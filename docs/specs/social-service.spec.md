@@ -1,16 +1,33 @@
 # Contrato: Servicio Social
 
-> **Estado:** Borrador v0.1. Convenciones en [api-conventions.spec.md](./api-conventions.spec.md). Tablas: `social_services`, `social_service_applications`, `social_service_commitments`, `social_service_bi_monthly_reports`, `social_service_evaluations`, `social_service_activity_assessments`. Escribe en `tramite_status_logs`, `non_conformances`, `document_series`.
+> **Estado:** Borrador v0.2 (alineado al flujo documental real y `SEGUIMIENTO VINCULACIÓN1.xlsx`). Convenciones en [api-conventions.spec.md](./api-conventions.spec.md). Tablas: `social_services`, `social_service_applications`, `social_service_commitments`, `social_service_bi_monthly_reports`, `social_service_evaluations`, `social_service_activity_assessments`. Escribe en `tramite_status_logs`, `non_conformances`, `document_series`.
 
 ## Acceso
 
 - `SocialServiceStaff`: todo.
 - `internship_coordinator`, `department_head`: lectura.
-- `student`: crea y opera solo sus trámites; acciones limitadas por `allowedActions`.
+- `student`: crea su solicitud, llena todos los formularios de sus formatos (Carta Compromiso, Reportes Bimestrales 1–3, Evaluaciones Cualitativas y de Actividades) para imprimirlos ya con todos los datos y recabar firma/sello, y sube sus documentos PDF escaneados.
 
 ---
 
-## 1. DTOs principales
+## 1. Resumen Operativo del Proceso Real
+
+1. **Apertura automatizada (Solicitud + IMSS):** El alumno llena sus datos del Anexo XVIII y en el mismo asistente sube su **Constancia de Vigencia de Derechos del IMSS** (`PUT /api/students/me/imss` + `POST /api/social-services`). El sistema genera automáticamente el formato Anexo XVIII (`print-data/application`) y lo envía a Vinculación.
+2. **Carta de Presentación (`CP`):** Al validar la apertura, el sistema genera automáticamente la Carta de Presentación mediante plantilla con su folio oficial (`SS_CP...`, ej. `SS_CP0405/17/09/2026`). El alumno la descarga y la entrega en la dependencia.
+3. **Carta de Aceptación (`CA`) y Carta Compromiso (`CC`):**
+   - Si el servicio se realiza **de manera local en el TecNM** (`modality == "internal"` / `company.isTecnmInternal == true`), el sistema habilita `print-data/acceptance_letter` para **generar automáticamente la Carta de Aceptación** mediante plantilla. El alumno igual la descarga, pide firma y sello del jefe del departamento interno y sube el PDF firmado y sellado (`CA`).
+   - Si es **externo**, la dependencia emite su Carta de Aceptación en hoja membretada y el alumno la sube firmada y sellada (`CA`).
+   - El alumno llena el formulario de **Carta Compromiso (Anexo XX)** en el sistema, descarga el PDF generado con sus datos, lo firma y lo sube (`CC`).
+4. **Reportes Bimestrales (`R1–R3`) y Evaluaciones Cualitativas (`EV1–EV3`):**
+   - El alumno cuenta con formularios en el sistema para llenar los datos de sus **Reportes Bimestrales 1, 2 y 3 (Anexo XXII)** y sus **Formatos de Evaluación Cualitativa y de Actividades (Anexos XXIII, XXIV y XXV)** de modo que **se impriman ya con todos los datos llenos** y el alumno **solo pida la firma y el sello**.
+   - Una vez firmados y sellados, el alumno sube los PDFs escaneados (`R1`, `R2`, `R3`, `EV1`, `EV2`, `EV3`).
+5. **Carta de Terminación (`CT`) y Liberación:**
+   - El alumno sube su **Carta de Terminación (Anexo XIX)** firmada y sellada (`CT`).
+   - **Progreso guiado por documentos:** Las horas acumuladas y las calificaciones numéricas **no bloquean el progreso**; solo se comprueba que el alumno vaya subiendo los documentos llenos, firmados y sellados y que Vinculación los valide (`approved`), reflejándose en tiempo real en los estadísticos (`SEGUIMIENTO VINCULACIÓN`).
+
+---
+
+## 2. DTOs principales
 
 ```ts
 interface SocialServiceListItem {
@@ -22,18 +39,20 @@ interface SocialServiceListItem {
   periodCode: string;
   programName: string;
   companyName: string;
+  modality: "internal" | "external";
   status: TramiteStatus;
-  accumulatedHours: number;
-  requiredHours: number;
+  documentProgressPercentage: number; // 0..100 (10% por cada documento validado en matriz de seguimiento)
+  accumulatedHours: number;           // informativo (tomado de los formularios de reportes)
+  requiredHours: number;              // 480
   startDate: string;
   endDate: string;
-  pendingReviewsCount: number;   // documentos + reportes por revisar
+  pendingReviewsCount: number;        // documentos por revisar
   updatedAt: string;
 }
 
 interface SocialServiceDetail {
   id: number;
-  student: { id: number; controlNumber: string; fullName: string; careerName: string; hasValidImss: boolean };
+  student: { id: number; controlNumber: string; fullName: string; careerName: string; hasValidImss: boolean; hasImssFile: boolean };
   period: { id: number; code: string };
   program: { id: number; code: string; name: string; category: string };
   company: { id: number; name: string; isTecnmInternal: boolean };
@@ -44,16 +63,18 @@ interface SocialServiceDetail {
   startDate: string;
   endDate: string;
   requiredHours: number;
-  accumulatedHours: number;
+  accumulatedHours: number;           // informativo
+  documentProgressPercentage: number; // 0..100
   status: TramiteStatus;
+  presentationLetterFolio: string | null;
   presentationLetterDate: string | null;
   acceptanceLetterDate: string | null;
   terminationLetterDate: string | null;
   originalTerminationLetterReceived: boolean;
   releaseCertificateFolio: string | null;
   releasedAt: string | null;
-  finalGradeLevel: QualitativeGrade | null;
-  finalScore: number | null;
+  finalGradeLevel: QualitativeGrade | null; // default "excellent" al liberar
+  finalScore: number | null;                // opcional
   schoolServicesActSent: boolean;
   schoolServicesActSentAt: string | null;
   schoolServicesActFolio: string | null;
@@ -80,9 +101,9 @@ type SocialServiceAction =
   | "update_impact" | "complete" | "release" | "send_school_act" | "cancel" | "mark_non_compliant";
 ```
 
-## 2. Crear solicitud (Anexo XVIII)
+## 3. Crear solicitud de apertura (Anexo XVIII)
 
-`POST /api/social-services` — crea `social_services` (`status=requested`) + `social_service_applications` en una transacción.
+`POST /api/social-services` — crea `social_services` (`status=requested`) + `social_service_applications` en una transacción. En el asistente UI, el alumno sube primero (o en el mismo flujo) su Constancia de Vigencia de Derechos del IMSS (`PUT /api/students/me/imss`).
 
 ```ts
 interface CreateSocialServiceRequest {
@@ -114,7 +135,7 @@ interface CreateSocialServiceRequest {
 | `supervisorId` | Debe pertenecer a `companyId` | `422 social_services.supervisor_company_mismatch` |
 | `agreementId` | Opcional; misma empresa, tipo compatible y vigente en `startDate` | `422 social_services.agreement_invalid` |
 | `modality` | `internal` exige `company.isTecnmInternal=true`; `external` exige `false` | `422 social_services.modality_mismatch` |
-| `startDate`/`endDate` | `endDate ≥ startDate + 6 meses` y `≤ startDate + 2 años` | `422 social_services.invalid_duration` |
+| `startDate`/`endDate` | `endDate ≥ startDate` | `400` |
 | `targetCommunity` | Opcional, máx. 200 | `400` |
 | `application.studentAddress` | Requerido | `400` |
 | `application.studentPhone` | Requerido, máx. 20 | `400` |
@@ -122,41 +143,40 @@ interface CreateSocialServiceRequest {
 | `application.dependencyHeadName` | Requerido, 1–180 | `400` |
 | `application.dependencyHeadPosition` | Requerido, 1–150 | `400` |
 | `application.activitiesOutline` | Requerido | `400` |
-| Estudiante | Elegible para SS (ver students.spec) | `422 social_services.student_not_eligible` |
+| Estudiante | Inscrito y sin otro SS activo/liberado | `422 social_services.student_not_eligible` |
 
 Backend fija: `semesterEnrolled` y `application.currentSemester` = `student.currentSemester`; `requiredHours=480`; `accumulatedHours=0`. Respuesta: `201 SocialServiceDetail`.
 
-## 3. Endpoints
+## 4. Endpoints
 
-| Método y ruta | Rol | Entrada | Transición | Éxito | Errores |
+| Método y ruta | Rol | Entrada | Transición / Efecto | Éxito | Errores |
 | --- | --- | --- | --- | --- | --- |
-| `GET /api/social-services` | Staff, lectura | `periodId`, `status`, `careerId`, `companyId`, `programId`, `search`, `sort` (`updatedAt`, `startDate`, `studentControlNumber`) | — | `200 PagedResponse<SocialServiceListItem>` | — |
+| `GET /api/social-services` | Staff, lectura | `periodId`, `status`, `careerId`, `companyId`, `programId`, `search`, `sort` | — | `200 PagedResponse<SocialServiceListItem>` | — |
 | `GET /api/social-services/me` | student | — | — | `200 SocialServiceListItem[]` | `404 students.profile_not_linked` |
 | `GET /api/social-services/{id}` | Todos (propio) | — | — | `200 SocialServiceDetail` | `404` |
 | `POST /api/social-services` | student, staff | `CreateSocialServiceRequest` | → `requested` | `201` | `400`, `422` |
-| `PUT /api/social-services/{id}` | student (`requested`), staff (no terminal) | Igual a crear sin `studentId` | Reinicia dictamen a `null` si estaba rechazado | `200` | `409 invalid_transition`, `422` |
-| `POST .../{id}/application/review` | staff | `{ isAccepted, rejectionReason, officeObservations }` | `requested → approved` si `isAccepted` | `200` | `409`, `400` (motivo requerido si rechaza) |
-| `POST .../{id}/presentation-letter` | staff | `{ presentationLetterDate }` | — (en `approved`) | `200` | `409` |
-| `POST .../{id}/acceptance` | staff | `{ acceptanceLetterDate }` | `approved → accepted` | `200` | `409`, `422 documents_missing` (`CA` aprobado) |
-| `PUT .../{id}/commitment` | student, staff | `CommitmentRequest` | — (en `accepted`) | `200` | `409`, `400` |
-| `POST .../{id}/activate` | staff | — | `accepted → active` | `200` | `409`, `422 imss_invalid`, `422 commitment_missing` |
-| `POST .../{id}/reports` | student, staff | `ReportRequest` | — (en `active`) | `201 BiMonthlyReport` | `409`, `422` |
-| `PUT .../{id}/reports/{reportId}` | student, staff | `ReportRequest` | Reenvío: `rejected → submitted` | `200` | `409 reports.not_editable` |
-| `POST .../{id}/reports/{reportId}/review` | staff | `{ status: "approved"\|"rejected", officeObservations }` | — | `200 BiMonthlyReport` | `409`, `400` |
-| `PUT .../{id}/evaluations/{evaluatorType}/{bimonthlyPeriod}` | staff (`external_supervisor`), student (`student_self`) | `EvaluationRequest` | — (en `active` o `completed_pending_review`) | `200 SocialServiceEvaluation` | `403`, `409`, `400` |
-| `PUT .../{id}/activity-assessment` | student, staff | `ActivityAssessmentRequest` | — (en `completed_pending_review`) | `200` | `409` |
+| `PUT /api/social-services/{id}` | student (`requested`), staff (no terminal) | Igual a crear sin `studentId` | Reinicia dictamen a `null` si estaba rechazado | `200` | `409`, `422` |
+| `POST .../{id}/application/review` | staff | `{ isAccepted, rejectionReason, officeObservations }` | Si `isAccepted`: `requested → approved`, genera folio `social_service_presentation_letter` (`presentationLetterFolio`) y fija `presentationLetterDate` | `200` | `409`, `400` |
+| `POST .../{id}/presentation-letter` | staff | `{ presentationLetterDate }` | Emite o actualiza fecha/folio de `CP` | `200` | `409` |
+| `POST .../{id}/acceptance` | staff | `{ acceptanceLetterDate }` | `approved → accepted` (exige documento `CA` aprobado) | `200` | `409`, `422 documents_missing` |
+| `PUT .../{id}/commitment` | **student**, staff | `CommitmentRequest` | Guarda datos de Anexo XX para impresión prellenada | `200` | `400` |
+| `POST .../{id}/activate` | staff | — | `accepted → active` (exige documento `CC` aprobado) | `200` | `409`, `422 documents_missing` |
+| `PUT .../{id}/reports/{reportNumber}` | **student**, staff | `ReportRequest` (`reportNumber`: `1`\|`2`\|`3`) | Crea o actualiza los datos del Anexo XXII (para imprimirlo lleno y pedir firma/sello) | `200 BiMonthlyReport` | `400` |
+| `POST .../{id}/reports/{reportId}/review` | staff | `{ status: "approved"\|"rejected", officeObservations }` | Opcional (también se aprueba automáticamente al aprobar el documento `R1`/`R2`/`R3`) | `200 BiMonthlyReport` | `400` |
+| `PUT .../{id}/evaluations/{evaluatorType}/{bimonthlyPeriod}` | **student**, staff | `EvaluationRequest` | Guarda datos de Anexo XXIII (`external_supervisor`) o Anexo XXIV (`student_self`) para imprimirlos llenos y pedir firma/sello | `200 SocialServiceEvaluation` | `400` |
+| `PUT .../{id}/activity-assessment` | **student**, staff | `ActivityAssessmentRequest` | Guarda datos de Anexo XXV para imprimirlo lleno y firmarlo | `200` | `400` |
 | `PATCH .../{id}/impact` | staff | `{ beneficiariesCount, hasInclusionActivities, targetCommunity, observations }` | — | `200` | `400` |
-| `POST .../{id}/complete` | staff | `{ terminationLetterDate }` | `active → completed_pending_review` | `200` | `409`, `422 hours_incomplete`, `422 reports_incomplete` |
-| `POST .../{id}/release` | staff | `{ finalGradeLevel, finalScore, originalTerminationLetterReceived }` | `completed_pending_review → released` | `200` (incluye folio) | `409`, `422 evaluations_incomplete`, `422 assessment_missing`, `422 original_letter_missing` |
-| `POST .../{id}/school-services-act` | staff | — | — (en `released`) | `200` (folio de acta) | `409 act_already_sent` |
+| `POST .../{id}/complete` | staff | `{ terminationLetterDate }` | `active → completed_pending_review` (verifica documentos `R1..R3`, `EV1..EV3`, `CT` aprobados; **no bloquea por horas**) | `200` | `409`, `422 documents_missing` |
+| `POST .../{id}/release` | staff | `{ finalGradeLevel?, finalScore?, originalTerminationLetterReceived }` | `completed_pending_review → released`; consume folio `social_service_release_certificate` (`SSC...`) | `200` | `409`, `422 documents_missing` |
+| `POST .../{id}/school-services-act` | staff | — | En `released`: consume folio `school_services_act` (`DGTV...`) y marca acta enviada | `200` | `409 act_already_sent` |
 | `POST .../{id}/cancel` | staff; student solo en `requested` | `{ reason }` | no terminal → `cancelled` | `200` | `409`, `400` |
-| `POST .../{id}/non-compliance` | staff | `{ category, description }` | `approved…completed_pending_review → non_compliant` | `200` (+ PNC creado) | `409`, `400` |
-| `GET .../{id}/history` | Todos (propio) | — | — | `200 StatusLogItem[]` (ver quality.spec) | `404` |
-| `GET .../{id}/print-data/{document}` | staff, student (propio) | `document`: `application`, `presentation_letter`, `commitment`, `release_certificate` | — | `200` objeto plano con datos + autoridades activas + folio | `404`, `409 not_available` |
+| `POST .../{id}/non-compliance` | staff | `{ category, description }` | no terminal → `non_compliant` (+ PNC creado) | `200` | `409`, `400` |
+| `GET .../{id}/history` | Todos (propio) | — | — | `200 StatusLogItem[]` | `404` |
+| `GET .../{id}/print-data/{document}` | staff, student (propio) | `document`: `application`, `presentation_letter`, `acceptance_letter` (solo si `modality="internal"`), `commitment`, `report_1`, `report_2`, `report_3`, `evaluation_1`, `evaluation_2`, `evaluation_3`, `self_evaluation_1`, `self_evaluation_2`, `self_evaluation_3`, `activity_assessment`, `release_certificate` | — | `200` objeto plano con todos los datos llenos + autoridades activas + folio | `404`, `409 not_available` |
 
-Prefijo de `code` de error: `social_services.` (p. ej. `social_services.hours_incomplete`).
+Prefijo de `code` de error: `social_services.`.
 
-## 4. Sub-DTOs
+## 5. Sub-DTOs (Formularios de Prellenado para Impresión)
 
 ```ts
 interface SocialServiceApplication {
@@ -169,9 +189,9 @@ interface SocialServiceApplication {
 }
 
 interface CommitmentRequest {           // Anexo XX
-  studentAddress: string;               // requerido
+  studentAddress: string;               // requerido (precargado de solicitud)
   studentPhone: string;                 // requerido, máx. 20
-  dependencyAddress: string;            // requerido
+  dependencyAddress: string;            // requerido (precargado de empresa)
   commitmentDate: string;               // requerida
   city: string;                         // requerido, 1–100, default "Monclova"
 }
@@ -181,27 +201,27 @@ interface SocialServiceCommitment extends CommitmentRequest {
   signedAt: string;
 }
 
-interface ReportRequest {               // Anexo XXII
+interface ReportRequest {               // Anexo XXII (lo llena el alumno para imprimirlo)
   periodStartDate: string;
   periodEndDate: string;
   activitiesSummary: string;
-  reportedHours: number;
+  reportedHours: number;                // ej. 160 por bimestre (solo para impresión del formato)
   evaluatorSupervisorId: number | null;
 }
 interface BiMonthlyReport extends ReportRequest {
   id: number;
-  reportNumber: 1 | 2 | 3;              // asignado por backend
-  accumulatedHours: number;             // calculado por backend
+  reportNumber: 1 | 2 | 3;
+  accumulatedHours: number;             // suma automática de reportedHours
   status: "submitted" | "approved" | "rejected";
   officeObservations: string | null;
   approvedByName: string | null;
   approvedAt: string | null;
 }
 
-interface EvaluationRequest {           // Anexos XXIII / XXIV
+interface EvaluationRequest {           // Anexos XXIII (supervisor) y XXIV (autoevaluación)
   criteria: [QualitativeGrade, QualitativeGrade, QualitativeGrade, QualitativeGrade,
-             QualitativeGrade, QualitativeGrade, QualitativeGrade]; // exactamente 7
-  evaluatorSupervisorId: number | null; // requerido si external_supervisor
+             QualitativeGrade, QualitativeGrade, QualitativeGrade]; // 7 criterios (default UI "excellent")
+  evaluatorSupervisorId: number | null;
   observations: string | null;
 }
 interface SocialServiceEvaluation extends EvaluationRequest {
@@ -211,40 +231,42 @@ interface SocialServiceEvaluation extends EvaluationRequest {
 }
 
 interface ActivityAssessmentRequest {   // Anexo XXV
-  questions: QualitativeGrade[];        // exactamente 8
+  questions: QualitativeGrade[];        // 8 reactivos (default UI "excellent")
   observations: string | null;
 }
 type ActivityAssessment = ActivityAssessmentRequest & { id: number; createdAt: string };
 ```
 
-Textos oficiales de los 7 criterios y 8 reactivos: tomar literal de los PDF fuente en `docs/sources/servicio-social/formatos/` (Anexos XXIII, XXIV, XXV). El orden del arreglo = número de criterio.
+Textos oficiales de los 7 criterios y 8 reactivos: tomar literal de los PDF fuente en `docs/sources/servicio-social/formatos/` (Anexos XXIII, XXIV, XXV).
 
-## 5. Reglas de negocio
+## 6. Reglas de negocio (Simplificadas al Proceso Real)
 
 1. Un estudiante tiene máximo un SS no terminal; un SS `released` impide crear otro.
-2. Reportes: `reportNumber` = siguiente libre (1→3). Reporte *n* exige reporte *n−1* `approved`. Máximo 3 (`409 reports.limit_reached`).
-3. Periodo del reporte dentro de `[startDate, endDate]` del trámite y `periodStartDate ≥ periodEndDate` del reporte anterior (`422 reports.invalid_period`).
-4. `accumulatedHours` del reporte = acumulado del reporte anterior aprobado + `reportedHours`. Al aprobar, `social_services.accumulated_hours` se actualiza con ese valor.
-5. Editar reporte solo en `submitted` o `rejected`. Editar uno `rejected` lo regresa a `submitted`.
-6. `complete` exige 3 reportes `approved` y `accumulatedHours ≥ requiredHours`, más documento `CT` aprobado.
-7. `release` exige: evaluaciones `external_supervisor` y `student_self` del periodo `final`, `activityAssessment`, `originalTerminationLetterReceived=true`, `finalScore` 0–100 con 2 decimales y `finalGradeLevel` válido. Consume folio `social_service_release_certificate` de forma atómica y fija `releasedAt`.
-8. `school-services-act` exige `released`; consume folio `school_services_act`; fija `schoolServicesActSent=true` y `schoolServicesActSentAt`.
-9. `non-compliance` crea `non_conformances` (`tramiteType=social_service`, `periodId` del trámite) en la misma transacción.
-10. Toda transición inserta `tramite_status_logs` (`previous_status`, `new_status`, `reason`, `changed_by = sub`).
+2. **Formularios para impresión libre de fricción:** El estudiante puede llenar o editar en cualquier momento del trámite activo los formularios de Carta Compromiso (`commitment`), Reportes 1–3 (`reports/{1..3}`), Evaluaciones (`evaluations`) y Evaluación de Actividades (`activity-assessment`) para descargar sus PDFs listos para firma y sello.
+3. **Carta de Aceptación Local (`modality == "internal"`):** Cuando la dependencia es un departamento interno del TecNM (`company.isTecnmInternal = true`), `print-data/acceptance_letter` genera automáticamente la Carta de Aceptación usando la plantilla oficial (`Ejemplo Carta de Aceptación 1.docx`). El alumno igual la descarga, pide firma y sello del responsable interno y sube el PDF escaneado (`CA`).
+4. **Progreso basado en documentos (sin bloqueo por horas ni calificaciones):**
+   - El avance (`documentProgressPercentage`) se calcula sobre los 10 hitos de la hoja `PRINCIPAL CONSULTA` de `SEGUIMIENTO VINCULACIÓN1.xlsx`: `CP`, `CA`, `SOL`, `CC`, `R1`, `R2`, `R3`, `EV` (`EV1`–`EV3`), `CT` y `COT` (Constancia de liberación), sumando 10% por cada uno aprobado.
+   - Aprobar un documento `R1`, `R2` o `R3` en el módulo de Documentos marca automáticamente como `approved` el registro correspondiente en `social_service_bi_monthly_reports` (si existe).
+   - `complete` y `release` verifican únicamente que los documentos PDF requeridos estén subidos y aprobados (`approved`); **nunca bloquean por `accumulatedHours` ni por promedios numéricos**. En `release`, `finalGradeLevel` toma por defecto `"excellent"` si no se especifica, y `finalScore` es opcional.
+5. `release` consume de forma atómica un folio de `social_service_release_certificate` (`SSC...`) y fija `releasedAt`.
+6. `school-services-act` exige `released`; consume folio `school_services_act` (`DGTV...`); fija `schoolServicesActSent=true` y `schoolServicesActSentAt`.
+7. Toda transición inserta `tramite_status_logs`.
 
-## 6. Checklist por estado (claves estables)
+## 7. Checklist documental (claves estables alineadas al Excel)
 
-| Estado | Claves |
-| --- | --- |
-| `requested` | `application_submitted`, `document_SOL`, `application_reviewed` |
-| `approved` | `presentation_letter`, `document_CA` |
-| `accepted` | `commitment_registered`, `document_CC`, `imss_valid` |
-| `active` | `report_1`, `report_2`, `report_3`, `hours_completed`, `document_CT` |
-| `completed_pending_review` | `evaluation_supervisor_final`, `evaluation_self_final`, `activity_assessment`, `original_termination_letter` |
-| `released` | `school_services_act` |
-
-## 7. Flujos UI esperados
-
-- **Estudiante:** asistente "Solicitar Servicio Social" (elegibilidad → dependencia/supervisor/convenio → datos Anexo XVIII → confirmar). Después, vista de trámite con línea de tiempo (`history`), checklist, barra de horas `accumulatedHours/requiredHours`, sección de reportes 1–3, documentos y evaluaciones.
-- **Staff:** tablero con filtros por estado/periodo y contadores; detalle con las mismas secciones y botones derivados de `allowedActions`; modales para dictamen, reporte, evaluación, liberación y acta.
-- **Impresión:** frontend arma PDFs con `print-data` (jsPDF). Backend es dueño de folios y autoridades.
+| Clave | Documento / Hito | Columna en `SEGUIMIENTO VINCULACIÓN1.xlsx` |
+| --- | --- | --- |
+| `imss_uploaded` | Constancia de Vigencia de Derechos IMSS | Requisito de apertura |
+| `document_SOL` | Anexo XVIII — Solicitud de Servicio Social | `SOL.` |
+| `presentation_letter` | Carta de Presentación generada (`CP`) | `C.P.` |
+| `document_CA` | Carta de Aceptación firmada y sellada (generada por sistema si es local) | `C.A.` |
+| `document_CC` | Anexo XX — Carta Compromiso firmada | `C.C.` |
+| `document_R1` | Anexo XXII — Reporte Bimestral 1 firmado y sellado | `REP. 1` |
+| `document_EV1` | Anexos XXIII/XXIV — Evaluación Cualitativa 1 firmada y sellada | `EV1` |
+| `document_R2` | Anexo XXII — Reporte Bimestral 2 firmado y sellado | `REP. 2` |
+| `document_EV2` | Anexos XXIII/XXIV — Evaluación Cualitativa 2 firmada y sellada | `EV2` |
+| `document_R3` | Anexo XXII — Reporte Bimestral 3 firmado y sellado | `REP. 3` |
+| `document_EV3` | Anexos XXIII/XXIV/XXV — Evaluación Cualitativa 3 y Actividades firmadas y selladas | `EV3` |
+| `document_CT` | Anexo XIX — Carta de Terminación firmada y sellada | `CTA. TERM.` |
+| `release_certificate` | Constancia de Terminación emitida por Vinculación (`SSC...`) | `CONST.TERM` |
+| `school_services_act` | Acta enviada a Servicios Escolares (`DGTV...`) | `ACTA ENVIADA` |

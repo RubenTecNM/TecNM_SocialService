@@ -186,8 +186,8 @@ interface DocumentSeriesRequest {
 
 | Campo | Regla |
 | --- | --- |
-| `documentType` | Uno de 3 valores; único por año (`document_series.duplicated_type_year`) |
-| `prefix` | Requerido, 1–20 |
+| `documentType` | Uno de 5 valores (`social_service_presentation_letter`, `internship_presentation_letter`, `social_service_release_certificate`, `internship_release_certificate`, `school_services_act`); único por año (`document_series.duplicated_type_year`) |
+| `prefix` | Requerido, 1–20 (`SS_CP`, `PR`, `SSC`, `PPC`, `DGTV`) |
 | `currentYear` | Entero ≥ 2020 |
 | `currentSequence` | Entero ≥ 0. Solo editable si no reduce el valor actual (`422 document_series.sequence_rollback`) |
 | `formatPattern` | Requerido, 1–100. Tokens válidos: `{PREFIX}`, `{SEQ:n}`, `{DD}`, `{MM}`, `{YYYY}` |
@@ -200,7 +200,7 @@ interface DocumentSeriesRequest {
 | `POST /api/document-series` | `201 DocumentSeries` | `400`, `409` |
 | `PUT /api/document-series/{id}` | `200 DocumentSeries` | `400`, `404`, `422` |
 
-Sin `DELETE`. No existe endpoint público para consumir folio: solo lo consumen acciones `release` y `school-services-act` de los trámites, de forma atómica. Si no existe serie para el año en curso, backend la crea copiando `prefix` y `formatPattern` del año anterior con `currentSequence=0`.
+Sin `DELETE`. No existe endpoint público para consumir folio: solo lo consumen acciones `presentation-letter`, `release` y `school-services-act` de los trámites, de forma atómica. Si no existe serie para el año en curso, backend la crea copiando `prefix` y `formatPattern` del año anterior con `currentSequence=0`.
 
 ## Flujos UI esperados
 

@@ -50,30 +50,28 @@
 - [x] Regla de integridad: supervisor y convenio del trámite deben pertenecer a la misma empresa.
 
 ### Fase 4: Estudiantes, IMSS e Importación Masiva
-- [ ] Módulo **Estudiantes** (`/api/students`): expediente completo, número de control, CURP y semestre.
-- [ ] Cálculo de avance curricular (`credits / career.totalCredits * 100`).
-- [ ] Validación médica de vigencia IMSS (`imss_validated_at`, `imss_validated_by`).
-- [ ] Asistente de importación masiva por Excel (`/api/students/import-batches`) con reporte de filas con error.
+- [ ] Módulo **Estudiantes** (`/api/students`): padrón, alta individual con botón para casos específicos, perfil `/me` y actualización de datos de contacto.
+- [ ] Carga y validación de **Constancia de Vigencia de Derechos del IMSS** (`/api/students/me/imss`).
+- [ ] Asistente de **importación masiva por Excel** (`/api/student-imports`) para cargar el listado de alumnos en condiciones de realizar el servicio.
 
 ### Fase 5: Expediente Documental & Archivos
 - [ ] Servicio de almacenamiento físico local en volumen Docker (`IFileStorage`).
-- [ ] Subida y descarga de archivos PDF (`/api/documents`).
-- [ ] Flujo de revisión: `approve`, `reject` con observaciones.
+- [ ] Subida y descarga de archivos PDF firmados y sellados (`/api/students/{id}/documents`, `/api/documents`).
+- [ ] Flujo de revisión por Vinculación: `approve`, `reject` con motivo y actualización en tiempo real del progreso documental y estadísticos.
 - [ ] Versionado automático `superseded` al re-subir documentos observados.
 
 ### Fase 6: Servicio Social Operativo (Anexos XVIII–XXV)
-- [ ] Máquina de estados: `requested` → `approved` → `accepted` → `active` → `completed_pending_review` → `released`.
-- [ ] Solicitud y Carta Compromiso (Anexos XVIII y XIX).
-- [ ] Tres reportes bimestrales secuenciales con acumulación de horas verificada (mínimo 480 h).
-- [ ] Evaluaciones bimestrales y final (Anexo XXIII externo y XXIV autoevaluación).
-- [ ] Liberación con asignación atómica de folio institucional.
+- [ ] Apertura automatizada (datos Anexo XVIII + Vigencia IMSS) y generación de Carta de Presentación (`CP`) con folio (`SS_CP...`).
+- [ ] Generación automática de Carta de Aceptación (`CA`) mediante plantilla cuando el servicio es local en el TecNM (`modality = "internal"`), para que el alumno la descargue, recabe firma/sello y la suba.
+- [ ] Formularios de prellenado para que el alumno llene todos los datos e imprima sus formatos listos para firma y sello: Carta Compromiso (Anexo XX), 3 Reportes Bimestrales (Anexo XXII) y Evaluaciones Cualitativas/Actividades (Anexos XXIII, XXIV y XXV).
+- [ ] Progreso documental (10% por documento validado: `CP, CA, SOL, CC, R1, R2, R3, EV1..3, CT, COT`) sin bloqueos por horas ni promedios numéricos, y liberación con folio (`SSC...`).
 
 ### Fase 7: Prácticas Profesionales (Anexo XVII)
-- [ ] Solicitud y registro de horas (200 a 480 horas, 2 créditos).
-- [ ] Evaluación integral Anexo XVII (10 criterios evaluados, cálculo de promedio y nivel de desempeño).
-- [ ] Acreditación y folio oficial de constancia.
+- [ ] Solicitud de Carta de Presentación automatizando el Forms oficial (confirmación de datos personales/escolares + subida de Vigencia IMSS) y emisión de `CP` con folio (`EJ26/PR...`).
+- [ ] Registro de empresa, responsable y fechas al recibir/subir el Oficio de Aceptación (`CA`, en hoja membretada con firma y sello).
+- [ ] Formulario de prellenado para Evaluación Anexo XVII (`PRODUCTIVIDAD LABORAL`, 7 criterios 0–4) para impresión y firma/sello, subida de documentos (`EV`, `CT`) y liberación con folio (`PPC...`).
 
-### Fase 8: Calidad ISO 9001 & Reportes Institucionales
-- [ ] Bitácora append-only de cambios de estado (`tramite_status_logs`).
-- [ ] Módulo de Producto No Conforme (`/api/non-conformances`): registro, tratamiento y cierre.
-- [ ] Vistas de base de datos (`CREATE VIEW`) para reportes estadísticos y formato oficial SEP/TecNM 911.10.
+### Fase 8: Calidad ISO 9001 & Estadísticos en Tiempo Real
+- [ ] Bitácora append-only de cambios de estado (`tramite_status_logs`) y Producto No Conforme (`/api/non-conformances`).
+- [ ] Sábana de Seguimiento en vivo (`/api/reports/tracking`) con porcentaje de avance documental idéntico a `SEGUIMIENTO VINCULACIÓN1.xlsx`.
+- [ ] Estadístico Semestral y por Año Escolar (`/api/reports/statistics`: En condiciones, Solicitantes, Liberados y PNC por carrera y sexo) y Formato SEP/TecNM 911.10 (`/api/reports/911`).

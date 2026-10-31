@@ -85,7 +85,8 @@ interface UpdateNonConformanceStatusRequest {
 Reglas:
 
 - `studentId` y `periodId` se derivan del trámite; no se aceptan en request.
-- `incidentCode` = `PNC-{SS|PP}-{YYYY}-{NNN}` generado por backend, secuencial por tipo y año (ver decisión D9 del roadmap).
+- `incidentCode` = `PNC-{SS|PP}-{YYYY}-{NNN}` generado por backend de forma atómica directo sobre `non_conformances` (`SELECT COALESCE(MAX(consecutive), 0) + 1 ... WHERE tramite_type = @type AND date_part('year', created_at) = @year`). No utiliza ni altera la tabla `document_series` (la cual queda reservada exclusivamente para constancias de acreditación/liberación y actas escolares).
+- Contexto operativo: en el sistema legacy (`SEGUIMIENTO VINCULACIÓN1.xlsx`), PNC era una simple resta numérica global (`PNC = Solicitantes - Liberados`). En este sistema, cada PNC es un expediente formal auditable bajo la norma ISO 9001:2015 del TecNM con causa, descripción y plan de acción.
 - Transiciones: `open → under_review | resolved | cancelled`; `under_review → resolved | cancelled`. `resolved` fija `resolvedAt` y `resolvedBy`.
 - Crear PNC manual no cambia el estado del trámite. La acción `non-compliance` del trámite sí crea PNC automáticamente.
 

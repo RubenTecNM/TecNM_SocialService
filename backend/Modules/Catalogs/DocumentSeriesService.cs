@@ -10,6 +10,8 @@ public partial class DocumentSeriesService(TecNMDbContext dbContext)
 {
     private static readonly HashSet<string> ValidDocumentTypes =
     [
+        "social_service_presentation_letter",
+        "internship_presentation_letter",
         "social_service_release_certificate",
         "internship_release_certificate",
         "school_services_act"

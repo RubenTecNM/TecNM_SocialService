@@ -74,9 +74,12 @@ interface StudentRequest {
   isEnrolled: boolean;
 }
 
-interface StudentContactRequest {   // autoservicio del estudiante
+interface StudentContactRequest {   // autoservicio del estudiante (y pre-paso de solicitud PP/SS)
   personalEmail: string | null;
+  institutionalEmail: string | null;
   phoneNumber: string | null;
+  currentSemester?: number;
+  shift?: StudentShift;
 }
 
 interface EligibilityResult {
@@ -133,18 +136,19 @@ interface StudentEligibility {
 
 Cuenta de estudiante: `username = controlNumber`, `email = institutionalEmail` (fallback `personalEmail`), rol `student`. `temporaryPassword` se muestra una sola vez.
 
-## Elegibilidad (reglas tentativas)
+## Elegibilidad
+
+El padrón de estudiantes se alimenta cargando el Excel de alumnos que ya pueden realizar el servicio (`POST /api/student-imports`) o agregando un caso específico manualmente con el botón "Agregar alumno" (`POST /api/students`).
 
 | Trámite | Regla | `code` si falla |
 | --- | --- | --- |
 | SS | `isEnrolled = true` | `eligibility.not_enrolled` |
-| SS | `curriculumProgressPercentage ≥ 70` | `eligibility.insufficient_credits` |
 | SS | Sin SS en estado no terminal ni `released` | `eligibility.social_service_exists` |
 | PP | `isEnrolled = true` | `eligibility.not_enrolled` |
-| PP | Umbral de avance **pendiente de confirmar** (ver roadmap, decisión D7) | `eligibility.insufficient_credits` |
 | PP | Sin PP en estado no terminal ni `released` | `eligibility.internship_exists` |
 
-IMSS vigente no bloquea la solicitud; bloquea la activación (`active`).
+- Si en el Excel o en el alta manual no se indican `completedCredits` (o se envía `0`), el backend asigna por defecto `156` créditos (`60.00%` de avance reticular) cuando el alumno proviene del listado de candidatos a Servicio Social, sin bloquear la apertura del trámite por falta de conteo exacto de kárdex.
+- La **Constancia de Vigencia de Derechos del IMSS** se sube directamente dentro del asistente de apertura de Servicio Social o de solicitud de Carta de Presentación de Prácticas Profesionales (`PUT /api/students/me/imss`).
 
 ## Importación masiva — `/api/student-imports`
 
@@ -175,12 +179,12 @@ interface StudentImportResult extends StudentImportBatch {
 | `GET /api/student-imports?periodId&status` | — | `200 PagedResponse<StudentImportBatch>` | — |
 | `GET /api/student-imports/{id}` | — | `200 StudentImportResult` | `404` |
 
-Columnas de plantilla: `control_number`*, `first_surname`*, `second_surname`, `first_name`*, `career_code`*, `curp`, `gender`, `shift`, `current_semester`*, `completed_credits`*, `institutional_email`, `personal_email`, `phone_number`, `has_disability`, `disability_description`. (`*` requeridas).
+Columnas de plantilla: `control_number`*, `first_surname`*, `second_surname`, `first_name`*, `career_code`*, `curp`, `gender`, `shift`, `current_semester`, `completed_credits`, `institutional_email`, `personal_email`, `phone_number`, `has_disability`, `disability_description`. (`*` requeridas; `current_semester` default `7`, `completed_credits` default `156`).
 
-Reglas: procesamiento síncrono en v1. Upsert por `control_number` (actualiza datos académicos; no toca `user_id` ni IMSS). Fila inválida no aborta el lote; se reporta en `rowErrors` y se cuenta en `failedRecords`. Estado final `completed` si ≥ 1 fila importada; `failed` si ninguna.
+Reglas: procesamiento síncrono en v1. Upsert por `control_number` (actualiza datos académicos; no toca `user_id` ni IMSS). Si el alumno no tenía cuenta de usuario y cuenta con correo (o usando matrícula), permite habilitar su acceso. Fila inválida no aborta el lote; se reporta en `rowErrors` y se cuenta en `failedRecords`. Estado final `completed` si ≥ 1 fila importada; `failed` si ninguna.
 
 ## Flujos UI esperados
 
-- Staff: padrón con filtros, detalle con pestañas Datos · Trámites · Documentos · IMSS.
-- Staff: asistente de importación (seleccionar periodo → subir → resumen con errores por fila exportable).
-- Estudiante: "Mi perfil" con datos de solo lectura, contacto editable, carga de IMSS y tarjeta de elegibilidad.
+- Staff: padrón con filtros, botón **"Agregar alumno"** para casos específicos y botón **"Importar Excel"** para carga masiva de candidatos; detalle con pestañas Datos · Trámites · Documentos · IMSS.
+- Staff: asistente de importación (seleccionar periodo → subir Excel → resumen con errores por fila exportable).
+- Estudiante: "Mi perfil" con datos académicos, datos de contacto editables, carga de Constancia de Vigencia IMSS y acceso directo a solicitar Servicio Social o Prácticas Profesionales.

@@ -123,42 +123,42 @@ INSERT INTO institutional_authorities (role_key, title, full_name, position, ema
 VALUES
     (
         'institute_director',
-        'M.C.',
-        'Dirección General ITSM',
-        'Director General',
+        'Mtro.',
+        'Juan Darío Hernández Guerrero',
+        'Director del Instituto Tecnológico Superior de Monclova',
         'direccion@monclova.tecnm.mx',
-        '8666390100',
-        'DG',
+        '8666490370',
+        'JDHG',
         true
     ),
     (
         'outreach_division_head',
-        'Lic.',
-        'Jefatura de Vinculación y Extensión',
-        'Jefa de División de Vinculación y Extensión',
+        'M.I.',
+        'Rocío Mendoza Riojas',
+        'Jefa de División de Gestión Tecnológica y Vinculación',
         'vinculacion@monclova.tecnm.mx',
-        '8666390101',
-        'JDVE',
+        '8666490372',
+        'RMR',
         true
     ),
     (
         'social_service_head',
-        'Ing.',
-        'Oficina de Servicio Social',
-        'Encargado(a) de la Oficina de Servicio Social',
-        'servicio.social@monclova.tecnm.mx',
-        '8666390102',
-        'SS',
+        'M.A.F.H.',
+        'Miguel Alejandro Sanson Olguin',
+        'Encargado de la Oficina de Servicio Social',
+        'vinculacion@monclova.tecnm.mx',
+        '8666490375',
+        'MSO',
         true
     ),
     (
         'internship_coordinator',
         'Ing.',
-        'Coordinación de Prácticas Profesionales',
-        'Coordinador(a) de Prácticas Profesionales',
-        'practicas@monclova.tecnm.mx',
-        '8666390103',
-        'PP',
+        'Arturo Martínez',
+        'Coordinador de Prácticas Profesionales',
+        'arturo.martinez@monclova.tecnm.mx',
+        '8666490372',
+        'AM',
         true
     )
 ON CONFLICT (id) DO NOTHING;
@@ -175,6 +175,22 @@ SELECT setval(pg_get_serial_sequence('institutional_authorities', 'id'), COALESC
 -- ============================================================================
 INSERT INTO document_series (document_type, prefix, current_year, current_sequence, format_pattern, description)
 VALUES
+    (
+        'social_service_presentation_letter',
+        'SS_CP',
+        2026,
+        0,
+        '{PREFIX}{SEQ:4}/{DD}/{MM}/{YYYY}',
+        'Cartas de Presentación de Servicio Social'
+    ),
+    (
+        'internship_presentation_letter',
+        'PR',
+        2026,
+        0,
+        'EJ26/{PREFIX}{SEQ:3}',
+        'Cartas de Presentación de Prácticas Profesionales'
+    ),
     (
         'social_service_release_certificate',
         'SSC',
@@ -193,10 +209,10 @@ VALUES
     ),
     (
         'school_services_act',
-        'ACTA',
+        'DGTV',
         2026,
         0,
-        '{PREFIX}-{SEQ:3}/{YYYY}',
+        '{PREFIX}{SEQ:3}/{DD}-{MM}-{YYYY}',
         'Actas turnadas a Servicios Escolares'
     )
 ON CONFLICT (document_type, current_year) WHERE deleted_at IS NULL DO UPDATE SET
