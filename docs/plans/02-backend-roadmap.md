@@ -13,8 +13,8 @@
 | **1** | **Fundaciones & Catálogos Base** | `AuditableEntity`, Soft Delete global, RFC 7807 ProblemDetails, Carreras y Periodos. | **100% Hecho** |
 | **2** | **Catálogos Restantes & Folios** | Programas SS, Autoridades Institucionales, Series de Folio atómicas. | **100% Hecho** |
 | **3** | **Empresas & Convenios** | Directorio de empresas, supervisores externos y convenios de colaboración. | **100% Hecho** |
-| **4** | **Estudiantes & Padrón** | Expediente de alumno, validación IMSS, importador Excel masivo. | **Siguiente** |
-| **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | Pendiente |
+| **4** | **Estudiantes & Padrón** | Expediente de alumno, validación IMSS, importador Excel masivo. | **100% Hecho** |
+| **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | **Siguiente** |
 | **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | Pendiente |
 | **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | Pendiente |
 | **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | Pendiente |
@@ -50,9 +50,10 @@
 - [x] Regla de integridad: supervisor y convenio del trámite deben pertenecer a la misma empresa.
 
 ### Fase 4: Estudiantes, IMSS e Importación Masiva
-- [ ] Módulo **Estudiantes** (`/api/students`): padrón, alta individual con botón para casos específicos, perfil `/me` y actualización de datos de contacto.
-- [ ] Carga y validación de **Constancia de Vigencia de Derechos del IMSS** (`/api/students/me/imss`).
-- [ ] Asistente de **importación masiva por Excel** (`/api/student-imports`) para cargar el listado de alumnos en condiciones de realizar el servicio.
+- [x] Módulo **Estudiantes** (`/api/students`): padrón, alta individual con botón para casos específicos, perfil `/me` y actualización de datos de contacto.
+- [x] Carga y validación de **Constancia de Vigencia de Derechos del IMSS** (`/api/students/me/imss`).
+- [x] Asistente de **importación masiva por Excel** (`/api/student-imports`) para cargar el listado de alumnos en condiciones de realizar el servicio.
+- [x] Semilla oficial de estudiantes ([`database/seed/04_dev_students.sql`](../../database/seed/04_dev_students.sql)).
 
 ### Fase 5: Expediente Documental & Archivos
 - [ ] Servicio de almacenamiento físico local en volumen Docker (`IFileStorage`).

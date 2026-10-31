@@ -15,6 +15,7 @@ services:
       - ./database/seed/01_dev_users.sql:/docker-entrypoint-initdb.d/02_dev_users.sql:ro
       - ./database/seed/02_dev_catalogs.sql:/docker-entrypoint-initdb.d/03_dev_catalogs.sql:ro
       - ./database/seed/03_dev_companies.sql:/docker-entrypoint-initdb.d/04_dev_companies.sql:ro
+      - ./database/seed/04_dev_students.sql:/docker-entrypoint-initdb.d/05_dev_students.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tecnm_app} -d ${POSTGRES_DB:-tecnm_sspp}"]
       interval: 5s

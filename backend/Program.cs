@@ -10,6 +10,7 @@ using TecNM.Api.Data;
 using TecNM.Api.Modules.Auth;
 using TecNM.Api.Modules.Catalogs;
 using TecNM.Api.Modules.Companies;
+using TecNM.Api.Modules.Students;
 
 const string FrontendCors = "Frontend";
 
@@ -91,6 +92,8 @@ builder.Services.AddScoped<DocumentSeriesService>();
 builder.Services.AddScoped<CompaniesService>();
 builder.Services.AddScoped<SupervisorsService>();
 builder.Services.AddScoped<AgreementsService>();
+builder.Services.AddScoped<StudentsService>();
+builder.Services.AddScoped<StudentImportsService>();
 
 builder.Services.AddScoped<PasswordHasher<User>>();
 builder.Services.AddSingleton(jwtSettings);
