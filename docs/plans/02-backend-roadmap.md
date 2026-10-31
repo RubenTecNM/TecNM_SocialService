@@ -17,7 +17,7 @@
 | **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | **100% Hecho** |
 | **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | **100% Hecho** |
 | **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | **100% Hecho** |
-| **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | **Siguiente** |
+| **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | **100% Hecho** |
 
 ---
 
@@ -73,6 +73,6 @@
 - [x] Formulario de prellenado para Evaluación Anexo XVII (`PRODUCTIVIDAD LABORAL`, 7 criterios 0–4) para impresión y firma/sello, subida de documentos (`EV`, `CT`) y liberación con folio (`PPC...`).
 
 ### Fase 8: Calidad ISO 9001 & Estadísticos en Tiempo Real
-- [ ] Bitácora append-only de cambios de estado (`tramite_status_logs`) y Producto No Conforme (`/api/non-conformances`).
-- [ ] Sábana de Seguimiento en vivo (`/api/reports/tracking`) con porcentaje de avance documental idéntico a `SEGUIMIENTO VINCULACIÓN1.xlsx`.
-- [ ] Estadístico Semestral y por Año Escolar (`/api/reports/statistics`: En condiciones, Solicitantes, Liberados y PNC por carrera y sexo) y Formato SEP/TecNM 911.10 (`/api/reports/911`).
+- [x] Bitácora append-only de cambios de estado (`tramite_status_logs`) y Producto No Conforme (`/api/non-conformances`).
+- [x] Sábana de Seguimiento en vivo (`/api/reports/tracking`) con porcentaje de avance documental idéntico a `SEGUIMIENTO VINCULACIÓN1.xlsx`.
+- [x] Estadístico Semestral y por Año Escolar (`/api/reports/statistics`: En condiciones, Solicitantes, Liberados y PNC por carrera y sexo) y Formato SEP/TecNM 911.10 (`/api/reports/911`).

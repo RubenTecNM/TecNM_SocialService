@@ -13,6 +13,8 @@ using TecNM.Api.Modules.Catalogs;
 using TecNM.Api.Modules.Companies;
 using TecNM.Api.Modules.Expedients;
 using TecNM.Api.Modules.Internships;
+using TecNM.Api.Modules.Quality;
+using TecNM.Api.Modules.Reports;
 using TecNM.Api.Modules.SocialService;
 using TecNM.Api.Modules.Students;
 
@@ -102,6 +104,8 @@ builder.Services.AddScoped<StudentImportsService>();
 builder.Services.AddScoped<DocumentsService>();
 builder.Services.AddScoped<SocialServiceService>();
 builder.Services.AddScoped<InternshipsService>();
+builder.Services.AddScoped<QualityService>();
+builder.Services.AddScoped<ReportsService>();
 
 builder.Services.AddScoped<PasswordHasher<User>>();
 builder.Services.AddSingleton(jwtSettings);
