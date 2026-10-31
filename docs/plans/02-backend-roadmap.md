@@ -16,8 +16,8 @@
 | **4** | **Estudiantes & Padrón** | Expediente de alumno, validación IMSS, importador Excel masivo. | **100% Hecho** |
 | **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | **100% Hecho** |
 | **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | **100% Hecho** |
-| **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | **Siguiente** |
-| **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | Pendiente |
+| **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | **100% Hecho** |
+| **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | **Siguiente** |
 
 ---
 
@@ -68,9 +68,9 @@
 - [x] Progreso documental (10% por documento validado: `CP, CA, SOL, CC, R1, R2, R3, EV1..3, CT, COT`) sin bloqueos por horas ni promedios numéricos, y liberación con folio (`SSC...`).
 
 ### Fase 7: Prácticas Profesionales (Anexo XVII)
-- [ ] Solicitud de Carta de Presentación automatizando el Forms oficial (confirmación de datos personales/escolares + subida de Vigencia IMSS) y emisión de `CP` con folio (`EJ26/PR...`).
-- [ ] Registro de empresa, responsable y fechas al recibir/subir el Oficio de Aceptación (`CA`, en hoja membretada con firma y sello).
-- [ ] Formulario de prellenado para Evaluación Anexo XVII (`PRODUCTIVIDAD LABORAL`, 7 criterios 0–4) para impresión y firma/sello, subida de documentos (`EV`, `CT`) y liberación con folio (`PPC...`).
+- [x] Solicitud de Carta de Presentación automatizando el Forms oficial (confirmación de datos personales/escolares + subida de Vigencia IMSS) y emisión de `CP` con folio (`EJ26/PR...`).
+- [x] Registro de empresa, responsable y fechas al recibir/subir el Oficio de Aceptación (`CA`, en hoja membretada con firma y sello).
+- [x] Formulario de prellenado para Evaluación Anexo XVII (`PRODUCTIVIDAD LABORAL`, 7 criterios 0–4) para impresión y firma/sello, subida de documentos (`EV`, `CT`) y liberación con folio (`PPC...`).
 
 ### Fase 8: Calidad ISO 9001 & Estadísticos en Tiempo Real
 - [ ] Bitácora append-only de cambios de estado (`tramite_status_logs`) y Producto No Conforme (`/api/non-conformances`).

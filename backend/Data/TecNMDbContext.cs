@@ -25,6 +25,8 @@ public sealed class TecNMDbContext(DbContextOptions<TecNMDbContext> options) : D
     public DbSet<SocialServiceBiMonthlyReport> SocialServiceBiMonthlyReports => Set<SocialServiceBiMonthlyReport>();
     public DbSet<SocialServiceEvaluation> SocialServiceEvaluations => Set<SocialServiceEvaluation>();
     public DbSet<SocialServiceActivityAssessment> SocialServiceActivityAssessments => Set<SocialServiceActivityAssessment>();
+    public DbSet<Internship> Internships => Set<Internship>();
+    public DbSet<InternshipEvaluation> InternshipEvaluations => Set<InternshipEvaluation>();
     public DbSet<TramiteStatusLog> TramiteStatusLogs => Set<TramiteStatusLog>();
     public DbSet<NonConformance> NonConformances => Set<NonConformance>();
 
