@@ -19,6 +19,14 @@ public sealed class TecNMDbContext(DbContextOptions<TecNMDbContext> options) : D
     public DbSet<Student> Students => Set<Student>();
     public DbSet<StudentImportBatch> StudentImportBatches => Set<StudentImportBatch>();
     public DbSet<ExpedientDocument> ExpedientDocuments => Set<ExpedientDocument>();
+    public DbSet<SocialService> SocialServices => Set<SocialService>();
+    public DbSet<SocialServiceApplication> SocialServiceApplications => Set<SocialServiceApplication>();
+    public DbSet<SocialServiceCommitment> SocialServiceCommitments => Set<SocialServiceCommitment>();
+    public DbSet<SocialServiceBiMonthlyReport> SocialServiceBiMonthlyReports => Set<SocialServiceBiMonthlyReport>();
+    public DbSet<SocialServiceEvaluation> SocialServiceEvaluations => Set<SocialServiceEvaluation>();
+    public DbSet<SocialServiceActivityAssessment> SocialServiceActivityAssessments => Set<SocialServiceActivityAssessment>();
+    public DbSet<TramiteStatusLog> TramiteStatusLogs => Set<TramiteStatusLog>();
+    public DbSet<NonConformance> NonConformances => Set<NonConformance>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -603,6 +603,21 @@ public sealed class DocumentsService(
                     [today, doc.TramiteId.Value],
                     cancellationToken);
             }
+            else if (doc.DocumentCode is "R1" or "R2" or "R3")
+            {
+                var reportNumber = int.Parse(doc.DocumentCode[1..]);
+                var report = await dbContext.SocialServiceBiMonthlyReports
+                    .SingleOrDefaultAsync(
+                        r => r.SocialServiceId == doc.TramiteId.Value && r.ReportNumber == reportNumber,
+                        cancellationToken);
+
+                if (report is not null)
+                {
+                    report.Status = "approved";
+                    report.ApprovedBy = currentUser.Id;
+                    report.ApprovedAt = DateTimeOffset.UtcNow;
+                }
+            }
         }
         else if (doc.TramiteType == "internship")
         {

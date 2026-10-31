@@ -15,8 +15,8 @@
 | **3** | **Empresas & Convenios** | Directorio de empresas, supervisores externos y convenios de colaboración. | **100% Hecho** |
 | **4** | **Estudiantes & Padrón** | Expediente de alumno, validación IMSS, importador Excel masivo. | **100% Hecho** |
 | **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | **100% Hecho** |
-| **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | **Siguiente** |
-| **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | Pendiente |
+| **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | **100% Hecho** |
+| **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | **Siguiente** |
 | **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | Pendiente |
 
 ---
@@ -62,10 +62,10 @@
 - [x] Versionado automático `superseded` al re-subir documentos observados.
 
 ### Fase 6: Servicio Social Operativo (Anexos XVIII–XXV)
-- [ ] Apertura automatizada (datos Anexo XVIII + Vigencia IMSS) y generación de Carta de Presentación (`CP`) con folio (`SS_CP...`).
-- [ ] Generación automática de Carta de Aceptación (`CA`) mediante plantilla cuando el servicio es local en el TecNM (`modality = "internal"`), para que el alumno la descargue, recabe firma/sello y la suba.
-- [ ] Formularios de prellenado para que el alumno llene todos los datos e imprima sus formatos listos para firma y sello: Carta Compromiso (Anexo XX), 3 Reportes Bimestrales (Anexo XXII) y Evaluaciones Cualitativas/Actividades (Anexos XXIII, XXIV y XXV).
-- [ ] Progreso documental (10% por documento validado: `CP, CA, SOL, CC, R1, R2, R3, EV1..3, CT, COT`) sin bloqueos por horas ni promedios numéricos, y liberación con folio (`SSC...`).
+- [x] Apertura automatizada (datos Anexo XVIII + Vigencia IMSS) y generación de Carta de Presentación (`CP`) con folio (`SS_CP...`).
+- [x] Generación automática de Carta de Aceptación (`CA`) mediante plantilla cuando el servicio es local en el TecNM (`modality = "internal"`), para que el alumno la descargue, recabe firma/sello y la suba.
+- [x] Formularios de prellenado para que el alumno llene todos los datos e imprima sus formatos listos para firma y sello: Carta Compromiso (Anexo XX), 3 Reportes Bimestrales (Anexo XXII) y Evaluaciones Cualitativas/Actividades (Anexos XXIII, XXIV y XXV).
+- [x] Progreso documental (10% por documento validado: `CP, CA, SOL, CC, R1, R2, R3, EV1..3, CT, COT`) sin bloqueos por horas ni promedios numéricos, y liberación con folio (`SSC...`).
 
 ### Fase 7: Prácticas Profesionales (Anexo XVII)
 - [ ] Solicitud de Carta de Presentación automatizando el Forms oficial (confirmación de datos personales/escolares + subida de Vigencia IMSS) y emisión de `CP` con folio (`EJ26/PR...`).
