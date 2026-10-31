@@ -14,8 +14,8 @@
 | **2** | **Catálogos Restantes & Folios** | Programas SS, Autoridades Institucionales, Series de Folio atómicas. | **100% Hecho** |
 | **3** | **Empresas & Convenios** | Directorio de empresas, supervisores externos y convenios de colaboración. | **100% Hecho** |
 | **4** | **Estudiantes & Padrón** | Expediente de alumno, validación IMSS, importador Excel masivo. | **100% Hecho** |
-| **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | **Siguiente** |
-| **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | Pendiente |
+| **5** | **Expediente Documental** | Almacenamiento local, subida de PDFs, estados de revisión y versionado. | **100% Hecho** |
+| **6** | **Servicio Social (SS)** | Trámite completo (480 h), Anexos XVIII–XXV, 3 reportes bimestrales y liberación. | **Siguiente** |
 | **7** | **Prácticas Profesionales (PP)** | Trámite completo (200–480 h), evaluación Anexo XVII y acreditación. | Pendiente |
 | **8** | **Calidad & Reportes** | Trazabilidad de estados, Producto No Conforme (PNC ISO 9001) y Formato 911.10. | Pendiente |
 
@@ -56,10 +56,10 @@
 - [x] Semilla oficial de estudiantes ([`database/seed/04_dev_students.sql`](../../database/seed/04_dev_students.sql)).
 
 ### Fase 5: Expediente Documental & Archivos
-- [ ] Servicio de almacenamiento físico local en volumen Docker (`IFileStorage`).
-- [ ] Subida y descarga de archivos PDF firmados y sellados (`/api/students/{id}/documents`, `/api/documents`).
-- [ ] Flujo de revisión por Vinculación: `approve`, `reject` con motivo y actualización en tiempo real del progreso documental y estadísticos.
-- [ ] Versionado automático `superseded` al re-subir documentos observados.
+- [x] Servicio de almacenamiento físico local en volumen Docker (`IFileStorage` / `LocalFileStorage`).
+- [x] Subida y descarga de archivos PDF firmados y sellados (`/api/students/{id}/documents`, `/api/students/me/documents`, `/api/documents/{id}/file`).
+- [x] Flujo de revisión por Vinculación (`/api/documents/{id}/review`, `/api/documents/review-queue`): `approve`, `reject` con motivo y actualización en tiempo real del progreso documental, hitos y vigencia IMSS.
+- [x] Versionado automático `superseded` al re-subir documentos observados.
 
 ### Fase 6: Servicio Social Operativo (Anexos XVIII–XXV)
 - [ ] Apertura automatizada (datos Anexo XVIII + Vigencia IMSS) y generación de Carta de Presentación (`CP`) con folio (`SS_CP...`).

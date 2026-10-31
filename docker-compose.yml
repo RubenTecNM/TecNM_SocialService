@@ -38,6 +38,9 @@ services:
       Jwt__Audience: "TecNM.Frontend"
       Jwt__LifetimeHours: "8"
       Cors__AllowedOrigin: ${Cors__AllowedOrigin:-http://localhost:3000}
+      Storage__RootPath: "/app/storage"
+    volumes:
+      - storage_data:/app/storage
     ports:
       - "8080:8080"
 
@@ -55,3 +58,5 @@ services:
 volumes:
   pgdata:
     name: tecnm_pgdata
+  storage_data:
+    name: tecnm_storage_data

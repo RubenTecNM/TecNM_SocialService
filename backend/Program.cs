@@ -6,10 +6,12 @@ using Microsoft.IdentityModel.Tokens;
 using TecNM.Api.Core.Entities;
 using TecNM.Api.Core.Http;
 using TecNM.Api.Core.Security;
+using TecNM.Api.Core.Storage;
 using TecNM.Api.Data;
 using TecNM.Api.Modules.Auth;
 using TecNM.Api.Modules.Catalogs;
 using TecNM.Api.Modules.Companies;
+using TecNM.Api.Modules.Expedients;
 using TecNM.Api.Modules.Students;
 
 const string FrontendCors = "Frontend";
@@ -83,6 +85,7 @@ builder.Services.AddDbContext<TecNMDbContext>((serviceProvider, options) =>
            .AddInterceptors(auditInterceptor);
 });
 
+builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CareersService>();
 builder.Services.AddScoped<AcademicPeriodsService>();
@@ -94,6 +97,7 @@ builder.Services.AddScoped<SupervisorsService>();
 builder.Services.AddScoped<AgreementsService>();
 builder.Services.AddScoped<StudentsService>();
 builder.Services.AddScoped<StudentImportsService>();
+builder.Services.AddScoped<DocumentsService>();
 
 builder.Services.AddScoped<PasswordHasher<User>>();
 builder.Services.AddSingleton(jwtSettings);

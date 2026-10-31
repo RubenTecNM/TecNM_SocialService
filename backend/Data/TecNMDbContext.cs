@@ -18,6 +18,7 @@ public sealed class TecNMDbContext(DbContextOptions<TecNMDbContext> options) : D
     public DbSet<Agreement> Agreements => Set<Agreement>();
     public DbSet<Student> Students => Set<Student>();
     public DbSet<StudentImportBatch> StudentImportBatches => Set<StudentImportBatch>();
+    public DbSet<ExpedientDocument> ExpedientDocuments => Set<ExpedientDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
