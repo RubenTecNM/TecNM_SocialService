@@ -1,30 +1,53 @@
 import type { BrandOptions, NavigationItem } from '../../shared/components/navigation'
 
-// Cambiar estas opciones por aplicación. Header y sidebar son independientes.
+// Configuración de encabezado y barra lateral
 export const mainLayoutConfig = {
   showHeader: false,
   showSidebar: true,
   header: { title: 'TecNM', subtitle: 'Campus Monclova', showTitle: true, showLogo: false } satisfies BrandOptions,
-  sidebar: { title: 'TecNM', subtitle: 'Plataforma institucional', showTitle: true, showLogo: false } satisfies BrandOptions,
+  sidebar: { title: 'TecNM SSPP', subtitle: 'Vinculación y Trámites', showTitle: true, showLogo: false } satisfies BrandOptions,
 }
 
 export const headerNavigation: NavigationItem[] = [
   { label: 'Panel Principal', to: '/' },
-  { label: 'Catálogos', children: [
-    { label: 'Carreras', to: '/catalogs/careers' },
-  ] },
-  { label: 'Trámites Recientes', to: '/#tramites' },
-  { label: 'Calendario', to: '/#calendario' },
+  { label: 'Padrón Alumnos', to: '/students' },
+  { label: 'Servicio Social', to: '/social-service' },
+  { label: 'Prácticas', to: '/internships' },
+  { label: 'Reportes', to: '/reports/tracking' },
 ]
 
 export const sidebarNavigation: NavigationItem[] = [
   { label: 'Panel Principal', to: '/' },
-  { label: 'Catálogos Institucionales', children: [
-    { label: 'Carreras', to: '/catalogs/careers' },
-  ] },
-  { label: 'Gestión Operativa', children: [
-    { label: 'Trámites en Curso', to: '/#tramites' },
-    { label: 'Avisos & Calendario', to: '/#calendario' },
-    { label: 'Acciones Rápidas', to: '/#accesos' },
-  ] },
+  {
+    label: 'Portal Estudiante',
+    children: [
+      { label: 'Mi Perfil & IMSS', to: '/students/me' },
+      { label: 'Mi Servicio Social', to: '/social-service/my' },
+      { label: 'Mis Prácticas', to: '/internships/my' },
+    ],
+  },
+  {
+    label: 'Gestión de Trámites',
+    children: [
+      { label: 'Padrón de Alumnos', to: '/students' },
+      { label: 'Revisión Documental', to: '/expedients/review' },
+      { label: 'Servicio Social', to: '/social-service' },
+      { label: 'Prácticas Profesionales', to: '/internships' },
+    ],
+  },
+  {
+    label: 'Calidad & Reportes',
+    children: [
+      { label: 'Dashboard General', to: '/reports/dashboard' },
+      { label: 'Matriz de Seguimiento', to: '/reports/tracking' },
+      { label: 'Estadísticas Semestrales', to: '/reports/stats' },
+      { label: 'Producto No Conforme (PNC)', to: '/quality/pnc' },
+    ],
+  },
+  {
+    label: 'Catálogos Institucionales',
+    children: [
+      { label: 'Carreras', to: '/catalogs/careers' },
+    ],
+  },
 ]

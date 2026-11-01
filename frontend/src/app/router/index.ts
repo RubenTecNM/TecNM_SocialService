@@ -2,6 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { authRoutes, authenticatedAuthRoutes } from '../../modules/auth'
 import { catalogsRoutes } from '../../modules/catalogs'
+import { expedientsRoutes } from '../../modules/expedients'
+import { internshipsRoutes } from '../../modules/internships'
+import { qualityRoutes } from '../../modules/quality'
+import { reportsRoutes } from '../../modules/reports'
+import { socialServiceRoutes } from '../../modules/social-service'
+import { studentsRoutes } from '../../modules/students'
 import {
   clearSessionMarker,
   hasActiveSession,
@@ -18,6 +24,12 @@ const router = createRouter({
       children: [
         ...authenticatedAuthRoutes,
         ...catalogsRoutes,
+        ...studentsRoutes,
+        ...expedientsRoutes,
+        ...socialServiceRoutes,
+        ...internshipsRoutes,
+        ...qualityRoutes,
+        ...reportsRoutes,
       ],
     },
   ],
