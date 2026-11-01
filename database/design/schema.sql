@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Proyecto: TecNM SSPP (Servicio Social y Prácticas Profesionales)
 -- Archivo: database/design/schema.sql
--- Motor Objetivo: PostgreSQL 16+
+-- Motor Objetivo: PostgreSQL 18+
 --
 -- Estándares Técnicos Aplicados:
 --   1. Idioma: Inglés técnico para todas las entidades, columnas y constraints.

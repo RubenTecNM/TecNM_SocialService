@@ -9,7 +9,7 @@
 
 | Fase | Módulo / Componente | Entregables Clave | Estado |
 | :---: | :--- | :--- | :---: |
-| **0** | **Infraestructura & Auth** | Docker Compose (3 servicios), PostgreSQL 16 (24 tablas), Auth JWT con cookies HttpOnly. | **100% Hecho** |
+| **0** | **Infraestructura & Auth** | Docker Compose (3 servicios), PostgreSQL 18 (24 tablas), Auth JWT con cookies HttpOnly. | **100% Hecho** |
 | **1** | **Fundaciones & Catálogos Base** | `AuditableEntity`, Soft Delete global, RFC 7807 ProblemDetails, Carreras y Periodos. | **100% Hecho** |
 | **2** | **Catálogos Restantes & Folios** | Programas SS, Autoridades Institucionales, Series de Folio atómicas. | **100% Hecho** |
 | **3** | **Empresas & Convenios** | Directorio de empresas, supervisores externos y convenios de colaboración. | **100% Hecho** |

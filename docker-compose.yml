@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: tecnm_postgres
     restart: unless-stopped
     environment:
@@ -10,7 +10,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
       - ./database/design/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./database/seed/01_dev_users.sql:/docker-entrypoint-initdb.d/02_dev_users.sql:ro
       - ./database/seed/02_dev_catalogs.sql:/docker-entrypoint-initdb.d/03_dev_catalogs.sql:ro
@@ -57,6 +57,6 @@ services:
 
 volumes:
   pgdata:
-    name: tecnm_pgdata
+    name: tecnm_pg18_data
   storage_data:
     name: tecnm_storage_data
