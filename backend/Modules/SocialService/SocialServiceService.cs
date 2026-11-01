@@ -618,6 +618,7 @@ public sealed class SocialServiceService(
         }
 
         var entity = await dbContext.SocialServices
+            .Include(s => s.Student)
             .Include(s => s.Reports)
             .SingleOrDefaultAsync(s => s.Id == id, cancellationToken)
             ?? throw new NotFoundException("social_services.not_found", $"Trámite de Servicio Social #{id} no encontrado.");
@@ -762,6 +763,7 @@ public sealed class SocialServiceService(
         }
 
         var entity = await dbContext.SocialServices
+            .Include(s => s.Student)
             .Include(s => s.Evaluations)
             .SingleOrDefaultAsync(s => s.Id == id, cancellationToken)
             ?? throw new NotFoundException("social_services.not_found", $"Trámite de Servicio Social #{id} no encontrado.");
@@ -825,6 +827,7 @@ public sealed class SocialServiceService(
         }
 
         var entity = await dbContext.SocialServices
+            .Include(s => s.Student)
             .Include(s => s.ActivityAssessment)
             .SingleOrDefaultAsync(s => s.Id == id, cancellationToken)
             ?? throw new NotFoundException("social_services.not_found", $"Trámite de Servicio Social #{id} no encontrado.");
