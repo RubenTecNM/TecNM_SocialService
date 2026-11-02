@@ -70,7 +70,7 @@ Editar `headerNavigation` y `sidebarNavigation`. Mismo contrato para ambos:
 ```
 
 Registrar rutas de ejemplo antes de usarlas. `to` acepta destinos de Vue Router.
-Grupo tiene `children`, sin ruta propia. Un nivel de grupos; hijos son páginas.
+Grupo tiene `children`, sin ruta propia, y enlaces aceptan `badge` e `icon` opcionales. Un nivel de grupos; hijos son páginas.
 Header despliega panel; sidebar expande lista. Teclado usa Tab, Enter/Espacio y Escape para cerrar.
 En móvil navegación permanece disponible. No se oculta listado del header.
 Muestra actual enlaza secciones de bienvenida mediante `/#colores`, `/#datos`, etc.

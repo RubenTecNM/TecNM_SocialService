@@ -34,7 +34,7 @@ Este archivo añade responsabilidades frontend. Contratos HTTP, DTOs, cookies y 
 
 - Usar diseño exacto de `frontend/DESIGN.md`, incluidos temas claro y oscuro.
 - `LoginView` muestra únicamente acceso institucional mediante `LoginForm`.
-- `SessionView` muestra bienvenida, datos reales de `/me`, logout y catálogo de componentes tras iniciar sesión.
+- `SessionView` presenta un centro de control ejecutivo compacto sin requerir scroll vertical en escritorio: encabezado compacto con acciones rápidas, 4 tarjetas KPI compactas con contadores animados y desglose inferior, bandeja izquierda de expedientes y dictámenes prioritarios (Servicio Social y Prácticas Profesionales) con filtrado y acciones contextuales (`Dictaminar`, `Liberar`, `Revisar`) conectadas a `UiDialog`, y columna derecha apilando la distribución por carrera y los vencimientos normativos.
 - Identidad visible: TecNM, Tecnológico Nacional de México, Campus Monclova.
 - Mantener labels visibles, `autocomplete="username"` y `autocomplete="current-password"`; permitir pegado y administradores de contraseñas.
 - Comunicar validación, carga y errores mediante texto claro y una región `aria-live`.

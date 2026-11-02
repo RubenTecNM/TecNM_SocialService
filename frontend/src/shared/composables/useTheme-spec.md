@@ -9,7 +9,7 @@ Todas las llamadas a `useTheme()` reciben mismo estado mientras aplicación est�
 
 - Estado inicial usa `window.matchMedia('(prefers-color-scheme: dark)')`.
 - `dark=true` asigna `data-theme="dark"` a `document.documentElement`.
-- `dark=false` asigna `data-theme="light"`.
+- `dark=false` asigna `data-theme="light"` con soporte de transición circular (`startViewTransition`) cuando el navegador lo permite.
 - Watch se ejecuta inmediatamente; tema queda aplicado al cargar módulo.
 - Tokens de `global.css` responden a atributo `data-theme`.
 - Estado no se guarda en cookies ni Web Storage. Recargar aplicación vuelve a preferencia del sistema.

@@ -17,18 +17,42 @@ withDefaults(defineProps<{ showHeader?: boolean; showSidebar?: boolean }>(), {
 </template>
 
 <style scoped>
-.app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
 .layout {
-  --sidebar-width: 216px;
+  --sidebar-width: 242px;
   width: 100%;
   max-width: none;
   margin: 0;
   flex: 1;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 }
-.ui-main { width: 100%; }
-@media (max-width: 1100px) {
-  .layout { --sidebar-width: 180px; }
+
+.ui-main {
+  width: 100%;
+  padding: 18px 26px;
 }
-.layout--content-only { grid-template-columns: minmax(0, 1fr); }
+
+.ui-footer {
+  padding: 10px 26px;
+  font-size: 11.5px;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    --sidebar-width: 206px;
+  }
+  .ui-main {
+    padding: 16px 20px;
+  }
+}
+
+.layout--content-only {
+  grid-template-columns: minmax(0, 1fr);
+}
 </style>
