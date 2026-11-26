@@ -4,8 +4,15 @@ import UiNavigation from './UiNavigation.vue'
 import type { BrandOptions, NavigationItem } from './navigation'
 
 withDefaults(
-  defineProps<BrandOptions & { items: NavigationItem[]; note?: string; mobileOpen?: boolean }>(),
-  { showTitle: true, showLogo: true, mobileOpen: false },
+  defineProps<
+    BrandOptions & {
+      items: NavigationItem[]
+      note?: string
+      mobileOpen?: boolean
+      live?: boolean
+    }
+  >(),
+  { showTitle: true, showLogo: true, mobileOpen: false, live: false },
 )
 
 const emit = defineEmits<{ close: [] }>()
@@ -37,7 +44,17 @@ const emit = defineEmits<{ close: [] }>()
 
       <div class="sidebar-section-bar">
         <span class="sidebar-section-label">MÓDULOS OFICIALES</span>
-        <span class="sidebar-year-pill">2026</span>
+        <div class="sidebar-section-pills">
+          <span
+            v-if="live"
+            class="sidebar-live-pill"
+            title="Sincronización en tiempo real activa (SignalR)"
+          >
+            <span class="sidebar-live-dot" aria-hidden="true" />
+            EN VIVO
+          </span>
+          <span class="sidebar-year-pill">2026</span>
+        </div>
       </div>
 
       <UiNavigation :items="items" label="Navegación lateral" />
@@ -121,6 +138,34 @@ const emit = defineEmits<{ close: [] }>()
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
+}
+
+.sidebar-section-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-success-text, var(--color-success));
+  background: var(--color-success-badge, color-mix(in srgb, var(--color-success) 14%, transparent));
+  border: 1px solid var(--color-success-border, color-mix(in srgb, var(--color-success) 38%, transparent));
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.sidebar-live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-success);
 }
 
 .sidebar-year-pill {

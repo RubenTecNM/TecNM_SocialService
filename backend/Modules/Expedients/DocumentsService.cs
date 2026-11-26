@@ -7,6 +7,7 @@ using TecNM.Api.Core.Http;
 using TecNM.Api.Core.Security;
 using TecNM.Api.Core.Storage;
 using TecNM.Api.Data;
+using TecNM.Api.Modules.Realtime;
 
 namespace TecNM.Api.Modules.Expedients;
 
@@ -14,8 +15,10 @@ public sealed class DocumentsService(
     TecNMDbContext dbContext,
     ICurrentUser currentUser,
     IFileStorage fileStorage,
-    TimeProvider clock)
+    TimeProvider clock,
+    IRealtimeNotifier? realtime = null)
 {
+    private readonly IRealtimeNotifier _realtime = realtime ?? NullRealtimeNotifier.Instance;
     private const long MaxDocumentSizeBytes = 5 * 1024 * 1024; // 5 MB
 
     private static readonly HashSet<string> ValidTramiteTypes =
@@ -219,6 +222,19 @@ public sealed class DocumentsService(
             if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         }
         catch { fileStorage.TryDelete(storagePath); throw; }
+
+        if (transaction is not null)
+        {
+            await _realtime.NotifyDocumentUploadedAsync(
+                studentId,
+                normalizedTramite,
+                tramiteId,
+                entity.Id,
+                normalizedCode,
+                currentUser.Id,
+                cancellationToken);
+        }
+
         return ToResponse(entity);
     }
 
@@ -319,6 +335,17 @@ public sealed class DocumentsService(
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
+        await _realtime.NotifyDocumentReviewedAsync(
+            doc.StudentId,
+            doc.TramiteType,
+            doc.TramiteId,
+            doc.Id,
+            doc.DocumentCode,
+            doc.Status,
+            doc.RejectionReason,
+            currentUser.Id,
+            cancellationToken);
+
         var updated = await dbContext.ExpedientDocuments
             .Include(d => d.Reviewer)
             .AsNoTracking()
@@ -346,6 +373,15 @@ public sealed class DocumentsService(
 
         dbContext.ExpedientDocuments.Remove(doc);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await _realtime.NotifyDocumentDeletedAsync(
+            doc.StudentId,
+            doc.TramiteType,
+            doc.TramiteId,
+            doc.Id,
+            doc.DocumentCode,
+            currentUser.Id,
+            cancellationToken);
     }
 
     public async Task<PagedResponse<ReviewQueueDocumentResponse>> GetReviewQueueAsync(

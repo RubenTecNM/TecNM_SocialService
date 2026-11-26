@@ -2,6 +2,7 @@
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { watch as watchValidation } from 'vue'
 import { useFormValidation } from '../../../shared/composables/useFormValidation'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { validateFields, optionalEmail, dateOrder } from '../../../shared/utils/validationRules'
 import UiFormErrors from '../../../shared/components/UiFormErrors.vue'
 import DocumentViewerModal from '../../expedients/components/DocumentViewerModal.vue'
@@ -304,6 +305,23 @@ async function handleSaveAndPrintReport(): Promise<void> {
 onMounted(() => {
   void loadData()
 })
+
+useRealtimeRefresh(
+  (evt) => evt.tramiteType === 'social_service' || evt.tramiteType === 'general',
+  async () => {
+    if (isSubmitting.value) return
+    if (!service.value) {
+      const [profile, ss] = await Promise.all([
+        getMyStudentProfile().catch(() => null),
+        getMySocialService().catch(() => null),
+      ])
+      if (profile) studentProfile.value = profile
+      if (ss) await loadData()
+      return
+    }
+    await loadData()
+  },
+)
 const applicationValidation = useFormValidation(() => {
  const errors = validateFields(openForm, {programId:{required:true,min:1},companyId:{required:true,min:1},supervisorId:{required:true,min:1},startDate:{required:true},endDate:{required:true},'application.studentAddress':{required:true},'application.studentPhone':{required:true,max:20},'application.dependencyName':{required:true,max:200},'application.dependencyHeadName':{required:true,max:180},'application.dependencyHeadPosition':{required:true,max:150},'application.activitiesOutline':{required:true},'application.periodType':{required:true,choices:['february_july','august_january']}})
  return dateOrder(errors, openForm, 'startDate', 'endDate')

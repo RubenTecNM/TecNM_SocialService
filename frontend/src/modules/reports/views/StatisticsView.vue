@@ -3,6 +3,7 @@ import { problemMessage } from '../../../shared/api/problemDetails'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { defaultProcess } from '../../../shared/composables/useSession'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import LinkageMetrics from '../components/LinkageMetrics.vue'
 import { UiAlert, UiBadge, UiBasePage, UiButton, UiCard } from '../../../shared/components'
 import { getPeriodOptions } from '../../catalogs/api/careersApi'
@@ -78,6 +79,11 @@ onMounted(async () => {
   periodOptions.value = await getPeriodOptions().catch(() => [])
   await loadData()
 })
+
+useRealtimeRefresh(
+  (evt) => evt.tramiteType === tramiteType.value || evt.eventType === 'tramite.updated',
+  () => loadData(),
+)
 </script>
 
 <template>

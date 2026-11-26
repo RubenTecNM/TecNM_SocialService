@@ -17,6 +17,7 @@ using TecNM.Api.Modules.Companies;
 using TecNM.Api.Modules.Expedients;
 using TecNM.Api.Modules.Internships;
 using TecNM.Api.Modules.Quality;
+using TecNM.Api.Modules.Realtime;
 using TecNM.Api.Modules.Reports;
 using TecNM.Api.Modules.SocialService;
 using TecNM.Api.Modules.Students;
@@ -84,6 +85,9 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<DocumentReviewPresenceRegistry>();
+builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
 
 builder.Services.AddDbContext<TecNMDbContext>((serviceProvider, options) =>
 {
@@ -200,6 +204,7 @@ app.UseCors(FrontendCors);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+app.MapHub<SsppHub>("/api/hubs/sspp").RequireAuthorization();
 app.MapControllers();
 
 app.Run();

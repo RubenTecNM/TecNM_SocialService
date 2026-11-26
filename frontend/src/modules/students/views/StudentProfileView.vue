@@ -2,6 +2,7 @@
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { watch as watchValidation } from 'vue'
 import { useFormValidation } from '../../../shared/composables/useFormValidation'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { validateFields, optionalEmail } from '../../../shared/utils/validationRules'
 import UiFormErrors from '../../../shared/components/UiFormErrors.vue'
 import DocumentViewerModal from '../../expedients/components/DocumentViewerModal.vue'
@@ -138,6 +139,22 @@ async function handleViewMyImss(): Promise<void> {
 onMounted(() => {
   void loadProfile()
 })
+
+useRealtimeRefresh(
+  (evt) =>
+    evt.tramiteType === 'general' ||
+    evt.documentCode === 'IMSS' ||
+    evt.eventType === 'tramite.updated',
+  async () => {
+    if (isSavingContact.value || isUploadingImss.value) return
+    const [data, elig] = await Promise.all([
+      getMyStudentProfile().catch(() => null),
+      getMyEligibility().catch(() => null),
+    ])
+    if (data) profile.value = data
+    if (elig) eligibility.value = elig
+  },
+)
 const contactValidation = useFormValidation(() => validateFields(contactForm, {phoneNumber:{max:20},institutionalEmail:optionalEmail,personalEmail:optionalEmail,currentSemester:{required:true,integer:true,min:1,maxNumber:15},shift:{required:true,choices:['morning','afternoon','night']}}))
 </script>
 

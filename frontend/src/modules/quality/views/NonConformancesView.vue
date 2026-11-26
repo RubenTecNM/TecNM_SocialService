@@ -13,6 +13,7 @@ import {
   UiToast,
 } from '../../../shared/components'
 import { hasRole } from '../../../shared/composables/useSession'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { useFormValidation } from '../../../shared/composables/useFormValidation'
 import { validateFields } from '../../../shared/utils/validationRules'
 import { getPeriodOptions } from '../../catalogs/api/careersApi'
@@ -252,6 +253,13 @@ async function loadData(): Promise<void> {
     updateAnimatedKpis()
   }
 }
+
+useRealtimeRefresh(
+  (evt) =>
+    evt.eventType === 'quality.pnc_updated' ||
+    (evt.eventType === 'tramite.updated' && evt.status === 'non_compliant'),
+  () => Promise.all([loadKpiPool(), loadData()]),
+)
 
 async function fetchSuggestions(query: string): Promise<void> {
   const q = query.trim()

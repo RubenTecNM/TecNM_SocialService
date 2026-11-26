@@ -2,6 +2,7 @@
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { watch as watchValidation } from 'vue'
 import { useFormValidation } from '../../../shared/composables/useFormValidation'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { validateFields, optionalEmail, dateOrder } from '../../../shared/utils/validationRules'
 import UiFormErrors from '../../../shared/components/UiFormErrors.vue'
 import DocumentViewerModal from '../../expedients/components/DocumentViewerModal.vue'
@@ -251,6 +252,23 @@ async function handleSaveAndPrintEvaluation(): Promise<void> {
 onMounted(() => {
   void loadData()
 })
+
+useRealtimeRefresh(
+  (evt) => evt.tramiteType === 'internship' || evt.tramiteType === 'general',
+  async () => {
+    if (isSubmitting.value) return
+    if (!internship.value) {
+      const [profile, pp] = await Promise.all([
+        getMyStudentProfile().catch(() => null),
+        getMyInternship().catch(() => null),
+      ])
+      if (profile) studentProfile.value = profile
+      if (pp) await loadData()
+      return
+    }
+    await loadData()
+  },
+)
 const requestValidation = useFormValidation(() => validateFields(requestForm,{currentSemester:{required:true,integer:true,min:1,maxNumber:15},shift:{required:true,choices:['morning','afternoon','night']},phoneNumber:{required:true,max:20},institutionalEmail:{...optionalEmail,required:true}}))
 const acceptanceValidation = useFormValidation(() => dateOrder(validateFields(acceptanceForm,{companyId:{required:true,min:1},supervisorId:{required:true,min:1},scheduleDescription:{max:150}}),acceptanceForm,'startDate','endDate'))
 const evaluationValidation = useFormValidation(() => dateOrder(validateFields(evalForm,{evaluationStartDate:{required:true},evaluationEndDate:{required:true}}),evalForm,'evaluationStartDate','evaluationEndDate'))

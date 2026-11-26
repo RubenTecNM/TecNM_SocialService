@@ -68,6 +68,7 @@ Este componente se incrusta en el detalle de Servicio Social y Prácticas Profes
   - Ordenamiento: Documentos ordenados desde el más reciente hasta el más antiguo (`createdAt` descendente).
   - Paginación estandarizada: `10` registros por página (`pageSize = 10`) con controles `Anterior`, `Página X de Y` y `Siguiente`.
   - En móvil (`<= 900px`), KPIs en cuadrícula `2×2`, barra de filtros y pestañas deslizables sin recorte, tabla con scroll horizontal táctil y visor PDF / checklist adaptados al ancho móvil sin afectar escritorio.
+  - Sincronización en tiempo real vía SignalR (`useRealtime`): actualiza automáticamente la cola al recibir `document.uploaded` / `document.reviewed` / `document.deleted` y muestra indicador en vivo cuando otro revisor tiene abierto un PDF (`ReviewPresenceUpdated`).
   - Columnas: Alumno (matrícula y nombre), Carrera, Trámite, Documento (código y nombre), Fecha de Envío, Acciones.
   - **Acciones Rápidas:**
     - Botón "Inspeccionar PDF": Abre `DocumentViewerModal.vue` en pantalla dividida o modal.

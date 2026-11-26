@@ -8,6 +8,7 @@ import { getStudentDocuments } from '../../expedients/api/expedientsApi'
 import type { ExpedientDocument } from '../../expedients/types/expedients'
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { hasRole } from '../../../shared/composables/useSession'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { getStudentsCsv } from '../utils/exportStudents'
 import {
   UiAlert,
@@ -161,6 +162,11 @@ async function reviewStudentImss() {
 async function afterReview() {
   await loadData()
 }
+
+useRealtimeRefresh(
+  (evt) => evt.documentCode === 'IMSS' || evt.eventType === 'tramite.updated',
+  () => loadData(),
+)
 
 async function confirmReset() {
   if (!resetCandidate.value || resetting.value) return

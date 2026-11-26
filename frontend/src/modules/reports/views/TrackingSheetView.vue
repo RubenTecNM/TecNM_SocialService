@@ -2,6 +2,7 @@
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { defaultProcess, canReadProcess } from '../../../shared/composables/useSession'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import {
   UiAlert,
   UiBadge,
@@ -214,6 +215,11 @@ async function loadData(): Promise<void> {
     if (request === dataRequest) isLoading.value = false
   }
 }
+
+useRealtimeRefresh(
+  (evt) => evt.tramiteType === tramiteType.value || evt.tramiteType === 'general',
+  () => loadData(),
+)
 
 function handleExportCsv(): void {
   if (filteredItems.value.length === 0) return

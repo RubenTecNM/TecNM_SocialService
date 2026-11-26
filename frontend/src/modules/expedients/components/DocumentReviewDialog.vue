@@ -4,6 +4,7 @@ import { UiAlert, UiButton, UiDialog, UiField } from '../../../shared/components
 import { socialDocumentLabel } from '../../../shared/utils/socialServiceDocuments'
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { useFormValidation } from '../../../shared/composables/useFormValidation'
+import { startReviewPresence, stopReviewPresence } from '../../../shared/composables/useRealtime'
 import UiFormErrors from '../../../shared/components/UiFormErrors.vue'
 import { getDocumentBlob, reviewDocument } from '../api/expedientsApi'
 import type { ExpedientDocument } from '../types/expedients'
@@ -23,14 +24,34 @@ const validation = useFormValidation(() => {
 })
 const url = ref(''), loading = ref(false), submitting = ref(false)
 let sequence = 0
+let presenceDocumentId: number | null = null
+function releasePresence() {
+  if (presenceDocumentId !== null) {
+    const prevId = presenceDocumentId
+    presenceDocumentId = null
+    void stopReviewPresence(prevId)
+  }
+}
 function release() { if (url.value) URL.revokeObjectURL(url.value); url.value = '' }
 watch([open, () => props.document?.id], async () => {
   const request = ++sequence
   release()
   validation.reset()
   imssVerified.value = false; reason.value = ''; error.value = ''
-  if (!open.value || !props.document) return
+  if (!open.value || !props.document) {
+    releasePresence()
+    return
+  }
   const document = props.document
+  if (document.status === 'pending') {
+    if (presenceDocumentId !== document.id) {
+      releasePresence()
+      presenceDocumentId = document.id
+    }
+    void startReviewPresence(document.id)
+  } else {
+    releasePresence()
+  }
   reason.value = document.rejectionReason || ''
   loading.value = true
   try {
@@ -43,7 +64,7 @@ watch([open, () => props.document?.id], async () => {
   }
   loading.value = false
 }, { immediate: true })
-onBeforeUnmount(() => { sequence++; release() })
+onBeforeUnmount(() => { sequence++; releasePresence(); release() })
 
 async function submit(status: 'approved' | 'rejected') {
   const document = props.document

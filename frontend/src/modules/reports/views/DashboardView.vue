@@ -2,6 +2,7 @@
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { onMounted, ref } from 'vue'
 import { UiAlert, UiBasePage, UiCard } from '../../../shared/components'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { getDashboardMetrics } from '../api/reportsApi'
 import type { DashboardMetrics } from '../types/reports'
 
@@ -24,6 +25,11 @@ async function loadData() {
 onMounted(() => {
   loadData()
 })
+
+useRealtimeRefresh(
+  () => true,
+  () => loadData(),
+)
 </script>
 
 <template>

@@ -10,6 +10,7 @@ using TecNM.Api.Core.Http;
 using TecNM.Api.Core.Security;
 using TecNM.Api.Data;
 using TecNM.Api.Modules.Catalogs;
+using TecNM.Api.Modules.Realtime;
 
 namespace TecNM.Api.Modules.SocialService;
 
@@ -21,8 +22,11 @@ public sealed class SocialServiceService(
     DocumentsService documents,
     OfficialPdfService pdf,
     IFileStorage storage,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IRealtimeNotifier? realtime = null)
 {
+    private readonly IRealtimeNotifier _realtime = realtime ?? NullRealtimeNotifier.Instance;
+
     private static readonly HashSet<string> TerminalStatuses =
     [
         "released",
@@ -356,6 +360,34 @@ public sealed class SocialServiceService(
             if (newImssPath is not null) storage.TryDelete(newImssPath);
             throw;
         }
+
+        if (submitForReview && imssFile is not null && entity.AdmissionImssDocumentId.HasValue)
+        {
+            await _realtime.NotifyDocumentUploadedAsync(
+                student.Id,
+                "general",
+                null,
+                entity.AdmissionImssDocumentId.Value,
+                "IMSS",
+                currentUser.Id,
+                cancellationToken);
+        }
+
+        await _realtime.NotifyTramiteUpdatedAsync(
+            student.Id,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Nueva solicitud de Servicio Social",
+            "registró solicitud de Servicio Social (Anexo XVIII).",
+            "Solicitud registrada",
+            IsSocialServiceStaff() && !submitForReview
+                ? "Vinculación registró tu trámite de Servicio Social."
+                : null,
+            "info",
+            currentUser.Id,
+            cancellationToken);
+
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -473,6 +505,22 @@ public sealed class SocialServiceService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await operation.CommitAsync(cancellationToken);
+
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            request.IsAccepted ? "Solicitud Anexo XVIII aprobada" : "Solicitud Anexo XVIII observada",
+            request.IsAccepted ? "solicitud de Servicio Social aprobada." : "solicitud devuelta con observaciones.",
+            request.IsAccepted ? "Solicitud aprobada" : "Solicitud con observaciones",
+            request.IsAccepted
+                ? "Tu solicitud de Servicio Social (Anexo XVIII) fue aprobada por Vinculación."
+                : $"Tu solicitud de Servicio Social tiene observaciones: {request.RejectionReason!.Trim()}",
+            request.IsAccepted ? "success" : "warning",
+            currentUser.Id,
+            cancellationToken);
+
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -510,6 +558,20 @@ public sealed class SocialServiceService(
             await operation.CommitAsync(cancellationToken);
         }
         catch { storage.TryDelete(issuedPath); throw; }
+
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Carta de Presentación emitida",
+            $"folio {entity.PresentationLetterFolio} emitido.",
+            "Carta de Presentación lista",
+            $"Vinculación emitió tu Carta de Presentación con folio {entity.PresentationLetterFolio}.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
+
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -566,6 +628,18 @@ public sealed class SocialServiceService(
         AddStatusLog(entity.Id, previous, "accepted", "Carta de Aceptación validada");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Carta de Aceptación validada",
+            "trámite avanzó a estado aceptado.",
+            "Carta de Aceptación validada",
+            "Tu Carta de Aceptación de Servicio Social quedó validada.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -669,6 +743,18 @@ public sealed class SocialServiceService(
         AddStatusLog(entity.Id, previous, "active", "Inicio formal de Servicio Social (Carta Compromiso validada)");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Servicio Social en curso",
+            "inicio formal de Servicio Social registrado.",
+            "Servicio Social activo",
+            "Tu Servicio Social quedó formalmente en curso.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -988,6 +1074,18 @@ public sealed class SocialServiceService(
         AddStatusLog(entity.Id, previous, "completed_pending_review", "Expediente documental concluido (Carta de Terminación validada)");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Expediente concluido (SS)",
+            "expediente listo para dictamen de liberación.",
+            "Expediente en cierre",
+            "Tu expediente de Servicio Social pasó a validación final de liberación.",
+            "info",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -1049,6 +1147,18 @@ public sealed class SocialServiceService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Servicio Social liberado",
+            $"Constancia emitida con folio {folio}.",
+            "Servicio Social liberado",
+            $"Se emitió tu Constancia de Terminación de Servicio Social con folio {folio}.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -1082,6 +1192,18 @@ public sealed class SocialServiceService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Acta enviada a Servicios Escolares",
+            $"folio de acta {folio} registrado.",
+            null,
+            null,
+            "info",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -1118,6 +1240,18 @@ public sealed class SocialServiceService(
         AddStatusLog(entity.Id, previous, "cancelled", entity.CancellationReason);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            "Trámite cancelado (SS)",
+            $"motivo: {entity.CancellationReason}",
+            "Trámite cancelado",
+            $"Tu trámite de Servicio Social fue cancelado: {entity.CancellationReason}",
+            "warning",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -1176,6 +1310,26 @@ public sealed class SocialServiceService(
         AddStatusLog(entity.Id, previous, "non_compliant", $"PNC {incidentCode}: {request.Description.Trim()}");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            entity.Status,
+            $"Producto No Conforme ({incidentCode})",
+            entity.CancellationReason,
+            "Trámite en revisión SGC",
+            $"Se registró una incidencia SGC ({incidentCode}) en tu trámite de Servicio Social.",
+            "warning",
+            currentUser.Id,
+            cancellationToken);
+        await _realtime.NotifyNonConformanceUpdatedAsync(
+            entity.StudentId,
+            "social_service",
+            entity.Id,
+            incidentCode,
+            pnc.Status,
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 

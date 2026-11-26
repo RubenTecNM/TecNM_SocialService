@@ -3,7 +3,21 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import { LogoutButton } from '../../modules/auth'
 import { sessionUser } from '../../shared/composables/useSession'
-import { UiBadge, UiBrand, UiHeader, UiShell, UiSidebar, UiToggle } from '../../shared/components'
+import {
+  onRealtimeEvent,
+  realtimeConnected,
+  startRealtime,
+  stopRealtime,
+} from '../../shared/composables/useRealtime'
+import {
+  UiBadge,
+  UiBrand,
+  UiHeader,
+  UiShell,
+  UiSidebar,
+  UiToast,
+  UiToggle,
+} from '../../shared/components'
 import { useTheme } from '../../shared/composables/useTheme'
 import {
   getRoleDisplayLabel,
@@ -16,6 +30,25 @@ const route = useRoute()
 const { dark } = useTheme()
 const currentUser = sessionUser
 const mobileMenuOpen = ref(false)
+const realtimeToast = ref<InstanceType<typeof UiToast> | null>(null)
+
+watch(
+  currentUser,
+  (user) => {
+    if (user) {
+      void startRealtime()
+    } else {
+      void stopRealtime()
+    }
+  },
+  { immediate: true },
+)
+
+onRealtimeEvent((event) => {
+  if (event.silent) return
+  if (event.actorUserId != null && event.actorUserId === currentUser.value?.id) return
+  realtimeToast.value?.show(`${event.title} · ${event.message}`)
+})
 
 watch(
   () => route.fullPath,
@@ -42,6 +75,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
+  void stopRealtime()
   if (typeof document !== 'undefined') {
     document.body.style.overflow = ''
   }
@@ -131,6 +165,7 @@ const roleDisplay = computed(() => {
         v-bind="mainLayoutConfig.sidebar"
         :items="dynamicSidebarItems"
         :mobile-open="mobileMenuOpen"
+        :live="realtimeConnected"
         @close="mobileMenuOpen = false"
       >
         <!-- Tarjeta de Usuario Activo -->
@@ -183,6 +218,7 @@ const roleDisplay = computed(() => {
       </UiSidebar>
     </template>
     <RouterView />
+    <UiToast ref="realtimeToast" />
     <template #footer>
       <span><strong>Tecnológico Nacional de México</strong> · Campus Monclova · Clave 05DIT0001V</span>
       <span>Sistema Institucional SSPP · SGC ISO 9001:2015</span>

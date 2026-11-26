@@ -2,6 +2,7 @@
 import { socialDocumentLabel } from '../../../shared/utils/socialServiceDocuments'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { canReadProcess, hasRole } from '../../../shared/composables/useSession'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import { useRouter } from 'vue-router'
 import { getRoleDisplayLabel } from '../../../app/layouts/mainLayout.config'
 import { UiAlert, UiBadge, UiBasePage, UiButton, UiCard } from '../../../shared/components'
@@ -251,6 +252,11 @@ async function loadData(): Promise<void> {
 onMounted(() => {
   void loadData()
 })
+
+useRealtimeRefresh(
+  () => true,
+  () => loadData(),
+)
 </script>
 
 <template>

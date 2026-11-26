@@ -6,7 +6,8 @@ import {
   socialServiceDocuments,
 } from '../../../shared/utils/socialServiceDocuments'
 import DocumentReviewDialog from '../components/DocumentReviewDialog.vue'
-import { canReadProcess } from '../../../shared/composables/useSession'
+import { canReadProcess, sessionUser } from '../../../shared/composables/useSession'
+import { activeReviewers, useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import {
   UiAlert,
   UiBadge,
@@ -321,6 +322,11 @@ const documentCodeChips = computed(() =>
 onMounted(() => {
   void loadQueue()
 })
+
+useRealtimeRefresh(
+  (evt) => evt.eventType.startsWith('document.') || evt.eventType === 'tramite.updated',
+  () => loadQueue(),
+)
 </script>
 
 <template>
@@ -584,6 +590,18 @@ onMounted(() => {
                             : getDocMeta(row.documentCode).title
                         }}
                       </strong>
+                      <span
+                        v-if="activeReviewers[row.id]"
+                        class="reviewer-live-badge"
+                        :title="`Abierto en dictamen por ${activeReviewers[row.id]?.reviewerName}`"
+                      >
+                        <span class="reviewer-live-dot" aria-hidden="true" />
+                        {{
+                          activeReviewers[row.id]?.reviewerUserId === sessionUser?.id
+                            ? 'En revisión por ti'
+                            : `Revisando: ${activeReviewers[row.id]?.reviewerName}`
+                        }}
+                      </span>
                     </div>
                     <span
                       :class="
@@ -1367,6 +1385,28 @@ select.modern-select:focus {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+.reviewer-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  padding: 0.08rem 0.44rem;
+  border-radius: 999px;
+  background: var(--color-warning-badge);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+  white-space: nowrap;
+}
+
+.reviewer-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
 }
 
 .mod-sub--navy,

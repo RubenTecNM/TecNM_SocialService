@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch as watchValidation } from 'vue'
 import { useFormValidation } from '../../../shared/composables/useFormValidation'
+import { useRealtimeRefresh } from '../../../shared/composables/useRealtime'
 import UiFormErrors from '../../../shared/components/UiFormErrors.vue'
 import { problemMessage } from '../../../shared/api/problemDetails'
 import { socialDocumentLabel, socialDocumentOrder, socialDocumentPeriod } from '../../../shared/utils/socialServiceDocuments'
@@ -549,6 +550,11 @@ onBeforeUnmount(() => {
 onMounted(() => {
   void loadData()
 })
+
+useRealtimeRefresh(
+  (evt) => evt.tramiteType === 'social_service' || evt.tramiteType === 'general',
+  () => (isDetailOpen.value && selectedDetail.value ? refreshCurrentDetail() : loadData()),
+)
 
 const actionValidation = useFormValidation()
 watchValidation(() => [isDetailOpen.value, selectedDetail.value?.id], () => actionValidation.reset())

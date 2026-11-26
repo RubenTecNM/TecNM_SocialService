@@ -10,7 +10,7 @@ Persistente significa conservar componentes durante navegación SPA; recargar na
 
 ## Archivos
 
-- `MainLayout.vue`: composición persistente, tema, logout y `RouterView`.
+- `MainLayout.vue`: composición persistente, tema, logout, conexión SignalR (`useRealtime` + avisos `UiToast` en vivo) y `RouterView`.
 - `mainLayout.config.ts`: configuración específica de aplicación y enlaces.
 - `shared/components/UiShell.vue`: estructura y espacio de contenido.
 - `shared/components/UiHeader.vue`: header independiente.

@@ -5,13 +5,17 @@ using TecNM.Api.Core.Exceptions;
 using TecNM.Api.Core.Http;
 using TecNM.Api.Core.Security;
 using TecNM.Api.Data;
+using TecNM.Api.Modules.Realtime;
 
 namespace TecNM.Api.Modules.Quality;
 
 public sealed class QualityService(
     TecNMDbContext dbContext,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    IRealtimeNotifier? realtime = null)
 {
+    private readonly IRealtimeNotifier _realtime = realtime ?? NullRealtimeNotifier.Instance;
+
     private static readonly HashSet<string> ValidTramiteTypes =
     [
         "social_service",
@@ -245,6 +249,14 @@ public sealed class QualityService(
 
         dbContext.NonConformances.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyNonConformanceUpdatedAsync(
+            entity.StudentId,
+            entity.TramiteType,
+            entity.TramiteId,
+            entity.IncidentCode,
+            entity.Status,
+            currentUser.Id,
+            cancellationToken);
 
         return await GetNonConformanceByIdAsync(entity.Id, cancellationToken);
     }
@@ -290,6 +302,14 @@ public sealed class QualityService(
         entity.ActionPlan = string.IsNullOrWhiteSpace(request.ActionPlan) ? null : request.ActionPlan.Trim();
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyNonConformanceUpdatedAsync(
+            entity.StudentId,
+            entity.TramiteType,
+            entity.TramiteId,
+            entity.IncidentCode,
+            entity.Status,
+            currentUser.Id,
+            cancellationToken);
         return await GetNonConformanceByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -349,6 +369,14 @@ public sealed class QualityService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyNonConformanceUpdatedAsync(
+            entity.StudentId,
+            entity.TramiteType,
+            entity.TramiteId,
+            entity.IncidentCode,
+            entity.Status,
+            currentUser.Id,
+            cancellationToken);
         return await GetNonConformanceByIdAsync(entity.Id, cancellationToken);
     }
 

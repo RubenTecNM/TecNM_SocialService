@@ -6,6 +6,7 @@ using TecNM.Api.Core.Http;
 using TecNM.Api.Core.Security;
 using TecNM.Api.Data;
 using TecNM.Api.Modules.Catalogs;
+using TecNM.Api.Modules.Realtime;
 using TecNM.Api.Modules.SocialService;
 
 namespace TecNM.Api.Modules.Internships;
@@ -14,8 +15,11 @@ public sealed class InternshipsService(
     TecNMDbContext dbContext,
     ICurrentUser currentUser,
     DocumentSeriesService documentSeriesService,
-    ImssEligibilityService imss)
+    ImssEligibilityService imss,
+    IRealtimeNotifier? realtime = null)
 {
+    private readonly IRealtimeNotifier _realtime = realtime ?? NullRealtimeNotifier.Instance;
+
     private static readonly HashSet<string> TerminalStatuses =
     [
         "released",
@@ -283,6 +287,18 @@ public sealed class InternshipsService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            student.Id,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Nueva solicitud de Prácticas",
+            "solicitó Carta de Presentación de Prácticas Profesionales.",
+            "Solicitud registrada",
+            IsInternshipStaff() ? "Vinculación registró tu trámite de Prácticas Profesionales." : null,
+            "info",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -367,6 +383,18 @@ public sealed class InternshipsService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Prácticas aprobadas",
+            $"Carta de Presentación emitida ({entity.PresentationLetterFolio}).",
+            "Carta de Presentación emitida",
+            $"Tu solicitud de Prácticas Profesionales fue aprobada con folio {entity.PresentationLetterFolio}.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -395,6 +423,18 @@ public sealed class InternshipsService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Carta de Presentación actualizada",
+            $"folio {entity.PresentationLetterFolio} registrado.",
+            "Carta de Presentación lista",
+            $"Tu Carta de Presentación de Prácticas ({entity.PresentationLetterFolio}) fue actualizada.",
+            "info",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -451,6 +491,18 @@ public sealed class InternshipsService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            entity.Status == "active" ? "Prácticas en curso" : "Aceptación de Prácticas registrada",
+            entity.Status == "active" ? "Oficio de Aceptación registrado e inicio activo." : "datos de aceptación capturados.",
+            entity.Status == "active" ? "Prácticas Profesionales activas" : "Aceptación registrada",
+            entity.Status == "active" ? "Tu Oficio de Aceptación fue registrado y tus Prácticas están en curso." : null,
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -490,6 +542,18 @@ public sealed class InternshipsService(
         AddStatusLog(entity.Id, previous, "active", "Inicio formal de Prácticas Profesionales (Oficio de Aceptación validado)");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Prácticas en curso",
+            "inicio formal de Prácticas Profesionales validado.",
+            "Prácticas Profesionales activas",
+            "Tus Prácticas Profesionales quedaron formalmente en curso.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -634,6 +698,18 @@ public sealed class InternshipsService(
         AddStatusLog(entity.Id, previous, "completed_pending_review", "Expediente documental de Prácticas Profesionales concluido");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Expediente concluido (PP)",
+            "expediente listo para acreditación final.",
+            "Expediente en cierre",
+            "Tu expediente de Prácticas Profesionales pasó a revisión final de acreditación.",
+            "info",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -682,6 +758,18 @@ public sealed class InternshipsService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Prácticas acreditadas",
+            $"Constancia emitida con folio {folio}.",
+            "Prácticas Profesionales liberadas",
+            $"Se emitió tu Constancia de Acreditación de Prácticas con folio {folio}.",
+            "success",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -715,6 +803,18 @@ public sealed class InternshipsService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await operation.CommitAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Acta enviada a Servicios Escolares",
+            $"folio de acta {folio} registrado.",
+            null,
+            null,
+            "info",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -751,6 +851,18 @@ public sealed class InternshipsService(
         AddStatusLog(entity.Id, previous, "cancelled", entity.CancellationReason);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            "Trámite cancelado (PP)",
+            $"motivo: {entity.CancellationReason}",
+            "Trámite cancelado",
+            $"Tu trámite de Prácticas Profesionales fue cancelado: {entity.CancellationReason}",
+            "warning",
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 
@@ -809,6 +921,26 @@ public sealed class InternshipsService(
         AddStatusLog(entity.Id, previous, "non_compliant", $"PNC {incidentCode}: {request.Description.Trim()}");
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _realtime.NotifyTramiteUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            entity.Status,
+            $"Producto No Conforme ({incidentCode})",
+            entity.CancellationReason,
+            "Trámite en revisión SGC",
+            $"Se registró una incidencia SGC ({incidentCode}) en tu trámite de Prácticas Profesionales.",
+            "warning",
+            currentUser.Id,
+            cancellationToken);
+        await _realtime.NotifyNonConformanceUpdatedAsync(
+            entity.StudentId,
+            "internship",
+            entity.Id,
+            incidentCode,
+            pnc.Status,
+            currentUser.Id,
+            cancellationToken);
         return await GetByIdAsync(entity.Id, cancellationToken);
     }
 

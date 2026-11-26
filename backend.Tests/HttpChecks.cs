@@ -48,10 +48,13 @@ internal static class HttpChecks
             builder.UseContentRoot(Path.GetFullPath("backend")).UseEnvironment("Testing").ConfigureLogging(logging => logging.ClearProviders()).ConfigureTestServices(services => { services.RemoveAll<IFileStorage>(); services.AddSingleton<IFileStorage>(failureStorage); services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(testClock); services.AddDbContext<TecNMDbContext>(options => options.UseNpgsql(connection).AddInterceptors(databaseFailure)); }));
         using var anonymous = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         Expect(await anonymous.GetAsync("/api/documents/review-queue"), HttpStatusCode.Unauthorized);
+        Expect(await anonymous.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.Unauthorized);
         using var admin = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var student = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await Login(admin, "admin");
         await Login(student, "l23050363@monclova.tecnm.mx");
+        Expect(await admin.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.OK);
+        Expect(await student.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.OK);
         Expect(await student.GetAsync("/api/documents/review-queue"), HttpStatusCode.Forbidden);
         Expect(await anonymous.GetAsync("/api/social-services/1/pdf/individual_act"), HttpStatusCode.Unauthorized);
         Expect(await student.GetAsync("/api/social-services/1/pdf/individual_act"), HttpStatusCode.Forbidden);

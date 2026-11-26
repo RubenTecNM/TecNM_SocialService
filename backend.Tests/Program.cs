@@ -8,6 +8,7 @@ using TecNM.Api.Core.Entities;
 using TecNM.Api.Core.Exceptions;
 using TecNM.Api.Core.Security;
 using TecNM.Api.Modules.Expedients;
+using TecNM.Api.Modules.Realtime;
 
 static void Check(bool condition, string description)
 {
@@ -90,6 +91,25 @@ foreach (var service in new[] { historicalService, newService })
     }
 }
 Check(new SocialServiceCommitment().SignedAt is null && !new SocialServiceCommitment().IsSignedByStudent, "Draft is not a signature");
+{
+    var presence = new DocumentReviewPresenceRegistry();
+    var baseNow = new DateTimeOffset(2026, 11, 25, 18, 0, 0, TimeSpan.Zero);
+    presence.AcquireOrRefresh(101, "social_service", 10, "Revisor SS", "conn-a", baseNow);
+    Check(presence.GetLocksForTramiteType("social_service", baseNow).Count == 1, "Reviewer acquires SS lock");
+    Check(presence.GetLocksForTramiteType("internship", baseNow).Count == 0, "SS lock isolated from PP group");
+    presence.AcquireOrRefresh(101, "social_service", 20, "Segundo Revisor", "conn-b", baseNow.AddMinutes(2));
+    Check(presence.GetLocksForTramiteType("social_service", baseNow.AddMinutes(2))[0].ReviewerUserId == 10, "Active reviewer lock is preserved against concurrent tab");
+    var movedTypes = presence.AcquireOrRefresh(202, "internship", 10, "Revisor SS", "conn-a", baseNow.AddMinutes(3));
+    Check(movedTypes.Contains("social_service") && movedTypes.Contains("internship"), "Switching modal releases previous document on same connection");
+    Check(presence.GetLocksForTramiteType("social_service", baseNow.AddMinutes(3)).Count == 0, "Previous document lock released on tab switch");
+    Check(presence.GetLocksForTramiteType("internship", baseNow.AddMinutes(3)).Single().DocumentId == 202, "New document lock active after switch");
+    Check(presence.ReleaseDocument(202) == "internship", "Document review completion releases presence lock");
+    presence.AcquireOrRefresh(303, "general", 30, "Admin", "conn-c", baseNow);
+    Check(presence.GetLocksForTramiteType("general", baseNow.AddMinutes(31)).Count == 0, "Stale lock expires after 30 minutes");
+    presence.AcquireOrRefresh(304, "general", 30, "Admin", "conn-c", baseNow.AddMinutes(32));
+    Check(presence.ReleaseAllByConnection("conn-c").Contains("general"), "SignalR disconnect cleans up connection locks");
+    Check(RealtimeGroups.Staff("social_service") == "staff:social_service" && RealtimeGroups.Staff("internship") == "staff:internship" && RealtimeGroups.Staff("general") == "staff:general", "SignalR group names isolate SS and PP domains");
+}
 var fonts = Environment.GetEnvironmentVariable("DOCUMENT_TEST_FONTS") ?? "C:/Windows/Fonts";
 if (Directory.Exists(fonts))
 {
