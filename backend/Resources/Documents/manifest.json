@@ -2,281 +2,460 @@
   "ss-application": {
     "file": "templates/ss-application.pdf",
     "sha256": "4093f7a0867988762ff915d5816313961b8e742423247c2509d95900c0669473",
-    "version": "1",
+    "version": "2",
     "font": "Arial",
     "fields": [
       {
         "key": "studentFullName",
-        "x": 164.520004,
-        "y": 168.84002999999996,
-        "width": 282.359996,
-        "height": 19.91998000000001,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 164.5,
+        "y": 174.1,
+        "width": 280.5,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 164.5,
+            "width": 280.5,
+            "baseline": 184.1
+          }
+        ]
       },
       {
         "key": "studentPhone",
-        "x": 119.879997,
-        "y": 190.55999999999995,
-        "width": 85.799993,
-        "height": 19.91998000000001,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 121,
+        "y": 195.94,
+        "width": 83,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 121,
+            "width": 83,
+            "baseline": 205.94
+          }
+        ]
       },
       {
         "key": "studentAddress",
-        "x": 268.67999,
-        "y": 190.55999999999995,
-        "width": 277.32001,
-        "height": 19.91998000000001,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 270,
+        "y": 195.94,
+        "width": 274,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 270,
+            "width": 274,
+            "baseline": 205.94
+          }
+        ]
       },
       {
         "key": "studentControlNumber",
-        "x": 127.788002,
-        "y": 249.12,
-        "width": 107.159998,
-        "height": 19.91998000000001,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 129,
+        "y": 254.53,
+        "width": 103.5,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 129,
+            "width": 103.5,
+            "baseline": 264.53
+          }
+        ]
       },
       {
         "key": "studentSemester",
-        "x": 424.79999,
-        "y": 272.88,
-        "width": 121.20001000000002,
-        "height": 19.919989999999984,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 426,
+        "y": 278.29,
+        "width": 118,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 426,
+            "width": 118,
+            "baseline": 288.29
+          }
+        ]
       },
       {
         "key": "dependencyHeadName",
-        "x": 190.67999,
-        "y": 342.72,
-        "width": 355.32001,
-        "height": 19.92000999999999,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 192,
+        "y": 348.13,
+        "width": 352,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 192,
+            "width": 352,
+            "baseline": 358.13
+          }
+        ]
       },
       {
         "key": "dependencyHeadPosition",
-        "x": 190.67999,
-        "y": 364.06799,
-        "width": 355.32001,
-        "height": 19.920019999999965,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 192,
+        "y": 368.65,
+        "width": 352,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 192,
+            "width": 352,
+            "baseline": 378.65
+          }
+        ]
       },
       {
         "key": "activitiesOutline",
-        "x": 65,
-        "y": 450,
-        "width": 475,
-        "height": 36,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 60,
+        "y": 436.11,
+        "width": 484,
+        "height": 41.09,
+        "rows": [
+          {
+            "x": 192,
+            "width": 352,
+            "baseline": 446.11
+          },
+          {
+            "x": 60,
+            "width": 484,
+            "baseline": 460.5
+          },
+          {
+            "x": 60,
+            "width": 484,
+            "baseline": 474.9
+          }
+        ]
       },
       {
         "key": "dependencyName",
-        "x": 190.758,
-        "y": 323.172,
-        "width": 355.44799,
-        "height": 20.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 192,
+        "y": 327.61,
+        "width": 352,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 192,
+            "width": 352,
+            "baseline": 337.61
+          }
+        ]
       },
       {
         "key": "careerName",
-        "x": 281.793,
-        "y": 249.10303,
-        "width": 263.58498999999995,
-        "height": 20.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 281.8,
+        "y": 254.53,
+        "width": 262.2,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 281.8,
+            "width": 262.2,
+            "baseline": 264.53
+          }
+        ]
       },
       {
         "key": "generatedAt",
-        "x": 430.758,
-        "y": 129.51702999999998,
-        "width": 115.24101999999999,
-        "height": 22.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 432,
+        "y": 140.38,
+        "width": 112,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 432,
+            "width": 112,
+            "baseline": 150.38
+          }
+        ]
       },
       {
         "key": "studentGender",
-        "x": 479.58499,
-        "y": 169.65503,
-        "width": 65.79299999999995,
-        "height": 20.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 481,
+        "y": 174.1,
+        "width": 63,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 481,
+            "width": 63,
+            "baseline": 184.1
+          }
+        ]
       },
       {
         "key": "periodCode",
-        "x": 117.102997,
-        "y": 274.34398999999996,
-        "width": 250.757993,
-        "height": 20.000000000000057,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 117,
+        "y": 278.29,
+        "width": 250,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 117,
+            "width": 250,
+            "baseline": 288.29
+          }
+        ]
       },
       {
         "key": "programName",
-        "x": 189.931,
-        "y": 383.99899,
-        "width": 356.68899999999996,
-        "height": 19.586000000000013,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 192,
+        "y": 389.17,
+        "width": 352,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 192,
+            "width": 352,
+            "baseline": 399.17
+          }
+        ]
       },
       {
         "key": "modality",
-        "x": 116.276001,
-        "y": 405.92999,
-        "width": 59.171999000000014,
-        "height": 20.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 118.5,
+        "y": 408.37,
+        "width": 54.0,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 118.5,
+            "width": 54.0,
+            "baseline": 418.37
+          }
+        ]
       },
       {
         "key": "startDate",
-        "x": 246.62,
-        "y": 402.20599,
-        "width": 101.58598999999998,
-        "height": 22.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 249,
+        "y": 408.37,
+        "width": 97,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 249,
+            "width": 97,
+            "baseline": 418.37
+          }
+        ]
       },
       {
         "key": "endDate",
-        "x": 450.92999,
-        "y": 402.79199,
-        "width": 101.58600000000001,
-        "height": 22.0,
-        "fontSize": 10,
-        "minFontSize": 7
+        "x": 455,
+        "y": 408.37,
+        "width": 89,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 455,
+            "width": 89,
+            "baseline": 418.37
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 60,
-        "y": 518,
-        "width": 12,
-        "height": 13,
+        "x": 59.2,
+        "y": 519.7,
+        "width": 11.0,
+        "height": 9.3,
+        "matchValue": "adult_education",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "adult_education"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 59.2,
+            "width": 11.0,
+            "baseline": 526.7
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 229,
-        "y": 518,
-        "width": 12,
-        "height": 13,
+        "x": 227.7,
+        "y": 519.7,
+        "width": 12.7,
+        "height": 9.3,
+        "matchValue": "community_development",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "community_development"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 227.7,
+            "width": 12.7,
+            "baseline": 526.7
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 229,
-        "y": 574,
-        "width": 12,
-        "height": 13,
+        "x": 227.7,
+        "y": 576.3,
+        "width": 12.7,
+        "height": 9.3,
+        "matchValue": "health_support",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "health_support"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 227.7,
+            "width": 12.7,
+            "baseline": 583.3
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 399,
-        "y": 546,
-        "width": 12,
-        "height": 13,
+        "x": 397.8,
+        "y": 548.0,
+        "width": 12.6,
+        "height": 9.3,
+        "matchValue": "environmental_care",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "environmental_care"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 397.8,
+            "width": 12.6,
+            "baseline": 555.0
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 60,
-        "y": 574,
-        "width": 12,
-        "height": 13,
+        "x": 59.2,
+        "y": 576.3,
+        "width": 11.0,
+        "height": 9.3,
+        "matchValue": "environmental_care",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "environmental_care"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 59.2,
+            "width": 11.0,
+            "baseline": 583.3
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 399,
-        "y": 518,
-        "width": 12,
-        "height": 13,
+        "x": 397.8,
+        "y": 519.7,
+        "width": 12.6,
+        "height": 9.3,
+        "matchValue": "civic_sports_cultural",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "civic_sports_cultural"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 397.8,
+            "width": 12.6,
+            "baseline": 526.7
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 60,
-        "y": 546,
-        "width": 12,
-        "height": 13,
+        "x": 59.2,
+        "y": 548.0,
+        "width": 11.0,
+        "height": 9.3,
+        "matchValue": "civic_sports_cultural",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "civic_sports_cultural"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 59.2,
+            "width": 11.0,
+            "baseline": 555.0
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 229,
-        "y": 546,
-        "width": 12,
-        "height": 13,
+        "x": 227.7,
+        "y": 548.0,
+        "width": 12.7,
+        "height": 9.3,
+        "matchValue": "civic_sports_cultural",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "civic_sports_cultural"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 227.7,
+            "width": 12.7,
+            "baseline": 555.0
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 399,
-        "y": 574,
-        "width": 12,
-        "height": 13,
+        "x": 397.8,
+        "y": 576.3,
+        "width": 12.6,
+        "height": 9.3,
+        "matchValue": "contingency_programs",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "contingency_programs"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 397.8,
+            "width": 12.6,
+            "baseline": 583.3
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 399,
-        "y": 574,
-        "width": 12,
-        "height": 13,
+        "x": 397.8,
+        "y": 576.3,
+        "width": 12.6,
+        "height": 9.3,
+        "matchValue": "special_government_programs",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "special_government_programs"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 397.8,
+            "width": 12.6,
+            "baseline": 583.3
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 399,
-        "y": 574,
-        "width": 12,
-        "height": 13,
+        "x": 397.8,
+        "y": 576.3,
+        "width": 12.6,
+        "height": 9.3,
+        "matchValue": "professionalizing_service",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "professionalizing_service"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 397.8,
+            "width": 12.6,
+            "baseline": 583.3
+          }
+        ]
       },
       {
         "key": "programCategory",
-        "x": 399,
-        "y": 574,
-        "width": 12,
-        "height": 13,
+        "x": 397.8,
+        "y": 576.3,
+        "width": 12.6,
+        "height": 9.3,
+        "matchValue": "institutional_programs",
         "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "institutional_programs"
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 397.8,
+            "width": 12.6,
+            "baseline": 583.3
+          }
+        ]
       }
     ],
     "pages": 1,
@@ -285,7 +464,9 @@
         "width": 612.0,
         "height": 792.0
       }
-    ]
+    ],
+    "fontSize": 10,
+    "minFontSize": 7
   },
   "ss-commitment": {
     "file": "templates/ss-commitment.pdf",
@@ -485,237 +666,389 @@
   "ss-report": {
     "file": "templates/ss-report.pdf",
     "sha256": "a9c8f9b78f34f06da3e0061d1a1ef7ecd646cad809d75f54f4c33aa36325ac01",
-    "version": "3",
+    "version": "4",
     "font": "Century Gothic",
     "fields": [
       {
         "key": "reportNumber",
-        "x": 465,
-        "y": 158,
-        "width": 68,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 469,
+        "y": 160.3,
+        "width": 77,
+        "height": 12.3,
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 469,
+            "width": 77,
+            "baseline": 170.3
+          }
+        ]
       },
       {
         "key": "studentFirstSurname",
-        "x": 110,
-        "y": 199,
-        "width": 145,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 115,
+        "y": 200.38,
+        "width": 138,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 115,
+            "width": 138,
+            "baseline": 210.38
+          }
+        ]
       },
       {
         "key": "studentSecondSurname",
         "x": 265,
-        "y": 199,
+        "y": 200.38,
         "width": 130,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "optional": true
+        "height": 12.3,
+        "optional": true,
+        "rows": [
+          {
+            "x": 265,
+            "width": 130,
+            "baseline": 210.38
+          }
+        ]
       },
       {
         "key": "studentFirstName",
         "x": 402,
-        "y": 199,
-        "width": 140,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "y": 200.38,
+        "width": 142,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 402,
+            "width": 142,
+            "baseline": 210.38
+          }
+        ]
       },
       {
         "key": "studentControlNumber",
-        "x": 465,
-        "y": 235,
-        "width": 79,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 469,
+        "y": 236.74,
+        "width": 75,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 469,
+            "width": 75,
+            "baseline": 246.74
+          }
+        ]
       },
       {
         "key": "companyName",
-        "x": 147,
-        "y": 307,
-        "width": 390,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 144,
+        "y": 308.41,
+        "width": 400,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 144,
+            "width": 400,
+            "baseline": 318.41
+          }
+        ]
       },
       {
         "key": "programName",
-        "x": 125,
-        "y": 328,
-        "width": 410,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 122,
+        "y": 329.17,
+        "width": 422,
+        "height": 12.3,
+        "rows": [
+          {
+            "x": 122,
+            "width": 422,
+            "baseline": 339.17
+          }
+        ]
       },
       {
         "key": "activitiesSummary",
-        "x": 65,
-        "y": 369,
-        "width": 470,
-        "height": 58,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 60,
+        "y": 349.93,
+        "width": 489,
+        "height": 65.67,
+        "rows": [
+          {
+            "x": 200,
+            "width": 349,
+            "baseline": 359.93
+          },
+          {
+            "x": 60,
+            "width": 486,
+            "baseline": 377.7
+          },
+          {
+            "x": 60,
+            "width": 486,
+            "baseline": 395.6
+          },
+          {
+            "x": 60,
+            "width": 486,
+            "baseline": 413.3
+          }
+        ]
       },
       {
         "key": "reportedHours",
-        "x": 257,
-        "y": 432,
-        "width": 68,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 230.5,
+        "y": 435.39,
+        "width": 74.5,
+        "height": 12.3,
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 230.5,
+            "width": 74.5,
+            "baseline": 445.39
+          }
+        ]
       },
       {
         "key": "reportAccumulatedHours",
-        "x": 480,
-        "y": 432,
-        "width": 59,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 462,
+        "y": 435.39,
+        "width": 79.5,
+        "height": 12.3,
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 462,
+            "width": 79.5,
+            "baseline": 445.39
+          }
+        ]
       },
       {
         "key": "careerCode",
-        "x": 110,
-        "y": 236.5,
-        "width": 12,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "MEC"
+        "x": 108.8,
+        "y": 235.9,
+        "width": 12.6,
+        "height": 12.3,
+        "matchValue": "MEC",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 108.8,
+            "width": 12.6,
+            "baseline": 245.9
+          }
+        ]
       },
       {
         "key": "careerCode",
-        "x": 152.5,
-        "y": 236.5,
-        "width": 12,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "IND"
+        "x": 151.4,
+        "y": 235.9,
+        "width": 12.6,
+        "height": 12.3,
+        "matchValue": "IND",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 151.4,
+            "width": 12.6,
+            "baseline": 245.9
+          }
+        ]
       },
       {
         "key": "careerCode",
-        "x": 195,
-        "y": 236.5,
-        "width": 12,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "ELE"
+        "x": 193.9,
+        "y": 235.9,
+        "width": 12.6,
+        "height": 12.3,
+        "matchValue": "ELE",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 193.9,
+            "width": 12.6,
+            "baseline": 245.9
+          }
+        ]
       },
       {
         "key": "careerCode",
-        "x": 237.5,
-        "y": 236.5,
-        "width": 12,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "INF"
+        "x": 236.4,
+        "y": 235.9,
+        "width": 12.7,
+        "height": 12.3,
+        "matchValue": "INF",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 236.4,
+            "width": 12.7,
+            "baseline": 245.9
+          }
+        ]
       },
       {
         "key": "careerCode",
-        "x": 280,
-        "y": 236.5,
-        "width": 12,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "GE"
+        "x": 279,
+        "y": 235.9,
+        "width": 12.6,
+        "height": 12.3,
+        "matchValue": "GE",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 279,
+            "width": 12.6,
+            "baseline": 245.9
+          }
+        ]
       },
       {
         "key": "careerCode",
-        "x": 315.5,
-        "y": 236.5,
-        "width": 12,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "matchValue": "ER"
+        "x": 314.4,
+        "y": 235.9,
+        "width": 12.6,
+        "height": 12.3,
+        "matchValue": "ER",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 314.4,
+            "width": 12.6,
+            "baseline": 245.9
+          }
+        ]
       },
       {
         "key": "periodStartDate",
-        "x": 108,
-        "y": 288,
-        "width": 26,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "format": "dd"
+        "x": 107,
+        "y": 288.73,
+        "width": 26.5,
+        "height": 12.3,
+        "format": "dd",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 107,
+            "width": 26.5,
+            "baseline": 298.73
+          }
+        ]
       },
       {
         "key": "periodStartDate",
         "x": 171,
-        "y": 288,
-        "width": 46,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "format": "MMMM"
+        "y": 288.73,
+        "width": 47.5,
+        "height": 12.3,
+        "format": "MMMM",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 171,
+            "width": 47.5,
+            "baseline": 298.73
+          }
+        ]
       },
       {
         "key": "periodStartDate",
-        "x": 257,
-        "y": 288,
-        "width": 45,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "format": "yyyy"
+        "x": 256,
+        "y": 288.73,
+        "width": 47.5,
+        "height": 12.3,
+        "format": "yyyy",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 256,
+            "width": 47.5,
+            "baseline": 298.73
+          }
+        ]
       },
       {
         "key": "periodEndDate",
-        "x": 349,
-        "y": 288,
-        "width": 31,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "format": "dd"
+        "x": 348.5,
+        "y": 288.73,
+        "width": 33.0,
+        "height": 12.3,
+        "format": "dd",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 348.5,
+            "width": 33.0,
+            "baseline": 298.73
+          }
+        ]
       },
       {
         "key": "periodEndDate",
-        "x": 420,
-        "y": 288,
-        "width": 52,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "format": "MMMM"
+        "x": 419,
+        "y": 288.73,
+        "width": 54.5,
+        "height": 12.3,
+        "format": "MMMM",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 419,
+            "width": 54.5,
+            "baseline": 298.73
+          }
+        ]
       },
       {
         "key": "periodEndDate",
-        "x": 512,
-        "y": 288,
-        "width": 43,
-        "height": 13,
-        "fontSize": 9,
-        "minFontSize": 7,
-        "format": "yyyy"
+        "x": 511.5,
+        "y": 288.73,
+        "width": 45.5,
+        "height": 12.3,
+        "format": "yyyy",
+        "alignment": "center",
+        "rows": [
+          {
+            "x": 511.5,
+            "width": 45.5,
+            "baseline": 298.73
+          }
+        ]
       },
       {
         "key": "supervisorFullName",
-        "x": 67,
-        "y": 568,
-        "width": 139,
-        "height": 22,
-        "fontSize": 9,
-        "minFontSize": 7
-      },
-      {
-        "key": "supervisorPosition",
-        "x": 67,
-        "y": 592,
-        "width": 139,
-        "height": 22,
-        "fontSize": 9,
-        "minFontSize": 7
+        "x": 69,
+        "y": 570.9,
+        "width": 135,
+        "height": 44.7,
+        "rows": [
+          {
+            "x": 69,
+            "width": 135,
+            "baseline": 580.9
+          },
+          {
+            "x": 69,
+            "width": 135,
+            "baseline": 591.7
+          },
+          {
+            "x": 69,
+            "width": 135,
+            "baseline": 602.5
+          },
+          {
+            "x": 69,
+            "width": 135,
+            "baseline": 613.3
+          }
+        ],
+        "followingKey": "supervisorPosition"
       }
     ],
     "pages": 1,
@@ -724,7 +1057,9 @@
         "width": 612.0,
         "height": 792.0
       }
-    ]
+    ],
+    "fontSize": 9,
+    "minFontSize": 7
   },
   "ss-supervisor-evaluation": {
     "file": "templates/ss-supervisor-evaluation.pdf",

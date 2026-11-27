@@ -60,7 +60,7 @@ def prepare():
         if key not in entries:
             entries[key] = value
         else:
-            for name in ['institutional', 'stamps']:
+            for name in ['version', 'font', 'fontSize', 'minFontSize', 'institutional', 'stamps']:
                 if name in value: entries[key][name] = value[name]
     for entry in entries.values():
         prepared = PdfReader(DEST / entry['file'])

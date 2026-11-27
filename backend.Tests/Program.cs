@@ -163,6 +163,32 @@ if (Directory.Exists(fonts))
     };
     foreach (var template in new[] { "ss-application", "ss-commitment", "ss-report", "ss-activity", "ss-supervisor-evaluation", "ss-self-evaluation", "ss-termination" })
         File.WriteAllBytes($"tmp/pdf-qa/{template}.pdf", generator.Generate(template, ssData));
+    var longApplication = new Dictionary<string, object?>(ssData)
+    {
+        ["studentFullName"] = new string('W', 42), // Fits the calibrated name row only at 7 pt.
+        ["studentAddress"] = "Avenida de la Constitución 425, colonia Ampliación Tecnológica",
+        ["activitiesOutline"] = "Primera línea con acentos y ñ.\r\nSegunda línea de actividades.\nTercera línea de actividades."
+    };
+    File.WriteAllBytes("tmp/pdf-qa/ss-application-long.pdf", generator.Generate("ss-application", longApplication));
+    var longReport = new Dictionary<string, object?>(ssData)
+    {
+        ["studentSecondSurname"] = null, ["periodEndDate"] = new DateOnly(2026, 9, 30),
+        ["activitiesSummary"] = "Primera línea con acentos y ñ.\r\nSegunda línea.\nTercera línea.\nCuarta línea.",
+        ["supervisorFullName"] = "María José Muñoz Peña\nCoordinación regional",
+        ["supervisorPosition"] = "Responsable de servicio\nApoyo comunitario"
+    };
+    File.WriteAllBytes("tmp/pdf-qa/ss-report-long.pdf", generator.Generate("ss-report", longReport));
+    foreach (var (template, key, value, source) in new[]
+    {
+        ("ss-application", "studentFullName", new string('W', 43), longApplication),
+        ("ss-application", "activitiesOutline", "Uno\nDos\nTres\nCuatro", longApplication),
+        ("ss-report", "supervisorPosition", "Uno\nDos\nTres", longReport)
+    })
+    {
+        var overflowing = new Dictionary<string, object?>(source) { [key] = value };
+        try { generator.Generate(template, overflowing); throw new Exception($"Overflow accepted for {key}"); }
+        catch (BusinessRuleException ex) { Check(ex.Code == "documents.text_overflow" && ex.Errors!.ContainsKey(key), $"Overflow identifies {key}"); }
+    }
     foreach (var key in new[] { "ss-report", "ss-supervisor-evaluation", "ss-self-evaluation", "ss-termination" })
     {
         var missing = new Dictionary<string, object?>(ssData);
@@ -197,6 +223,8 @@ if (Directory.Exists(fonts))
         templateDefinition with { Fields = [templateDefinition.Fields[0] with { Width = 900 }] },
         templateDefinition with { Fields = [templateDefinition.Fields[0] with { MinFontSize = 0 }] },
         templateDefinition with { Fields = [templateDefinition.Fields[0] with { FontSize = 6 }] },
+        templateDefinition with { Fields = [templateDefinition.Fields[0] with { Rows = [new(200, 330, 178), new(200, 330, 175)] }] },
+        templateDefinition with { Fields = [templateDefinition.Fields[0] with { Rows = [new(200, 331, 178)] }] },
         templateDefinition with { Fields = null! }
     })
     {

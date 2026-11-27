@@ -153,6 +153,10 @@ internal static class HttpChecks
             if (admission.Status != "pending" || ss.Status != "requested") throw new Exception("Joint submission must await review.");
             Expect(await admin.PostAsJsonAsync($"/api/social-services/{ss.Id}/application/review", new { isAccepted = true }), HttpStatusCode.UnprocessableEntity);
             Expect(await admin.PostAsJsonAsync($"/api/documents/{admission.Id}/review", new { status = "approved" }), HttpStatusCode.OK);
+            using var applicationPdf = await student.GetAsync($"/api/social-services/{ss.Id}/pdf/application");
+            Expect(applicationPdf, HttpStatusCode.OK);
+            if (applicationPdf.Content.Headers.ContentType?.MediaType != "application/pdf")
+                throw new Exception("Application must download as PDF.");
             var commitmentCount = await db.SocialServiceCommitments.CountAsync();
             var clockBefore = testClock.UtcNow;
             try

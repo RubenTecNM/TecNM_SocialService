@@ -56,18 +56,23 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
                     value = "X";
                 }
                 if (field.Optional && string.IsNullOrWhiteSpace(value)) continue;
-                if (value.Length == 0)
-                    throw new BusinessRuleException("documents.data_missing", "Completa los datos del formato.", new Dictionary<string, string[]> { [field.Key] = ["Dato requerido para el formato."] });
+                RequireValue(field.Key, value);
+                var size = field.FontSize ?? definition.FontSize;
+                var minimum = field.MinFontSize ?? definition.MinFontSize;
+                if (field.Rows is not null)
+                {
+                    DrawRows(graphics, definition.Font, field, value, data, size, minimum);
+                    continue;
+                }
                 XFont font;
                 string[] lines;
-                var size = field.FontSize;
                 while (true)
                 {
                     font = new XFont(definition.Font, size);
                     lines = Wrap(value, graphics, font, field.Width);
                     if (lines.All(l => graphics.MeasureString(l, font).Width <= field.Width) && lines.Length * size * 1.2 <= field.Height) break;
-                    if (size <= field.MinFontSize) throw new BusinessRuleException("documents.text_overflow", "El texto no cabe en el formato oficial.", new Dictionary<string, string[]> { [field.Key] = ["Reduce el texto para conservar la legibilidad del formato."] });
-                    size = Math.Max(field.MinFontSize, size - 0.5);
+                    if (size <= minimum) throw Overflow(field.Key);
+                    size = Math.Max(minimum, size - 0.5);
                 }
                 for (var i = 0; i < lines.Length; i++)
                     {
@@ -92,6 +97,78 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         pdf.Save(output, false);
         return output.ToArray();
     }
+
+    private static void DrawRows(XGraphics graphics, string family, Field field, string value,
+        IReadOnlyDictionary<string, object?> data, double size, double minimum)
+    {
+        var rows = field.Rows!;
+        var followingKey = field.FollowingKey;
+        var following = followingKey is null ? null : data.GetValueOrDefault(followingKey) as string ?? "";
+        if (followingKey is not null) RequireValue(followingKey, following!);
+
+        while (true)
+        {
+            var font = new XFont(family, size);
+            var lines = FitRows(value, rows, graphics, font);
+            var failure = field.Key;
+            if (lines is not null)
+            {
+                var position = following is null ? [] : FitRows(following, rows.AsSpan(lines.Count), graphics, font);
+                if (position is not null)
+                {
+                    lines.AddRange(position);
+                    var start = followingKey is null ? 0 : rows.Length - lines.Count;
+                    for (var i = 0; i < lines.Count; i++)
+                    {
+                        var line = lines[i];
+                        if (line.Length == 0) continue;
+                        var row = rows[start + i];
+                        var x = field.Alignment == "center" ? row.X + (row.Width - graphics.MeasureString(line, font).Width) / 2 : row.X;
+                        graphics.DrawString(line, font, XBrushes.Black, new XPoint(x, row.Baseline));
+                    }
+                    return;
+                }
+                failure = followingKey!;
+            }
+            if (size <= minimum) throw Overflow(failure);
+            size = Math.Max(minimum, size - 0.5);
+        }
+    }
+
+    private static List<string>? FitRows(string value, ReadOnlySpan<TextRow> rows, XGraphics graphics, XFont font)
+    {
+        var lines = new List<string>(rows.Length);
+        foreach (var paragraph in value.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
+        {
+            var words = paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            var next = 0;
+            do
+            {
+                if (lines.Count == rows.Length) return null;
+                var width = rows[lines.Count].Width;
+                var line = "";
+                while (next < words.Length)
+                {
+                    var candidate = line.Length == 0 ? words[next] : line + " " + words[next];
+                    if (graphics.MeasureString(candidate, font).Width > width) break;
+                    line = candidate;
+                    next++;
+                }
+                // A token may fit the full-width row after the short first row.
+                lines.Add(line);
+            } while (next < words.Length);
+        }
+        return lines;
+    }
+
+    private static void RequireValue(string key, string value)
+    {
+        if (value.Length == 0)
+            throw new BusinessRuleException("documents.data_missing", "Completa los datos del formato.", new Dictionary<string, string[]> { [key] = ["Dato requerido para el formato."] });
+    }
+
+    private static BusinessRuleException Overflow(string key) =>
+        new("documents.text_overflow", "El texto no cabe en el formato oficial.", new Dictionary<string, string[]> { [key] = ["Reduce el texto para conservar la legibilidad del formato."] });
 
     private void ApplyStamp(PdfDocument pdf, TemplateDefinition definition, Stamp stamp, IReadOnlyDictionary<string, object?> data)
     {
@@ -156,7 +233,8 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
     private static void ValidateLayout(TemplateDefinition definition, PdfDocument pdf)
     {
         if (pdf.PageCount == 0 || definition.Pages != pdf.PageCount
-            || definition.PageSizes is null || definition.PageSizes.Length != pdf.PageCount) throw Unavailable();
+            || definition.PageSizes is null || definition.PageSizes.Length != pdf.PageCount
+            || !ValidFontSize(definition.FontSize, definition.MinFontSize)) throw Unavailable();
         for (var i = 0; i < pdf.PageCount; i++)
         {
             var size = definition.PageSizes[i];
@@ -167,13 +245,29 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         foreach (var field in definition.Fields)
         {
             if (field is null || field.Alignment is not ("left" or "center" or "justify") || string.IsNullOrWhiteSpace(field.Key) || field.Page < 0 || field.Page >= pdf.PageCount
-                || !new[] { field.X, field.Y, field.Width, field.Height, field.FontSize, field.MinFontSize }.All(double.IsFinite)
+                || !new[] { field.X, field.Y, field.Width, field.Height }.All(double.IsFinite)
                 || field.X < 0 || field.Y < 0 || field.Width <= 0 || field.Height <= 0
-                || field.MinFontSize <= 0 || field.FontSize < field.MinFontSize) throw Unavailable();
+                || !ValidFontSize(field.FontSize ?? definition.FontSize, field.MinFontSize ?? definition.MinFontSize)) throw Unavailable();
             var page = pdf.Pages[field.Page];
             if (field.X + field.Width > page.Width.Point || field.Y + field.Height > page.Height.Point) throw Unavailable();
+            if (field.FollowingKey is not null && (field.Rows is null || string.IsNullOrWhiteSpace(field.FollowingKey)
+                || field.FollowingKey == field.Key || field.MatchValue is not null || field.Optional)) throw Unavailable();
+            if (field.Rows is null) continue;
+            if (field.Rows.Length == 0 || field.Alignment == "justify") throw Unavailable();
+            var baseline = field.Y;
+            foreach (var row in field.Rows)
+            {
+                if (row is null || !double.IsFinite(row.X) || !double.IsFinite(row.Width) || !double.IsFinite(row.Baseline)
+                    || row.X < field.X || row.Width <= 0 || row.X + row.Width > field.X + field.Width + 0.001
+                    || row.Baseline <= baseline || row.Baseline >= field.Y + field.Height
+                    || (field.FollowingKey is not null && row.Width != field.Rows[0].Width)) throw Unavailable();
+                baseline = row.Baseline;
+            }
         }
     }
+
+    private static bool ValidFontSize(double size, double minimum) =>
+        double.IsFinite(size) && double.IsFinite(minimum) && minimum > 0 && size >= minimum;
 
     private static string[] Wrap(string value, XGraphics graphics, XFont font, double width)
     {
@@ -193,8 +287,9 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
     }
 
     private static ConflictException Unavailable() => new("documents.template_unavailable", "La plantilla oficial aún no está disponible o no superó su verificación.");
-    public sealed record Field(string Key, double X, double Y, double Width, double Height, double FontSize = 9, double MinFontSize = 7, int Page = 0, string? Format = null, string? MatchValue = null, bool Optional = false, string Alignment = "left");
+    public sealed record TextRow(double X, double Width, double Baseline);
+    public sealed record Field(string Key, double X, double Y, double Width, double Height, double? FontSize = null, double? MinFontSize = null, int Page = 0, string? Format = null, string? MatchValue = null, bool Optional = false, string Alignment = "left", TextRow[]? Rows = null, string? FollowingKey = null);
     public sealed record Stamp(string File, string Sha256, string AuthorityRoleKey, double X, double Y, double Width, double Height, double Opacity = 1, int Page = 0);
     public sealed record PageSize(double Width, double Height);
-    public sealed record TemplateDefinition(string File, string Sha256, string Version, string Font, Field[] Fields, bool Institutional = false, Stamp[]? Stamps = null, int Pages = 0, PageSize[]? PageSizes = null);
+    public sealed record TemplateDefinition(string File, string Sha256, string Version, string Font, Field[] Fields, bool Institutional = false, Stamp[]? Stamps = null, int Pages = 0, PageSize[]? PageSizes = null, double FontSize = 9, double MinFontSize = 7);
 }
