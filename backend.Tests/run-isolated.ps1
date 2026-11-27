@@ -29,6 +29,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la clasificación final.' }
     Get-Content database/migrations/20261107_student_accounts.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
     Get-Content database/migrations/20261108_student_social_service_follow_up.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la migración de seguimiento.' }
+    Get-Content database/migrations/20261126_document_templates.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw "Falló la migración de cuentas." }
     $mapping = docker port $containerName 5432
     $port = ($mapping -split ':')[-1]

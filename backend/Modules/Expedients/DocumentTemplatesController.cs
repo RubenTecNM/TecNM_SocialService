@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TecNM.Api.Core.Exceptions;
-using TecNM.Api.Modules.Expedients.Pdf;
+using TecNM.Api.Modules.Expedients.Templates;
 using TecNM.Api.Modules.SocialService;
 using TecNM.Api.Modules.Internships;
 
@@ -9,15 +9,15 @@ namespace TecNM.Api.Modules.Expedients;
 
 [ApiController]
 [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head,student")]
-public sealed class DocumentTemplatesController(OfficialPdfService pdf, SocialServiceService socialService, InternshipsService internships, DocumentsService documents) : ControllerBase
+public sealed class DocumentTemplatesController(TemplateCatalog templates, SocialServiceService socialService, InternshipsService internships, DocumentsService documents) : ControllerBase
 {
     [HttpGet("/api/document-templates/{key}/file")]
-    public IActionResult Template(string key)
+    public async Task<IActionResult> Template(string key, [FromQuery] long? tramiteId, CancellationToken ct)
     {
         if (key is not ("ss-supervisor-evaluation" or "ss-self-evaluation" or "ss-termination" or "ss-acceptance-example"))
             throw new NotFoundException("documents.template_not_found", "La plantilla no existe.");
-        var result = pdf.Template(key);
-        return File(result.Bytes, "application/pdf", result.FileName);
+        if (tramiteId is long id) await socialService.GetByIdAsync(id, ct);
+        return File(await templates.ResolveAsync(key, tramiteId, null, ct), "application/pdf", key + ".pdf");
     }
 
     [HttpGet("/api/social-services/{id:long}/pdf/{document}")]
@@ -26,7 +26,7 @@ public sealed class DocumentTemplatesController(OfficialPdfService pdf, SocialSe
         if (document == "individual_act")
         {
             var actData = await socialService.GetIndividualActDataAsync(id, ct);
-            return File(pdf.Generate("ss-individual-act", actData), "application/pdf", $"SS_{id}_acta_individual.pdf");
+            return File(await templates.ResolveAsync("ss-individual-act", id, actData, ct), "application/pdf", $"SS_{id}_acta_individual.pdf");
         }
         var detail = await socialService.GetByIdAsync(id, ct);
         if (document == "presentation_letter")
@@ -55,13 +55,13 @@ public sealed class DocumentTemplatesController(OfficialPdfService pdf, SocialSe
         data["finalMark"] = "X";
         // A missing second surname is valid, unlike an absent student name.
         if (data.TryGetValue("studentSecondSurname", out var surname) && surname is null) data["studentSecondSurname"] = " ";
-        return File(pdf.Generate(key, data), "application/pdf", $"SS_{id}_{document}.pdf");
+        return File(await templates.ResolveAsync(key, id, data, ct), "application/pdf", $"SS_{id}_{document}.pdf");
     }
 
     [HttpGet("/api/internships/{id:long}/pdf/evaluation")]
     public async Task<IActionResult> InternshipPdf(long id, CancellationToken ct)
     {
         var data = await internships.GetEvaluationFormatDataAsync(id, ct);
-        return File(pdf.Generate("pp-evaluation", data), "application/pdf", $"PP_{id}_evaluacion.pdf");
+        return File(await templates.ResolveAsync("pp-evaluation", id, data, ct), "application/pdf", $"PP_{id}_evaluacion.pdf");
     }
 }

@@ -94,6 +94,9 @@ export function getSidebarNavigationForRoles(roles: string[]): NavigationItem[] 
       children: [
         { label: 'Empresas y dependencias', to: '/companies', icon: 'companies' },
         { label: 'Carreras Oficiales', to: '/catalogs/careers', icon: 'careers' },
+        ...(isAdmin || isSSOfficer || isPPCoord
+          ? [{ label: 'Plantillas documentales', to: '/catalogs/document-templates', icon: 'careers' as const }]
+          : []),
       ],
     })
   }

@@ -32,6 +32,11 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
     public byte[] Generate(string key, IReadOnlyDictionary<string, object?> data)
     {
         var (definition, bytes) = Load(key);
+        return Generate(definition, bytes, data);
+    }
+
+    public byte[] Generate(TemplateDefinition definition, byte[] bytes, IReadOnlyDictionary<string, object?> data)
+    {
         if (definition.Fields.Length == 0) throw new ConflictException("documents.template_unavailable", "El formato aún no tiene un mapa de prellenado verificado.");
         using var source = new MemoryStream(bytes);
         using var pdf = PdfReader.Open(source, PdfDocumentOpenMode.Modify);
@@ -204,9 +209,11 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         content.Stream.Value = [.. Encoding.ASCII.GetBytes($"q /{name} gs\n"), .. content.Stream.Value, .. "\nQ"u8.ToArray()];
     }
 
-    private (TemplateDefinition Definition, byte[] Bytes) Load(string key)
+    internal (TemplateDefinition Definition, byte[] Bytes) Load(string key) => LoadFrom(Root, key);
+
+    internal static (TemplateDefinition Definition, byte[] Bytes) LoadFrom(string root, string key)
     {
-        var manifest = Path.Combine(Root, "manifest.json");
+        var manifest = Path.Combine(root, "manifest.json");
         if (!File.Exists(manifest)) throw Unavailable();
         Dictionary<string, TemplateDefinition>? definitions;
         try { definitions = JsonSerializer.Deserialize<Dictionary<string, TemplateDefinition>>(File.ReadAllText(manifest), JsonOptions); }
@@ -214,8 +221,8 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         if (definitions is null || !definitions.TryGetValue(key, out var definition) || definition is null
             || string.IsNullOrWhiteSpace(definition.File) || string.IsNullOrWhiteSpace(definition.Version)
             || string.IsNullOrWhiteSpace(definition.Font) || definition.Fields is null) throw Unavailable();
-        var path = Path.GetFullPath(Path.Combine(Root, definition.File));
-        var relative = Path.GetRelativePath(Root, path);
+        var path = Path.GetFullPath(Path.Combine(root, definition.File));
+        var relative = Path.GetRelativePath(root, path);
         if (Path.IsPathRooted(relative) || relative.StartsWith("..") || !File.Exists(path)) throw Unavailable();
         var bytes = File.ReadAllBytes(path);
         if (!Convert.ToHexString(SHA256.HashData(bytes)).Equals(definition.Sha256, StringComparison.OrdinalIgnoreCase)) throw Unavailable();
@@ -230,7 +237,7 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         return (definition, bytes);
     }
 
-    private static void ValidateLayout(TemplateDefinition definition, PdfDocument pdf)
+    internal static void ValidateLayout(TemplateDefinition definition, PdfDocument pdf)
     {
         if (pdf.PageCount == 0 || definition.Pages != pdf.PageCount
             || definition.PageSizes is null || definition.PageSizes.Length != pdf.PageCount

@@ -1,5 +1,15 @@
 # Migración de tipología y métricas
 
+## Gestor de plantillas PDF
+
+Conservar un respaldo de PostgreSQL y el catálogo desplegado, incluido cualquier directorio configurado en `Documents__RootPath`. Detener las escrituras y aplicar `20261126_document_templates.sql` con `ON_ERROR_STOP=1` en instalaciones existentes. Las bases nuevas ya incluyen sus tablas en `database/design/schema.sql`.
+
+Con la imagen nueva y el mismo catálogo, ejecutar `docker compose run --rm --no-deps backend --import-document-templates`. En una instalación nativa usar `dotnet TecNM.Api.dll --import-document-templates` desde el directorio publicado. El importador comprueba los PDF y guarda versiones y asignaciones en una transacción. Repetirlo conserva las versiones activadas y las asignaciones que ya existan. Al terminar, arrancar API y frontend juntos y comprobar una descarga de un expediente anterior y la vista de Catálogos oficiales. Conservar el respaldo anterior hasta validar el corte.
+
+Las suites aisladas nativa y Docker verifican publicación por área, concurrencia, protección antifalsificación y conservación de versiones. Con Vite activo, `node frontend/scripts/check-template-management-ui.mjs` prueba el editor con Edge y respuestas API simuladas. Puede configurarse `PLAYWRIGHT_MODULE` para indicar la instalación local de Playwright.
+
+Si el catálogo de la nueva imagen difiere del catálogo en servicio, montar una copia del directorio anterior en solo lectura y pasar su ruta con `Documents__BaselineRootPath` al importador. Este fija el catálogo anterior en los expedientes existentes y activa las diferencias del catálogo nuevo para nuevas aperturas.
+
 ## Cuentas de alumnos — 7 de noviembre de 2026
 
 Después de las migraciones documental y de tipología, aplicar `20261107_student_accounts.sql` una sola vez en instalaciones existentes. Las bases nuevas creadas con el diseño actual ya incluyen sus columnas e índices.

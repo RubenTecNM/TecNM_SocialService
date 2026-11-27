@@ -32,6 +32,7 @@ try {
     Invoke-TestSql (Get-Content database/migrations/20261106_company_type_finalize.sql -Raw)
     Invoke-TestSql (Get-Content database/migrations/20261107_student_accounts.sql -Raw)
     Invoke-TestSql (Get-Content database/migrations/20261108_student_social_service_follow_up.sql -Raw)
+    Invoke-TestSql (Get-Content database/migrations/20261126_document_templates.sql -Raw)
     $env:DOCUMENT_TEST_CONNECTION = "Host=127.0.0.1;Port=$port;Database=document_checks;Username=postgres;Timeout=3"
     dotnet run --project backend.Tests/TecNM.DocumentChecks.csproj --verbosity quiet
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron las comprobaciones.' }

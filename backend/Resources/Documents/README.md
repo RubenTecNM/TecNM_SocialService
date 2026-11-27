@@ -1,5 +1,7 @@
 # Recursos documentales
 
+Para las claves del gestor, este directorio aporta el catálogo inicial. Ejecutar `--import-document-templates` tras la migración para cargarlo en PostgreSQL. Las publicaciones posteriores se gestionan en Catálogos oficiales y cada expediente descarga la versión que se le asignó. La emisión institucional con estampas sigue usando sus recursos controlados en disco.
+
 `manifest.json` contiene hashes, versiones y mapas oficiales. Generación conserva las bases; actualizar hash solo después de verificar cualquier cambio de plantilla.
 
 Cada entrada requiere `pages` y `pageSizes: [{ width, height }]`, en puntos PDF y en orden de páginas. El motor contrasta estos datos con la base y valida campos dentro de la hoja, página existente y tamaños de fuente positivos/ordenados. Metadatos ausentes, JSON inválido o geometría inconsistente devuelven `409 documents.template_unavailable`. Preparación y verificación reproducibles: `tools/pdf/prepare_templates.py` y `tools/pdf/verify_templates.py`; el preparador conserva mapas calibrados y entradas externas del catálogo.

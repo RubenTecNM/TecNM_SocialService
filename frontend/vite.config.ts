@@ -6,11 +6,11 @@ export default defineConfig({
   plugins: [vue(), basicSsl()],
   server: {
     host: '127.0.0.1',
-    port: 5900,
+    port: 6070,
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5055',
+        target: 'http://localhost:6080',
         changeOrigin: true,
         secure: false,
         ws: true,

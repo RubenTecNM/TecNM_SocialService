@@ -47,12 +47,19 @@ internal static class HttpChecks
         using var factory = new WebApplicationFactory<TecNMDbContext>().WithWebHostBuilder(builder =>
             builder.UseContentRoot(Path.GetFullPath("backend")).UseEnvironment("Testing").ConfigureLogging(logging => logging.ClearProviders()).ConfigureTestServices(services => { services.RemoveAll<IFileStorage>(); services.AddSingleton<IFileStorage>(failureStorage); services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(testClock); services.AddDbContext<TecNMDbContext>(options => options.UseNpgsql(connection).AddInterceptors(databaseFailure)); }));
         using var anonymous = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        await using (var importScope = factory.Services.CreateAsyncScope())
+        {
+            var catalog = importScope.ServiceProvider.GetRequiredService<TecNM.Api.Modules.Expedients.Templates.TemplateCatalog>();
+            await catalog.ImportAsync();
+            await catalog.ImportAsync();
+        }
         Expect(await anonymous.GetAsync("/api/documents/review-queue"), HttpStatusCode.Unauthorized);
         Expect(await anonymous.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.Unauthorized);
         using var admin = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var student = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await Login(admin, "admin");
         await Login(student, "l23050363@monclova.tecnm.mx");
+        await CheckTemplateManagementAsync(factory, student);
         Expect(await admin.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.OK);
         Expect(await student.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.OK);
         Expect(await student.GetAsync("/api/documents/review-queue"), HttpStatusCode.Forbidden);
@@ -425,6 +432,147 @@ internal static class HttpChecks
         if (history.EnumerateArray().Count(d => d.GetProperty("documentCode").GetString() == "R1") != 2)
             throw new Exception("Report replacement history missing.");
         Console.WriteLine("HTTP commitment signature and report/PDF rejection-correction-approval consistency checks passed.");
+    }
+
+    private static async Task CheckTemplateManagementAsync(WebApplicationFactory<TecNMDbContext> factory, HttpClient student)
+    {
+        const string root = "/api/template-management";
+        const string key = "ss-acceptance-example";
+        using var ss = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        using var pp = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        await Login(ss, "encargado.ss");
+        await Login(pp, "coord.practicas");
+        Expect(await student.GetAsync(root), HttpStatusCode.Forbidden);
+        Expect(await ss.PostAsync($"{root}/{key}/draft", null), HttpStatusCode.BadRequest);
+        foreach (var client in new[] { ss, pp })
+        {
+            var token = await client.GetFromJsonAsync<JsonElement>(root + "/csrf");
+            client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("token").GetString());
+        }
+        Expect(await pp.PostAsync($"{root}/{key}/draft", null), HttpStatusCode.Forbidden);
+        Expect(await ss.PostAsync($"{root}/pp-evaluation/draft", null), HttpStatusCode.Forbidden);
+        async Task<JsonElement> Summary(HttpClient client, string template)
+        {
+            var list = await client.GetFromJsonAsync<JsonElement>(root);
+            return list.EnumerateArray().Single(item => item.GetProperty("key").GetString() == template);
+        }
+        async Task<JsonElement> Draft(HttpClient client, string template)
+        {
+            var result = await client.PostAsync($"{root}/{template}/draft", null);
+            Expect(result, HttpStatusCode.OK);
+            return await result.Content.ReadFromJsonAsync<JsonElement>();
+        }
+
+        foreach (var (client, area) in new[] { (ss, "social_service"), (pp, "internship") })
+        {
+            var available = await client.GetFromJsonAsync<JsonElement>(root);
+            foreach (var item in available.EnumerateArray())
+            {
+                if (item.GetProperty("area").GetString() != area) throw new Exception("Template catalog leaked the other area.");
+                var template = item.GetProperty("key").GetString()!;
+                var check = await Draft(client, template);
+                if (check.GetProperty("slots").GetArrayLength() != check.GetProperty("layout").GetProperty("fields").GetArrayLength())
+                    throw new Exception("The draft must use the field contract from the version it was copied from.");
+                var tag = check.GetProperty("revision").GetUInt32();
+                foreach (var longSample in new[] { "false", "true" })
+                {
+                    var preview = await client.PostAsync($"{root}/{template}/draft/preview?revision={tag}&longSample={longSample}", null);
+                    if (!preview.IsSuccessStatusCode) throw new Exception($"Preview {template}: {await preview.Content.ReadAsStringAsync()}");
+                }
+                if (template == "pp-evaluation")
+                {
+                    var layout = check.GetProperty("layout");
+                    var placements = layout.GetProperty("fields").Deserialize<TecNM.Api.Modules.Expedients.Templates.TemplatePlacement[]>(
+                        new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+                    var originalPlacement = placements[0];
+                    placements[0] = originalPlacement with { X = -2 };
+                    async Task<HttpResponseMessage> SaveLayout() =>
+                        await client.PutAsJsonAsync($"{root}/{template}/draft/layout", new
+                        {
+                            revision = tag, font = layout.GetProperty("font").GetString(),
+                            fontSize = layout.GetProperty("fontSize").GetDouble(), minFontSize = layout.GetProperty("minFontSize").GetDouble(), fields = placements
+                        });
+                    Expect(await SaveLayout(), HttpStatusCode.UnprocessableEntity);
+                    placements[0] = originalPlacement with { X = originalPlacement.X + 1 };
+                    var updatedLayout = await SaveLayout();
+                    Expect(updatedLayout, HttpStatusCode.OK);
+                    tag = (await updatedLayout.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("revision").GetUInt32();
+                    Expect(await client.PostAsJsonAsync($"{root}/{template}/draft/publish", new
+                    {
+                        templateRevision = item.GetProperty("revision").GetUInt32(), draftRevision = tag, reason = "Distribución de prueba PP"
+                    }), HttpStatusCode.NoContent);
+                    continue;
+                }
+                Expect(await client.DeleteAsync($"{root}/{template}/draft?revision={tag}"), HttpStatusCode.NoContent);
+            }
+        }
+
+        var path = $"{root}/{key}";
+        var original = await Summary(ss, key);
+        var originalId = original.GetProperty("activeVersionId").GetInt64();
+        var draft = await Draft(ss, key);
+        var versionId = draft.GetProperty("id").GetInt64();
+        var revision = draft.GetProperty("revision").GetUInt32();
+        var global = $"/api/document-templates/{key}/file";
+        var pinned = global + "?tramiteId=1";
+        var originalBytes = await ss.GetByteArrayAsync(pinned);
+        using (var malformed = new MultipartFormDataContent())
+        {
+            malformed.Add(new ByteArrayContent("%PDF-1.7 invalid document"u8.ToArray()), "file", "danado.pdf");
+            Expect(await ss.PutAsync($"{path}/draft/file?revision={revision}", malformed), HttpStatusCode.UnsupportedMediaType);
+        }
+        using var form = new MultipartFormDataContent();
+        using var staticPdf = new PdfSharp.Pdf.PdfDocument();
+        staticPdf.AddPage();
+        using var stream = new MemoryStream();
+        staticPdf.Save(stream, false);
+        var replacement = stream.ToArray();
+        form.Add(new ByteArrayContent(replacement), "file", "sustituto.pdf");
+        var updated = await ss.PutAsync($"{path}/draft/file?revision={revision}", form);
+        if (!updated.IsSuccessStatusCode) throw new Exception(await updated.Content.ReadAsStringAsync());
+        var publishedRevision = (await updated.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("revision").GetUInt32();
+        Expect(await ss.DeleteAsync($"{path}/draft?revision={revision}"), HttpStatusCode.Conflict);
+        var publish = new { templateRevision = original.GetProperty("revision").GetUInt32(), draftRevision = publishedRevision, reason = "Formato redistribuido" };
+        var attempts = await Task.WhenAll(ss.PostAsJsonAsync(path + "/draft/publish", publish), ss.PostAsJsonAsync(path + "/draft/publish", publish));
+        if (attempts.Count(response => response.StatusCode == HttpStatusCode.NoContent) != 1 ||
+            attempts.Count(response => response.StatusCode == HttpStatusCode.Conflict) != 1)
+            throw new Exception(string.Join(", ", attempts.Select(r => r.StatusCode)));
+        if (!(await ss.GetByteArrayAsync(global)).SequenceEqual(replacement) ||
+            !(await ss.GetByteArrayAsync(pinned)).SequenceEqual(originalBytes))
+            throw new Exception("Publication changed the assigned version or failed to activate the replacement.");
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TecNMDbContext>();
+            var catalog = scope.ServiceProvider.GetRequiredService<TecNM.Api.Modules.Expedients.Templates.TemplateCatalog>();
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            var reference = await db.SocialServices.AsNoTracking().FirstAsync();
+            var additional = new TecNM.Api.Core.Entities.SocialService
+            {
+                StudentId = reference.StudentId, PeriodId = reference.PeriodId, ProgramId = reference.ProgramId,
+                CompanyId = reference.CompanyId, SupervisorId = reference.SupervisorId, StartDate = reference.StartDate,
+                EndDate = reference.EndDate, Status = "cancelled", Modality = reference.Modality, RequiredHours = 480,
+                SemesterEnrolled = reference.SemesterEnrolled
+            };
+            // The isolated transaction rolls back this synthetic opening after checking its assignment.
+            db.Add(additional);
+            await db.SaveChangesAsync();
+            await catalog.AssignAsync("social_service", additional.Id, CancellationToken.None);
+            await db.SaveChangesAsync();
+            var assignedBytes = await catalog.ResolveAsync(key, additional.Id, null, CancellationToken.None);
+            if (!assignedBytes.SequenceEqual(replacement)) throw new Exception("New opening did not pin the active version.");
+            await transaction.RollbackAsync();
+        }
+        var active = await Summary(ss, key);
+        if (active.GetProperty("activeVersionId").GetInt64() != versionId) throw new Exception("Replacement version was not recorded.");
+        Expect(await ss.PostAsJsonAsync($"{path}/versions/{originalId}/restore", new
+        {
+            templateRevision = active.GetProperty("revision").GetUInt32(), reason = "Restauración de prueba"
+        }), HttpStatusCode.NoContent);
+        if (!(await ss.GetByteArrayAsync(global)).SequenceEqual(originalBytes)) throw new Exception("Restore did not reactivate the original bytes.");
+        var events = await ss.GetFromJsonAsync<JsonElement>(path + "/activations");
+        if (events.GetArrayLength() != 3) throw new Exception("Missing activation history.");
+        Console.WriteLine("Template management permissions, previews, immutable pins, concurrency and restore passed.");
     }
 
     private static async Task Login(HttpClient client, string username)

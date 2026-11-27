@@ -1,5 +1,6 @@
 using PdfSharp.Fonts;
 using TecNM.Api.Modules.Expedients.Pdf;
+using TecNM.Api.Modules.Expedients.Templates;
 using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,7 +27,8 @@ const string FrontendCors = "Frontend";
 
 LoadDotEnv();
 
-var builder = WebApplication.CreateBuilder(args);
+const string ImportTemplatesArg = "--import-document-templates";
+var builder = WebApplication.CreateBuilder(args.Where(arg => arg != ImportTemplatesArg).ToArray());
 var configuration = builder.Configuration;
 
 var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -112,6 +114,13 @@ builder.Services.AddScoped<StudentAccountsService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ImssEligibilityService>();
 builder.Services.AddSingleton<OfficialPdfService>();
+builder.Services.AddScoped<TemplateCatalog>();
+builder.Services.AddScoped<TemplateManagement>();
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
 GlobalFontSettings.FontResolver ??= new OfficialFontResolver(configuration["Documents:FontsRootPath"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "Resources", "Documents", "fonts"));
 builder.Services.AddScoped<DocumentsService>();
@@ -197,6 +206,14 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+if (args.Contains(ImportTemplatesArg))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<TemplateCatalog>().ImportAsync();
+    Console.WriteLine("Catálogo documental importado y asignado.");
+    return;
+}
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();

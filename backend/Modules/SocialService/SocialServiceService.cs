@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using TecNM.Api.Core.Storage;
 using TecNM.Api.Modules.Expedients.Pdf;
+using TecNM.Api.Modules.Expedients.Templates;
 using TecNM.Api.Modules.Expedients;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ public sealed class SocialServiceService(
     OfficialPdfService pdf,
     IFileStorage storage,
     TimeProvider timeProvider,
+    TemplateCatalog templates,
     IRealtimeNotifier? realtime = null)
 {
     private readonly IRealtimeNotifier _realtime = realtime ?? NullRealtimeNotifier.Instance;
@@ -333,6 +335,7 @@ public sealed class SocialServiceService(
             }
             dbContext.SocialServices.Add(entity);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await templates.AssignAsync("social_service", entity.Id, cancellationToken);
 
             var application = new SocialServiceApplication
             {

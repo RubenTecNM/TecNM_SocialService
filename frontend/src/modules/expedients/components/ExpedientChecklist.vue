@@ -86,7 +86,7 @@ async function view(item: DocumentRequirement, uploaded = false): Promise<void> 
         : (
             await http.get(
               item.templateKey
-                ? `/document-templates/${item.templateKey}/file`
+                ? `/document-templates/${item.templateKey}/file?tramiteId=${props.tramiteId}`
                 : `/${props.tramiteType === 'internship' ? 'internships' : 'social-services'}/${props.tramiteId}/pdf/${item.pdfKey}`,
               { responseType: 'blob' },
             )

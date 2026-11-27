@@ -1,4 +1,5 @@
 using TecNM.Api.Modules.Expedients;
+using TecNM.Api.Modules.Expedients.Templates;
 using Microsoft.EntityFrameworkCore;
 using TecNM.Api.Core.Entities;
 using TecNM.Api.Core.Exceptions;
@@ -16,6 +17,7 @@ public sealed class InternshipsService(
     ICurrentUser currentUser,
     DocumentSeriesService documentSeriesService,
     ImssEligibilityService imss,
+    TemplateCatalog templates,
     IRealtimeNotifier? realtime = null)
 {
     private readonly IRealtimeNotifier _realtime = realtime ?? NullRealtimeNotifier.Instance;
@@ -282,6 +284,7 @@ public sealed class InternshipsService(
 
         dbContext.Internships.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await templates.AssignAsync("internship", entity.Id, cancellationToken);
 
         AddStatusLog(entity.Id, null, "requested", "Solicitud de Carta de Presentación de Prácticas Profesionales");
         await dbContext.SaveChangesAsync(cancellationToken);

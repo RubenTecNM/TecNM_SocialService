@@ -59,6 +59,8 @@ Los bimestres de evaluaciones son metadatos separados del nombre. IMSS queda fue
 
 ## PDF oficial
 
+- Las bases gestionadas siguen el [contrato de plantillas PDF](document-templates.spec.md). Un expediente conserva sus versiones de apertura.
+
 - Carta Compromiso: descarga directa con datos registrados, sin exigir guardar previamente el formulario CC. Domicilio del alumno desde solicitud (respaldo CC), teléfono del perfil (respaldos solicitud/CC), domicilio de la dependencia vinculada (respaldo CC); omitir valores vacíos al resolver respaldos. Ciudad desde CC o dependencia. La fecha impresa se calcula en cada petición de descarga con TimeProvider y zona America/Mexico_City; nunca reutiliza fecha guardada ni inicio del servicio. Solo firma del alumno vacía; conservar los demás campos prellenados. Descargar no persiste datos ni acredita firma. Datos ausentes/desbordamiento mantienen errores 422.
 
 - `GET /api/social-services/{id}/pdf/{document}`: `application`, `commitment`, `report_1..3`, `evaluation_1..3`, `self_evaluation_1..3`, `activity_assessment`, `termination_letter`, `presentation_letter`. Evaluaciones y CT usan `pdfKey` en el checklist; las plantillas vacías siguen disponibles por su endpoint existente.

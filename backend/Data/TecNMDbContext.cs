@@ -35,6 +35,7 @@ public sealed class TecNMDbContext(DbContextOptions<TecNMDbContext> options) : D
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        TecNM.Api.Modules.Expedients.Templates.DocumentTemplate.Configure(modelBuilder);
         modelBuilder.Entity<StudentSocialServiceFollowUp>(b => {
             b.HasNoKey().ToView("vw_student_social_service_follow_up");
             foreach (var property in typeof(StudentSocialServiceFollowUp).GetProperties())
