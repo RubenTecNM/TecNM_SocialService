@@ -11,9 +11,14 @@ const manifest = JSON.parse(fs.readFileSync('backend/Resources/Documents/manifes
 const key = 'ss-report'
 const active = { key, area: 'social_service', mode: 'prefill', activeVersionId: 1, draftId: null, revision: 125 }
 const layout = structuredClone(manifest[key])
+const brand = JSON.parse(fs.readFileSync('backend/Resources/Documents/branding/manifest.json', 'utf8'))[key]
+const png = fs.readFileSync('backend/Resources/Documents/branding/' + brand.zones[0].png)
+layout.logoZones = brand.zones
 layout.fields = layout.fields.map(field => ({ page: 0, alignment: 'left', fontSize: null, minFontSize: null, rows: null, ...field }))
-const draft = { id: 2, revision: 126, publishedAt: null, slots: structuredClone(layout.fields), layout }
-let saved, publish
+const draft = { id: 2, revision: 126, publishedAt: null, slots: structuredClone(layout.fields), layout,
+  logos: brand.zones.map((zone, slot) => ({ slot, logoId: 1, x: zone.x, y: zone.y, width: zone.width, height: zone.height })) }
+let saved, savedLogos, publish, authority
+let adminView = false
 let uploaded = false
 const browser = await chromium.launch({ channel: 'msedge', headless: true })
 try {
@@ -29,8 +34,17 @@ try {
     if (!endpoint.startsWith('/api/')) return route.continue()
     const method = request.method()
     let json = []
-    if (endpoint === '/api/auth/me') json = { id: 2, username: 'ss', name: 'Usuario de prueba', roles: ['social_service_officer'] }
+    if (endpoint === '/api/auth/me') json = { id: 2, username: 'ss', name: 'Usuario de prueba', roles: [adminView ? 'admin' : 'social_service_officer'] }
     else if (endpoint === '/api/template-management') json = [active]
+    else if (endpoint === '/api/template-management/logos') json = [{ id: 1, name: 'Marca inicial', width: 800, height: 200 }, { id: 2, name: 'Marca nueva', width: 800, height: 200 }]
+    else if (endpoint.endsWith('/image')) return route.fulfill({ contentType: 'image/png', body: png })
+    else if (endpoint === '/api/institutional-authorities/active') json = {}
+    else if (endpoint === '/api/institutional-authorities' && method === 'GET') json = { items: [] }
+    else if (endpoint === '/api/institutional-authorities' && method === 'POST') {
+      assert.equal(request.headers()['x-csrf-token'], 'template-csrf')
+      authority = request.postDataJSON()
+      json = { id: 1, isActive: true, ...authority }
+    }
     else if (endpoint.endsWith('/csrf')) json = { token: 'template-csrf' }
     else if (endpoint.endsWith('/draft') && method === 'POST') {
       assert.equal(request.headers()['x-csrf-token'], 'template-csrf')
@@ -46,6 +60,12 @@ try {
       saved = request.postDataJSON()
       assert.equal(saved.revision, draft.revision)
       draft.layout.fields = saved.fields
+      draft.revision++
+      json = draft
+    } else if (endpoint.endsWith('/draft/logos')) {
+      savedLogos = request.postDataJSON()
+      assert.equal(savedLogos.revision, draft.revision)
+      draft.logos = savedLogos.logos
       draft.revision++
       json = draft
     } else if (endpoint.endsWith('/draft/publish')) {
@@ -64,7 +84,7 @@ try {
   })
   await page.getByLabel('Formato institucional').selectOption(key)
   await page.getByRole('button', { name: 'Crear borrador' }).click()
-  await page.getByLabel('PDF sustituto').setInputFiles({ name: 'sustituto.pdf', mimeType: 'application/pdf', buffer: pdf })
+  await page.getByLabel('PDF sustituto', { exact: true }).setInputFiles({ name: 'sustituto.pdf', mimeType: 'application/pdf', buffer: pdf })
   await page.getByRole('status').filter({ hasText: 'PDF cargado' }).waitFor()
   assert.ok(uploaded)
   await page.waitForFunction(() => {
@@ -92,6 +112,15 @@ try {
   await page.getByRole('button', { name: 'Guardar configuración' }).click()
   await page.getByRole('status').filter({ hasText: 'Configuración guardada' }).waitFor()
   assert.equal(saved.fields[0].rows[0].baseline, first.rows[0].baseline + 11)
+  await page.getByRole('button', { name: 'Logotipos', exact: true }).click()
+  const logos = page.getByRole('group', { name: 'Logotipos del formato' })
+  await logos.getByLabel('Revisión del logotipo').selectOption('2')
+  const width = brand.zones[0].width - 10
+  await logos.getByLabel('Ancho (pt)').fill(String(width))
+  await page.getByRole('button', { name: 'Guardar logotipos' }).click()
+  await page.getByRole('status').filter({ hasText: 'Logotipos guardados' }).waitFor()
+  assert.equal(savedLogos.logos[0].logoId, 2)
+  assert.equal(savedLogos.logos[0].width, width)
   for (const type of ['normal', 'larga']) {
     await page.getByRole('button', { name: 'Ver muestra ' + type }).click()
     const modal = page.getByRole('dialog')
@@ -102,7 +131,16 @@ try {
   await page.getByRole('button', { name: 'Publicar para nuevas aperturas' }).click()
   await page.getByRole('status').filter({ hasText: 'Plantilla publicada' }).waitFor()
   assert.deepEqual(publish, { templateRevision: 125, draftRevision: draft.revision, reason: 'Formato redistribuido' })
-  console.log('Template editor pointer/zoom, numeric editing, upload, preview and publish passed.')
+  adminView = true
+  await page.goto(base + '/catalogs/institutional-identity')
+  await page.getByLabel('Cargo institucional').selectOption('outreach_division_head')
+  await page.getByLabel('Nombre del nuevo titular').fill('Lucía Muñoz Valdés')
+  await page.getByLabel('Cargo para el PDF').fill('Titular de Vinculación')
+  await page.getByRole('button', { name: 'Activar titular' }).click()
+  await page.getByRole('status').filter({ hasText: 'Titular activado' }).waitFor()
+  assert.equal(authority.roleKey, 'outreach_division_head')
+  assert.equal(authority.fullName, 'Lucía Muñoz Valdés')
+  console.log('Template editor, logo revisions, publication and authority catalog passed.')
 } finally {
   await browser.close()
 }

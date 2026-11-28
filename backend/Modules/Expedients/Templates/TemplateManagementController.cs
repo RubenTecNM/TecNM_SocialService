@@ -10,7 +10,7 @@ namespace TecNM.Api.Modules.Expedients.Templates;
 [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
 [TemplateAntiforgery]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class TemplateManagementController(TemplateManagement management) : ControllerBase
+public sealed class TemplateManagementController(TemplateManagement management, TemplateBranding branding) : ControllerBase
 {
     [HttpGet("csrf")]
     public IActionResult Csrf([FromServices] IAntiforgery antiforgery) =>
@@ -18,6 +18,19 @@ public sealed class TemplateManagementController(TemplateManagement management) 
 
     [HttpGet]
     public Task<List<TemplateSummary>> List(CancellationToken ct) => management.ListAsync(ct);
+
+    [HttpGet("logos")]
+    public Task<List<LogoSummary>> Logos(CancellationToken ct) => branding.ListAsync(ct);
+
+    [HttpGet("logos/{id:long}/image")]
+    public async Task<IActionResult> LogoImage(long id, CancellationToken ct) =>
+        File(await branding.ImageAsync(id, ct), "image/png");
+
+    [HttpPost("logos")]
+    [Authorize(Roles = "admin")]
+    [RequestSizeLimit(2 * 1024 * 1024 + 65536)]
+    public Task<LogoSummary> UploadLogo([FromForm] string name, IFormFile file, CancellationToken ct) =>
+        branding.UploadAsync(name, file, ct);
 
     [HttpGet("{key}/versions")]
     public Task<List<TemplateVersionSummary>> History(string key, CancellationToken ct) => management.HistoryAsync(key, ct);
@@ -29,20 +42,28 @@ public sealed class TemplateManagementController(TemplateManagement management) 
     public Task<TemplateVersionDetail> Detail(string key, long id, CancellationToken ct) => management.DetailAsync(key, id, ct);
 
     [HttpGet("{key}/versions/{id:long}/file")]
-    public async Task<IActionResult> VersionFile(string key, long id, CancellationToken ct) =>
-        File(await management.FileAsync(key, id, ct), "application/pdf", $"{key}-{id}.pdf");
+    public async Task<IActionResult> VersionFile(string key, long id, [FromQuery] bool source, CancellationToken ct) =>
+        File(await management.FileAsync(key, id, source, ct), "application/pdf", $"{key}-{id}.pdf");
 
     [HttpPost("{key}/draft")]
     public Task<TemplateVersionDetail> CreateDraft(string key, CancellationToken ct) => management.CreateDraftAsync(key, ct);
 
     [HttpPut("{key}/draft/file")]
     [RequestSizeLimit(TemplatePdfValidation.MaxBytes + 65536)]
-    public Task<TemplateVersionDetail> ReplaceFile(string key, [FromQuery] uint revision, IFormFile file, CancellationToken ct) =>
-        management.ReplaceFileAsync(key, revision, file, ct);
+    public Task<TemplateVersionDetail> ReplaceFile(string key, [FromQuery] uint revision, [FromQuery] bool cleanBranding, IFormFile file, CancellationToken ct) =>
+        management.ReplaceFileAsync(key, revision, file, cleanBranding, ct);
 
     [HttpPut("{key}/draft/layout")]
     public Task<TemplateVersionDetail> SaveLayout(string key, TemplateLayoutEdit layout, CancellationToken ct) =>
         management.SaveLayoutAsync(key, layout, ct);
+
+    [HttpPut("{key}/draft/logos")]
+    public Task<TemplateVersionDetail> SaveLogos(string key, TemplateLogoEdit edit, CancellationToken ct) =>
+        management.SaveLogosAsync(key, edit, ct);
+
+    [HttpPost("{key}/draft/adopt-authority-base")]
+    public Task<TemplateVersionDetail> AdoptAuthorityBase(string key, [FromQuery] uint revision, CancellationToken ct) =>
+        management.AdoptAuthorityBaseAsync(key, revision, ct);
 
     [HttpDelete("{key}/draft")]
     public async Task<IActionResult> Discard(string key, [FromQuery] uint revision, CancellationToken ct)

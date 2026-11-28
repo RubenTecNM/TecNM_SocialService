@@ -6,6 +6,8 @@ import { http } from '../../../shared/api/http'
 import { problemFields, problemMessage } from '../../../shared/api/problemDetails'
 import DocumentViewerModal from '../components/DocumentViewerModal.vue'
 import TemplateCanvas from '../components/TemplateCanvas.vue'
+import TemplateLogoEditor from '../components/TemplateLogoEditor.vue'
+import type { LogoPlacement } from '../types/templateManagement'
 import type { Placement, TemplateActivation, TemplateSlot, TemplateSummary, TemplateVersion, VersionSummary } from '../types/templateManagement'
 
 const base = '/template-management'
@@ -22,6 +24,8 @@ const page = ref(0)
 const field = computed(() => draft.value?.layout.fields[selected.value])
 const busy = ref(false)
 const dirty = ref(false)
+const editingLogos = ref(false)
+const cleanBranding = ref(false)
 const message = ref('')
 const error = ref('')
 const fieldErrors = ref<Record<string, string[]>>({})
@@ -101,6 +105,7 @@ async function selectTemplate(value: string) {
   confirmingDiscard.value = false
   reason.value = ''
   dirty.value = false
+  editingLogos.value = false
   reviewed.value = { normal: false, long: false }
   const [versions, events] = await Promise.all([
     http.get<VersionSummary[]>(route.value + '/versions'),
@@ -114,11 +119,13 @@ async function selectTemplate(value: string) {
   }
 }
 async function loadDraft(value: TemplateVersion) {
-  const file = await http.get<Blob>(route.value + '/versions/' + value.id + '/file', { responseType: 'blob' })
+  const file = await http.get<Blob>(route.value + '/versions/' + value.id + '/file', { responseType: 'blob', params: { source: true } })
   draft.value = value
   source.value = file.data
   selected.value = 0
   page.value = 0
+  cleanBranding.value = false
+  if (!value.layout.logoZones?.length) editingLogos.value = false
   dirty.value = false
   reviewed.value = { normal: false, long: false }
 }
@@ -146,7 +153,7 @@ async function replaceFile(event: Event) {
     const body = new FormData()
     body.append('file', file)
     const response = await http.put<TemplateVersion>(route.value + '/draft/file', body, {
-      ...await csrf(), params: { revision: draft.value.revision },
+      ...await csrf(), params: { revision: draft.value.revision, cleanBranding: cleanBranding.value },
     })
     await loadDraft(response.data)
     message.value = 'PDF cargado. Revisa todas las posiciones antes de publicar.'
@@ -216,6 +223,24 @@ async function preview(longSample: boolean) {
   openFile(result.data, longSample ? 'Muestra larga' : 'Muestra normal')
   reviewed.value[longSample ? 'long' : 'normal'] = true
 }
+async function saveLogos(logos: LogoPlacement[]) {
+  if (!draft.value) return
+  const { data } = await http.put<TemplateVersion>(route.value + '/draft/logos', {
+    revision: draft.value.revision, logos,
+  }, await csrf())
+  draft.value = data
+  dirty.value = false
+  reviewed.value = { normal: false, long: false }
+  message.value = 'Logotipos guardados.'
+}
+async function adoptAuthorityBase() {
+  if (!draft.value) return
+  const { data } = await http.post<TemplateVersion>(route.value + '/draft/adopt-authority-base', null, {
+    ...await csrf(), params: { revision: draft.value.revision },
+  })
+  await loadDraft(data)
+  message.value = 'Base actualizada. Los campos del borrador se conservaron.'
+}
 async function activate(id?: number) {
   if (!current.value) return
   await http.post(id === undefined ? route.value + '/draft/publish' : route.value + '/versions/' + id + '/restore', {
@@ -258,6 +283,10 @@ onMounted(() => action(list))
           <div class="template-actions">
             <strong>Borrador {{ draft.id }}</strong>
             <label>PDF sustituto <input type="file" accept="application/pdf,.pdf" :disabled="busy || dirty" @change="replaceFile" /></label>
+            <label v-if="draft.layout.logoZones?.length || draft.layout.authorityFields?.length" class="clean-branding">
+              <input v-model="cleanBranding" type="checkbox" :disabled="busy || dirty" />
+              Conservar zonas de identidad. El PDF sustituto debe traer esas zonas limpias.
+            </label>
             <UiButton v-if="dirty" variant="secondary" size="sm" :disabled="busy" @click="action(() => selectTemplate(key))">Deshacer cambios locales</UiButton>
             <UiButton variant="secondary" size="sm" :disabled="busy" @click="confirmingDiscard = true">Descartar borrador</UiButton>
           </div>
@@ -266,7 +295,18 @@ onMounted(() => action(list))
             <UiButton variant="danger" size="sm" :disabled="busy" @click="action(discard)">Confirmar descarte</UiButton>
             <UiButton variant="secondary" size="sm" @click="confirmingDiscard = false">Cancelar</UiButton>
           </div>
-          <div v-if="source" class="editor">
+          <UiAlert v-if="draft.canAdoptAuthorityBase" tone="warning">
+            Este borrador usa destinatarios impresos. Adopta la base con autoridades dinámicas para poder publicarlo.
+            <UiButton variant="secondary" size="sm" :disabled="busy || dirty" @click="action(adoptAuthorityBase)">Adoptar base limpia</UiButton>
+          </UiAlert>
+          <p v-if="draft.layout.authorityFields?.length">Los destinatarios se toman del catálogo de autoridades vigentes.</p>
+          <div v-if="draft.layout.logoZones?.length" class="template-actions">
+            <UiButton variant="secondary" :aria-pressed="!editingLogos" :disabled="busy || dirty" @click="editingLogos = false">Campos</UiButton>
+            <UiButton variant="secondary" :aria-pressed="editingLogos" :disabled="busy || dirty" @click="editingLogos = true">Logotipos</UiButton>
+          </div>
+          <TemplateLogoEditor v-if="source && editingLogos" :key="draft.revision" :draft="draft" :source="source"
+            :busy="busy" @changed="change" @save="logos => action(() => saveLogos(logos))" />
+          <div v-else-if="source" class="editor">
             <TemplateCanvas v-model:page="page" :blob="source" :page-sizes="draft.layout.pageSizes"
               :fields="draft.layout.fields" :selected="selected" @select="selectSlot" @placement="putPlacement" />
             <fieldset v-if="current.mode === 'prefill'" class="inspector" :disabled="busy">
@@ -368,6 +408,8 @@ onMounted(() => action(list))
 .catalog-select { max-width: 30rem; }
 .templates label { display: grid; gap: .25rem; font-size: .9rem; }
 .templates input, .templates select { width: 100%; min-width: 0; }
+.templates label.clean-branding { display: flex; align-items: center; gap: .4rem; }
+.clean-branding input { width: auto; }
 .template-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
 .editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem); gap: 1rem; align-items: start; }
 .inspector, .row-settings { display: grid; gap: .65rem; min-width: 0; margin: 0; border: 1px solid var(--color-border-medium); padding: .85rem; }

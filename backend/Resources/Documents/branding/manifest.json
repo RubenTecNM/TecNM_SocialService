@@ -1,0 +1,603 @@
+{
+  "pp-evaluation": {
+    "sha256": "e1b507bdb4f60bf12934e5de38df6122c2f2cab7e6650ac49ae19cbcb741868f",
+    "file": "pp-evaluation-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 12.0,
+        "y": 7.0,
+        "width": 174.0,
+        "height": 54.0,
+        "png": "c46338629af35966.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 201.0,
+        "y": 7.0,
+        "width": 90.0,
+        "height": 54.0,
+        "png": "7b210244174a76fd.png"
+      },
+      {
+        "name": "ITSM",
+        "page": 0,
+        "x": 295.0,
+        "y": 7.0,
+        "width": 87.0,
+        "height": 54.0,
+        "png": "f5180186a6ffae84.png"
+      },
+      {
+        "name": "Coahuila",
+        "page": 0,
+        "x": 399.0,
+        "y": 7.0,
+        "width": 43.0,
+        "height": 54.0,
+        "png": "a6479650324a539d.png"
+      },
+      {
+        "name": "SEDU",
+        "page": 0,
+        "x": 456.0,
+        "y": 7.0,
+        "width": 119.0,
+        "height": 54.0,
+        "png": "75c3b071586e7e50.png"
+      },
+      {
+        "name": "Marca de pie 1",
+        "page": 0,
+        "x": 66.0,
+        "y": 728.0,
+        "width": 50.0,
+        "height": 64.0,
+        "png": "bad068a2be854f5c.png"
+      },
+      {
+        "name": "Marca de pie 2",
+        "page": 0,
+        "x": 118.0,
+        "y": 728.0,
+        "width": 38.0,
+        "height": 64.0,
+        "png": "a42b4e9dfb54c0d5.png"
+      },
+      {
+        "name": "Marca de pie 3",
+        "page": 0,
+        "x": 157.0,
+        "y": 728.0,
+        "width": 36.0,
+        "height": 64.0,
+        "png": "74111349ff359bfb.png"
+      },
+      {
+        "name": "Marca de pie 4",
+        "page": 0,
+        "x": 194.0,
+        "y": 728.0,
+        "width": 36.0,
+        "height": 64.0,
+        "png": "752aa0031f34c06c.png"
+      },
+      {
+        "name": "Marca de pie 5",
+        "page": 0,
+        "x": 231.0,
+        "y": 728.0,
+        "width": 34.0,
+        "height": 64.0,
+        "png": "ea31a646e79a92b0.png"
+      },
+      {
+        "name": "Marca de pie 6",
+        "page": 0,
+        "x": 266.0,
+        "y": 728.0,
+        "width": 39.0,
+        "height": 64.0,
+        "png": "ee2b994ee90ca9ff.png"
+      },
+      {
+        "name": "Marca de pie 7",
+        "page": 0,
+        "x": 307.0,
+        "y": 728.0,
+        "width": 36.0,
+        "height": 64.0,
+        "png": "d8ee10effdb52475.png"
+      },
+      {
+        "name": "Marca de pie 8",
+        "page": 0,
+        "x": 344.0,
+        "y": 728.0,
+        "width": 56.0,
+        "height": 64.0,
+        "png": "2e100aa0cc702c57.png"
+      },
+      {
+        "name": "Marca de pie 9",
+        "page": 0,
+        "x": 429.0,
+        "y": 728.0,
+        "width": 148.0,
+        "height": 64.0,
+        "png": "ec7ac7c863bdddb3.png"
+      },
+      {
+        "name": "Educación",
+        "page": 1,
+        "x": 12.0,
+        "y": 7.0,
+        "width": 174.0,
+        "height": 54.0,
+        "png": "c46338629af35966.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 1,
+        "x": 201.0,
+        "y": 7.0,
+        "width": 90.0,
+        "height": 54.0,
+        "png": "7b210244174a76fd.png"
+      },
+      {
+        "name": "ITSM",
+        "page": 1,
+        "x": 295.0,
+        "y": 7.0,
+        "width": 87.0,
+        "height": 54.0,
+        "png": "f5180186a6ffae84.png"
+      },
+      {
+        "name": "Coahuila",
+        "page": 1,
+        "x": 399.0,
+        "y": 7.0,
+        "width": 43.0,
+        "height": 54.0,
+        "png": "a6479650324a539d.png"
+      },
+      {
+        "name": "SEDU",
+        "page": 1,
+        "x": 456.0,
+        "y": 7.0,
+        "width": 119.0,
+        "height": 54.0,
+        "png": "75c3b071586e7e50.png"
+      },
+      {
+        "name": "Marca de pie 1",
+        "page": 1,
+        "x": 66.0,
+        "y": 728.0,
+        "width": 50.0,
+        "height": 64.0,
+        "png": "bad068a2be854f5c.png"
+      },
+      {
+        "name": "Marca de pie 2",
+        "page": 1,
+        "x": 118.0,
+        "y": 728.0,
+        "width": 38.0,
+        "height": 64.0,
+        "png": "a42b4e9dfb54c0d5.png"
+      },
+      {
+        "name": "Marca de pie 3",
+        "page": 1,
+        "x": 157.0,
+        "y": 728.0,
+        "width": 36.0,
+        "height": 64.0,
+        "png": "74111349ff359bfb.png"
+      },
+      {
+        "name": "Marca de pie 4",
+        "page": 1,
+        "x": 194.0,
+        "y": 728.0,
+        "width": 36.0,
+        "height": 64.0,
+        "png": "752aa0031f34c06c.png"
+      },
+      {
+        "name": "Marca de pie 5",
+        "page": 1,
+        "x": 231.0,
+        "y": 728.0,
+        "width": 34.0,
+        "height": 64.0,
+        "png": "ea31a646e79a92b0.png"
+      },
+      {
+        "name": "Marca de pie 6",
+        "page": 1,
+        "x": 266.0,
+        "y": 728.0,
+        "width": 39.0,
+        "height": 64.0,
+        "png": "ee2b994ee90ca9ff.png"
+      },
+      {
+        "name": "Marca de pie 7",
+        "page": 1,
+        "x": 307.0,
+        "y": 728.0,
+        "width": 36.0,
+        "height": 64.0,
+        "png": "d8ee10effdb52475.png"
+      },
+      {
+        "name": "Marca de pie 8",
+        "page": 1,
+        "x": 344.0,
+        "y": 728.0,
+        "width": 56.0,
+        "height": 64.0,
+        "png": "2e100aa0cc702c57.png"
+      },
+      {
+        "name": "Marca de pie 9",
+        "page": 1,
+        "x": 429.0,
+        "y": 728.0,
+        "width": 148.0,
+        "height": 64.0,
+        "png": "ec7ac7c863bdddb3.png"
+      }
+    ]
+  },
+  "ss-acceptance-example": {
+    "sha256": "6ef5a13de4660181f5efeaf04640fb2bb10f0330351076ec5a02de2473866f31",
+    "file": "ss-acceptance-example-authority.pdf",
+    "authorityFile": "ss-acceptance-example-authority.pdf",
+    "authorityFields": [
+      {
+        "role": "outreach_division_head",
+        "part": "name",
+        "prefix": null,
+        "placement": {
+          "key": "outreach_division_head.name",
+          "x": 63.86,
+          "y": 261.91,
+          "width": 481.93999999999994,
+          "height": 14,
+          "fontSize": 11,
+          "minFontSize": 8,
+          "alignment": "left",
+          "rows": [
+            {
+              "x": 63.86,
+              "width": 481.93999999999994,
+              "baseline": 273.41
+            }
+          ]
+        }
+      },
+      {
+        "role": "outreach_division_head",
+        "part": "position",
+        "prefix": null,
+        "placement": {
+          "key": "outreach_division_head.position",
+          "x": 63.86,
+          "y": 277.39,
+          "width": 481.93999999999994,
+          "height": 14,
+          "fontSize": 11,
+          "minFontSize": 8,
+          "alignment": "left",
+          "rows": [
+            {
+              "x": 63.86,
+              "width": 481.93999999999994,
+              "baseline": 288.89
+            }
+          ]
+        }
+      }
+    ],
+    "zones": []
+  },
+  "ss-activity": {
+    "sha256": "efdbb33080515d09df12cb9a24cea1ff2a437ca38c9c40f36e41b6e2db39334d",
+    "file": "ss-activity-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 57.0,
+        "y": 7.0,
+        "width": 175.0,
+        "height": 54.0,
+        "png": "b3d60981fdb30f4f.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 244.0,
+        "y": 7.0,
+        "width": 89.0,
+        "height": 54.0,
+        "png": "20a849fcda9ecfed.png"
+      }
+    ]
+  },
+  "ss-application": {
+    "sha256": "4093f7a0867988762ff915d5816313961b8e742423247c2509d95900c0669473",
+    "file": "ss-application-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 30.0,
+        "y": 7.0,
+        "width": 154.0,
+        "height": 54.0,
+        "png": "791d0623eefcb1a1.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 194.0,
+        "y": 7.0,
+        "width": 78.0,
+        "height": 54.0,
+        "png": "1e1595725257a2b3.png"
+      }
+    ]
+  },
+  "ss-commitment": {
+    "sha256": "eac182cd9ceb5dd0425050fa6c5a808bb88aa0864f84792dacf71ee61b269f0a",
+    "file": "ss-commitment-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 46.0,
+        "y": 7.0,
+        "width": 175.0,
+        "height": 54.0,
+        "png": "88fe25848a4e42d1.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 233.0,
+        "y": 7.0,
+        "width": 90.0,
+        "height": 54.0,
+        "png": "4624b258ef15ddea.png"
+      }
+    ]
+  },
+  "ss-report": {
+    "sha256": "a9c8f9b78f34f06da3e0061d1a1ef7ecd646cad809d75f54f4c33aa36325ac01",
+    "file": "ss-report-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 45.0,
+        "y": 7.0,
+        "width": 175.0,
+        "height": 50.0,
+        "png": "37bc36ec8675f377.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 232.0,
+        "y": 7.0,
+        "width": 90.0,
+        "height": 50.0,
+        "png": "2ef702996eb9b22d.png"
+      }
+    ]
+  },
+  "ss-self-evaluation": {
+    "sha256": "0b8b2acee4bda1fa04008b796853083d229178c81cc039275fb15dbcc238d14a",
+    "file": "ss-self-evaluation-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 59.0,
+        "y": 7.0,
+        "width": 175.0,
+        "height": 54.0,
+        "png": "afb757473235030a.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 246.0,
+        "y": 7.0,
+        "width": 90.0,
+        "height": 54.0,
+        "png": "7eb52eb7104f8628.png"
+      }
+    ]
+  },
+  "ss-supervisor-evaluation": {
+    "sha256": "f8d5dfea1f52aa57ec863072145b49516ba5032f113d5d6efa88c62fef59b364",
+    "file": "ss-supervisor-evaluation-clean.pdf",
+    "authorityFile": null,
+    "authorityFields": [],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 59.0,
+        "y": 7.0,
+        "width": 175.0,
+        "height": 54.0,
+        "png": "ea9cfcd585cfaae2.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 245.0,
+        "y": 7.0,
+        "width": 91.0,
+        "height": 54.0,
+        "png": "a0fb55ea78d53622.png"
+      }
+    ]
+  },
+  "ss-termination": {
+    "sha256": "c231aa94b9822eaa9c580b926439a6a5f0fea937119f96dd33f7508b8b15f0a4",
+    "file": "ss-termination-clean.pdf",
+    "authorityFile": "ss-termination-authority.pdf",
+    "authorityFields": [
+      {
+        "role": "institute_director",
+        "part": "name",
+        "prefix": "C. ",
+        "placement": {
+          "key": "institute_director.name",
+          "x": 63.86,
+          "y": 165.76,
+          "width": 481.93999999999994,
+          "height": 14,
+          "fontSize": 11,
+          "minFontSize": 8,
+          "alignment": "left",
+          "rows": [
+            {
+              "x": 63.86,
+              "width": 481.93999999999994,
+              "baseline": 177.26
+            }
+          ]
+        }
+      },
+      {
+        "role": "institute_director",
+        "part": "position",
+        "prefix": null,
+        "placement": {
+          "key": "institute_director.position",
+          "x": 63.86,
+          "y": 181.24,
+          "width": 481.93999999999994,
+          "height": 14,
+          "fontSize": 11,
+          "minFontSize": 8,
+          "alignment": "left",
+          "rows": [
+            {
+              "x": 63.86,
+              "width": 481.93999999999994,
+              "baseline": 192.74
+            }
+          ]
+        }
+      },
+      {
+        "role": "outreach_division_head",
+        "part": "name",
+        "prefix": "Atención: ",
+        "placement": {
+          "key": "outreach_division_head.name",
+          "x": 63.86,
+          "y": 227.8,
+          "width": 481.93999999999994,
+          "height": 14,
+          "fontSize": 11,
+          "minFontSize": 8,
+          "alignment": "right",
+          "rows": [
+            {
+              "x": 63.86,
+              "width": 481.93999999999994,
+              "baseline": 239.3
+            }
+          ]
+        }
+      },
+      {
+        "role": "outreach_division_head",
+        "part": "position",
+        "prefix": null,
+        "placement": {
+          "key": "outreach_division_head.position",
+          "x": 63.86,
+          "y": 243.31,
+          "width": 481.93999999999994,
+          "height": 14,
+          "fontSize": 11,
+          "minFontSize": 8,
+          "alignment": "right",
+          "rows": [
+            {
+              "x": 63.86,
+              "width": 481.93999999999994,
+              "baseline": 254.81
+            }
+          ]
+        }
+      }
+    ],
+    "zones": [
+      {
+        "name": "Educación",
+        "page": 0,
+        "x": 30.0,
+        "y": 7.0,
+        "width": 175.0,
+        "height": 54.0,
+        "png": "c2a1357a83b33c7d.png"
+      },
+      {
+        "name": "TecNM",
+        "page": 0,
+        "x": 217.0,
+        "y": 7.0,
+        "width": 90.0,
+        "height": 54.0,
+        "png": "ca1934f4b8deac76.png"
+      },
+      {
+        "name": "Coahuila",
+        "page": 0,
+        "x": 339.0,
+        "y": 7.0,
+        "width": 44.0,
+        "height": 54.0,
+        "png": "c9797ec6c3452509.png"
+      },
+      {
+        "name": "SEDU",
+        "page": 0,
+        "x": 429.0,
+        "y": 7.0,
+        "width": 119.0,
+        "height": 54.0,
+        "png": "20f16d7c6e503ace.png"
+      }
+    ]
+  }
+}

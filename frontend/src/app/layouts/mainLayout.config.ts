@@ -93,6 +93,7 @@ export function getSidebarNavigationForRoles(roles: string[]): NavigationItem[] 
       open: true,
       children: [
         { label: 'Empresas y dependencias', to: '/companies', icon: 'companies' },
+        ...(isAdmin ? [{ label: 'Autoridades y logotipos', to: '/catalogs/institutional-identity', icon: 'careers' as const }] : []),
         { label: 'Carreras Oficiales', to: '/catalogs/careers', icon: 'careers' },
         { label: 'Tipos de Actividad', to: '/catalogs/activity-types', icon: 'careers' },
         ...(isAdmin || isSSOfficer || isPPCoord

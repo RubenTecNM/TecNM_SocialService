@@ -2,13 +2,15 @@
 import { onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
 import { UiAlert, UiButton } from '../../../shared/components'
-import type { Placement } from '../types/templateManagement'
+import type { LogoZone, Placement } from '../types/templateManagement'
 
 const props = defineProps<{
   blob: Blob
   pageSizes: { width: number; height: number }[]
   fields: (Placement | null)[]
   selected: number
+  bounds?: LogoZone[]
+  imageSources?: (string | undefined)[]
 }>()
 const page = defineModel<number>('page', { required: true })
 const emit = defineEmits<{ select: [number]; placement: [number, Placement] }>()
@@ -78,13 +80,14 @@ function move(event: PointerEvent) {
   const size = props.pageSizes[page.value]
   if (!drag || !size) return
   const { field, index, resize } = drag
+  const zone = props.bounds?.[index] ?? { x: 0, y: 0, width: size.width, height: size.height }
   const dx = (event.clientX - drag.x) / zoom.value
   const dy = (event.clientY - drag.y) / zoom.value
   const clamp = (value: number, min: number, max: number) => Math.round(Math.max(min, Math.min(max, value)) * 100) / 100
-  const x = resize ? field.x : clamp(field.x + dx, 0, size.width - field.width)
-  const y = resize ? field.y : clamp(field.y + dy, 0, size.height - field.height)
-  const width = resize ? clamp(field.width + dx, 5, size.width - x) : field.width
-  const height = resize ? clamp(field.height + dy, 5, size.height - y) : field.height
+  const x = resize ? field.x : clamp(field.x + dx, zone.x, zone.x + zone.width - field.width)
+  const y = resize ? field.y : clamp(field.y + dy, zone.y, zone.y + zone.height - field.height)
+  const width = resize ? clamp(field.width + dx, 5, zone.x + zone.width - x) : field.width
+  const height = resize ? clamp(field.height + dy, 5, zone.y + zone.height - y) : field.height
   const rows = field.rows?.map(row => ({
     x: x + (row.x - field.x) * width / field.width,
     width: row.width * width / field.width,
@@ -114,6 +117,7 @@ function move(event: PointerEvent) {
         <template v-for="(field, i) in fields" :key="i">
           <div v-if="ready && field && field.page === page" class="field-box" :class="{ selected: selected === i }"
             :style="{ left: field.x * zoom + 'px', top: field.y * zoom + 'px', width: field.width * zoom + 'px', height: field.height * zoom + 'px' }">
+            <img v-if="imageSources?.[i]" class="logo-overlay" :src="imageSources[i]" alt="" />
             <button type="button" class="field-move" :aria-label="'Seleccionar campo ' + (i + 1)" @click="emit('select', i)"
               @pointerdown="start($event, i, field, false)" @pointermove="move" @pointerup="drag = undefined" @lostpointercapture="drag = undefined">{{ i + 1 }}</button>
             <span v-for="(row, index) in field.rows ?? []" :key="index" class="baseline"
@@ -139,4 +143,5 @@ canvas { display: block; width: 100%; height: 100%; }
 .field-move { position: absolute; inset: 0; width: 100%; border: 0; text-align: left; padding: 0 2px; background: transparent; color: #10384a; font-size: .65rem; cursor: move; touch-action: none; }
 .field-resize { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; padding: 0; border: 2px solid #fff; background: #00536a; cursor: nwse-resize; touch-action: none; }
 .baseline { position: absolute; border-top: 1px dashed #00536a; pointer-events: none; }
+.logo-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 </style>

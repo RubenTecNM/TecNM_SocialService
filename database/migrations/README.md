@@ -2,6 +2,8 @@
 
 ## Gestor de plantillas PDF
 
+Para desplegar la identidad documental sobre una instalación con el gestor activo, respaldar PostgreSQL, detener la aplicación y aplicar `20261127_document_branding.sql`. A continuación ejecutar `docker compose run --rm --no-deps backend --import-document-branding` con la imagen nueva. El importador comprueba los hashes de las bases, conserva las asignaciones históricas y deja los borradores disponibles. En bases nuevas puede ejecutarse junto con `--import-document-templates`. Ejecutar `tools/pdf/verify_branding.py` para verificar las copias preparadas.
+
 Conservar un respaldo de PostgreSQL y el catálogo desplegado, incluido cualquier directorio configurado en `Documents__RootPath`. Detener las escrituras y aplicar `20261126_document_templates.sql` con `ON_ERROR_STOP=1` en instalaciones existentes. Las bases nuevas ya incluyen sus tablas en `database/design/schema.sql`.
 
 Con la imagen nueva y el mismo catálogo, ejecutar `docker compose run --rm --no-deps backend --import-document-templates`. En una instalación nativa usar `dotnet TecNM.Api.dll --import-document-templates` desde el directorio publicado. El importador comprueba los PDF y guarda versiones y asignaciones en una transacción. Repetirlo conserva las versiones activadas y las asignaciones que ya existan. Al terminar, arrancar API y frontend juntos y comprobar una descarga de un expediente anterior y la vista de Catálogos oficiales. Conservar el respaldo anterior hasta validar el corte.

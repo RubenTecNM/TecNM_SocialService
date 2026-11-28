@@ -129,6 +129,8 @@ Endpoints CRUD estándar + `/options` (`meta.category`, `meta.isInternal`) + `PA
 
 ## 4. Autoridades institucionales — `/api/institutional-authorities`
 
+Administración registra reemplazos de titulares desde el catálogo. Cada cargo admite una sola autoridad activa. La rotación es transaccional, conserva al titular anterior como inactivo y protege las escrituras con antifalsificación.
+
 ```ts
 interface InstitutionalAuthority {
   id: number;

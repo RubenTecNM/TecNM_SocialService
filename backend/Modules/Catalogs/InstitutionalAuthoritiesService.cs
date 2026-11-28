@@ -111,6 +111,7 @@ public class InstitutionalAuthoritiesService(TecNMDbContext dbContext)
         {
             a.IsActive = false;
         }
+        await SaveAsync(cancellationToken);
 
         var authority = new InstitutionalAuthority
         {
@@ -125,7 +126,7 @@ public class InstitutionalAuthoritiesService(TecNMDbContext dbContext)
         };
 
         dbContext.InstitutionalAuthorities.Add(authority);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SaveAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return ToResponse(authority);
@@ -154,7 +155,7 @@ public class InstitutionalAuthoritiesService(TecNMDbContext dbContext)
         authority.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
         authority.SignatureInitials = string.IsNullOrWhiteSpace(request.SignatureInitials) ? null : request.SignatureInitials.Trim().ToUpperInvariant();
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SaveAsync(cancellationToken);
 
         return ToResponse(authority);
     }
@@ -185,10 +186,11 @@ public class InstitutionalAuthoritiesService(TecNMDbContext dbContext)
             {
                 a.IsActive = false;
             }
+            await SaveAsync(cancellationToken);
         }
 
         authority.IsActive = isActive;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SaveAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return ToResponse(authority);
@@ -222,6 +224,11 @@ public class InstitutionalAuthoritiesService(TecNMDbContext dbContext)
             errors["fullName"] = ["El nombre completo es obligatorio y debe tener entre 1 y 180 caracteres."];
         }
 
+        if (request.Title?.Trim().Length > 32)
+        {
+            errors["title"] = ["El título debe tener hasta 32 caracteres."];
+        }
+
         if (string.IsNullOrWhiteSpace(request.Position) || request.Position.Trim().Length > 180)
         {
             errors["position"] = ["El cargo o puesto es obligatorio y debe tener entre 1 y 180 caracteres."];
@@ -235,6 +242,16 @@ public class InstitutionalAuthoritiesService(TecNMDbContext dbContext)
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
+        }
+    }
+
+    private async Task SaveAsync(CancellationToken ct)
+    {
+        try { await dbContext.SaveChangesAsync(ct); }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException
+            { ConstraintName: "uq_institutional_authorities_active_role" })
+        {
+            throw new ConflictException("institutional_authorities.active_conflict", "El titular activo cambió. Actualiza el catálogo.");
         }
     }
 

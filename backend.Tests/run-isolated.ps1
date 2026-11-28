@@ -18,6 +18,8 @@ try {
     $baseline | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1 2>$null
     if ($LASTEXITCODE -ne 0) { throw 'Falló el esquema v1 en el contenedor vacío.' }
     Get-Content database/migrations/20261106_company_type_prepare.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la preparación de tipología.' }
+    Get-Content database/migrations/20261127_reports_school_year_and_activity_types.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw 'Falló la preparación de clasificación.' }
     Get-ChildItem database/seed/*.sql | Sort-Object Name | ForEach-Object {
         Get-Content -LiteralPath $_.FullName -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1 | Out-Null
@@ -31,6 +33,8 @@ try {
     Get-Content database/migrations/20261108_student_social_service_follow_up.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw 'Falló la migración de seguimiento.' }
     Get-Content database/migrations/20261126_document_templates.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la migración del gestor de plantillas.' }
+    Get-Content database/migrations/20261127_document_branding.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw "Falló la migración de cuentas." }
     $mapping = docker port $containerName 5432
     $port = ($mapping -split ':')[-1]

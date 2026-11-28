@@ -7,7 +7,7 @@ using TecNM.Api.Modules.Expedients.Pdf;
 
 namespace TecNM.Api.Modules.Expedients.Templates;
 
-public sealed class TemplateCatalog(TecNMDbContext db, OfficialPdfService pdf, TimeProvider clock, IConfiguration configuration)
+public sealed class TemplateCatalog(TecNMDbContext db, OfficialPdfService pdf, TimeProvider clock, IConfiguration configuration, TemplateBranding branding)
 {
     internal static readonly string[] SocialKeys =
     [
@@ -45,9 +45,8 @@ public sealed class TemplateCatalog(TecNMDbContext db, OfficialPdfService pdf, T
         var version = await versions.SingleOrDefaultAsync(v => v.TemplateKey == key && v.PublishedAt != null && selection.Contains(v.Id), ct)
             ?? throw Unavailable();
         VerifyHash(version);
-        var layout = Layout(version);
-        TemplatePdfValidation.ValidateGeometry(version.Pdf, layout);
-        return data is null ? version.Pdf : pdf.Generate(layout, version.Pdf, data);
+        var compatible = TemplateBranding.RequiresAuthorities(key) ? await branding.CompatibleAsync(version, ct) : null;
+        return await branding.RenderAsync(compatible ?? version, data, ct);
     }
 
     public async Task AssignAsync(string area, long id, CancellationToken ct)

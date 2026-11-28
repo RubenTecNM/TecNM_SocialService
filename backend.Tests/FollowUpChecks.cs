@@ -19,7 +19,7 @@ internal static class FollowUpChecks
         foreach (var (client, name) in new[] {(admin,"admin"),(ss,"encargado.ss"),(pp,"coord.practicas")})
             (await client.PostAsJsonAsync("/api/auth/login",new {username=name,password="TecNM-Demo-2026!"})).EnsureSuccessStatusCode();
         var previous = await db.AcademicPeriods.Where(p=>p.IsActive).ToListAsync();
-        var periods = Enumerable.Range(0,5).Select(i=>new AcademicPeriod {Code=$"FOLLOW{i}",Name="Seguimiento QA",StartDate=new DateOnly(2010+i/2, i%2==0?2:8,1),EndDate=new DateOnly(2010+i/2,i%2==0?7:12,28)}).ToArray();
+        var periods = Enumerable.Range(0,5).Select(i=>new AcademicPeriod {Code=$"FOLLOW{i}",Name="Seguimiento QA",SchoolYear=$"{2009+i/2+i%2}-{2010+i/2+i%2}",StartDate=new DateOnly(2010+i/2, i%2==0?2:8,1),EndDate=new DateOnly(2010+i/2,i%2==0?7:12,28)}).ToArray();
         foreach(var p in previous)p.IsActive=false;
         periods[0].IsActive=true; db.AddRange(periods);
         var student=new Student {ControlNumber="FOLLOWQA",FirstName="Seguimiento",FirstSurname="Prueba",CareerId=await db.Careers.Select(c=>c.Id).FirstAsync()};

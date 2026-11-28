@@ -35,9 +35,9 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         return Generate(definition, bytes, data);
     }
 
-    public byte[] Generate(TemplateDefinition definition, byte[] bytes, IReadOnlyDictionary<string, object?> data)
+    public byte[] Generate(TemplateDefinition definition, byte[] bytes, IReadOnlyDictionary<string, object?> data, IReadOnlyList<LogoImage>? logos = null)
     {
-        if (definition.Fields.Length == 0) throw new ConflictException("documents.template_unavailable", "El formato aún no tiene un mapa de prellenado verificado.");
+        if (definition.Fields.Length == 0 && logos is not { Count: > 0 }) throw new ConflictException("documents.template_unavailable", "El formato aún no tiene un mapa de prellenado verificado.");
         using var source = new MemoryStream(bytes);
         using var pdf = PdfReader.Open(source, PdfDocumentOpenMode.Modify);
         foreach (var group in definition.Fields.GroupBy(f => f.Page))
@@ -82,7 +82,7 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
                 for (var i = 0; i < lines.Length; i++)
                     {
                     var line = lines[i];
-                    var x = field.Alignment == "center" ? field.X + (field.Width - graphics.MeasureString(line, font).Width) / 2 : field.X;
+                    var x = AlignedX(field.Alignment, field.X, field.Width, graphics, font, line);
                     var words = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     if (field.Alignment == "justify" && i < lines.Length - 1 && words.Length > 1)
                     {
@@ -95,6 +95,19 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
                     }
                     else graphics.DrawString(line, font, XBrushes.Black, new XPoint(x, field.Y + size + i * size * 1.2));
                 }
+            }
+        }
+        foreach (var group in (logos ?? []).GroupBy(logo => logo.Page))
+        {
+            using var graphics = XGraphics.FromPdfPage(pdf.Pages[group.Key], XGraphicsPdfPageOptions.Append);
+            foreach (var logo in group)
+            {
+                using var stream = new MemoryStream(logo.Png);
+                using var image = XImage.FromStream(stream);
+                var scale = Math.Min(logo.Width / image.PointWidth, logo.Height / image.PointHeight);
+                var width = image.PointWidth * scale;
+                var height = image.PointHeight * scale;
+                graphics.DrawImage(image, logo.X + (logo.Width - width) / 2, logo.Y + (logo.Height - height) / 2, width, height);
             }
         }
         foreach (var stamp in definition.Stamps ?? []) ApplyStamp(pdf, definition, stamp, data);
@@ -128,7 +141,7 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
                         var line = lines[i];
                         if (line.Length == 0) continue;
                         var row = rows[start + i];
-                        var x = field.Alignment == "center" ? row.X + (row.Width - graphics.MeasureString(line, font).Width) / 2 : row.X;
+                        var x = AlignedX(field.Alignment, row.X, row.Width, graphics, font, line);
                         graphics.DrawString(line, font, XBrushes.Black, new XPoint(x, row.Baseline));
                     }
                     return;
@@ -251,7 +264,7 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
         }
         foreach (var field in definition.Fields)
         {
-            if (field is null || field.Alignment is not ("left" or "center" or "justify") || string.IsNullOrWhiteSpace(field.Key) || field.Page < 0 || field.Page >= pdf.PageCount
+            if (field is null || field.Alignment is not ("left" or "center" or "right" or "justify") || string.IsNullOrWhiteSpace(field.Key) || field.Page < 0 || field.Page >= pdf.PageCount
                 || !new[] { field.X, field.Y, field.Width, field.Height }.All(double.IsFinite)
                 || field.X < 0 || field.Y < 0 || field.Width <= 0 || field.Height <= 0
                 || !ValidFontSize(field.FontSize ?? definition.FontSize, field.MinFontSize ?? definition.MinFontSize)) throw Unavailable();
@@ -298,5 +311,16 @@ public sealed class OfficialPdfService(IWebHostEnvironment environment, IConfigu
     public sealed record Field(string Key, double X, double Y, double Width, double Height, double? FontSize = null, double? MinFontSize = null, int Page = 0, string? Format = null, string? MatchValue = null, bool Optional = false, string Alignment = "left", TextRow[]? Rows = null, string? FollowingKey = null);
     public sealed record Stamp(string File, string Sha256, string AuthorityRoleKey, double X, double Y, double Width, double Height, double Opacity = 1, int Page = 0);
     public sealed record PageSize(double Width, double Height);
-    public sealed record TemplateDefinition(string File, string Sha256, string Version, string Font, Field[] Fields, bool Institutional = false, Stamp[]? Stamps = null, int Pages = 0, PageSize[]? PageSizes = null, double FontSize = 9, double MinFontSize = 7);
+    private static double AlignedX(string alignment, double x, double width, XGraphics graphics, XFont font, string line) =>
+        alignment switch
+        {
+            "center" => x + (width - graphics.MeasureString(line, font).Width) / 2,
+            "right" => x + width - graphics.MeasureString(line, font).Width,
+            _ => x
+        };
+
+    public sealed record LogoImage(byte[] Png, int Page, double X, double Y, double Width, double Height);
+    public sealed record LogoZone(string Name, int Page, double X, double Y, double Width, double Height);
+    public sealed record AuthorityField(string Role, string Part, Field Placement, string? Prefix = null);
+    public sealed record TemplateDefinition(string File, string Sha256, string Version, string Font, Field[] Fields, bool Institutional = false, Stamp[]? Stamps = null, int Pages = 0, PageSize[]? PageSizes = null, double FontSize = 9, double MinFontSize = 7, LogoZone[]? LogoZones = null, AuthorityField[]? AuthorityFields = null);
 }

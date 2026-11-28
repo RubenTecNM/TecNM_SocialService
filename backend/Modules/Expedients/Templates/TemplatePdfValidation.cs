@@ -11,7 +11,7 @@ internal static class TemplatePdfValidation
     internal const int MaxBytes = 5 * 1024 * 1024;
 
     private static readonly string[] ActiveKeys =
-        ["/AcroForm", "/Annots", "/AA", "/OpenAction", "/JavaScript", "/JS", "/EmbeddedFiles", "/EF", "/AF", "/XFA", "/Perms"];
+        ["/AcroForm", "/AA", "/OpenAction", "/JavaScript", "/JS", "/EmbeddedFiles", "/EF", "/AF", "/XFA", "/Perms"];
     private static readonly HashSet<string> Actions =
         ["/GoTo", "/GoToR", "/GoToE", "/Launch", "/Thread", "/URI", "/Sound", "/Movie", "/Hide", "/Named",
          "/SubmitForm", "/ResetForm", "/ImportData", "/JavaScript", "/SetOCGState", "/Rendition", "/Trans", "/GoTo3DView", "/RichMediaExecute"];
@@ -35,7 +35,9 @@ internal static class TemplatePdfValidation
                     foreach (var child in array.Elements) pending.Push(child);
                 else if (item is PdfDictionary dict)
                 {
-                    if (ActiveKeys.Any(dict.Elements.ContainsKey) || Actions.Contains(dict.Elements.GetName("/S")) ||
+                    if (ActiveKeys.Any(dict.Elements.ContainsKey) ||
+                        (dict.Elements.ContainsKey("/Annots") && dict.Elements.GetArray("/Annots") is not { Elements.Count: 0 }) ||
+                        Actions.Contains(dict.Elements.GetName("/S")) ||
                         dict.Elements.GetName("/Type") is "/Action" or "/Filespec" or "/EmbeddedFile" or "/Sig") throw Invalid();
                     foreach (var child in dict.Elements.Values)
                         if (child is not null) pending.Push(child);

@@ -60,6 +60,7 @@ internal static class HttpChecks
         await Login(admin, "admin");
         await Login(student, "l23050363@monclova.tecnm.mx");
         await CheckTemplateManagementAsync(factory, student);
+        await CheckBrandingAsync(factory, admin, student);
         Expect(await admin.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.OK);
         Expect(await student.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.OK);
         Expect(await student.GetAsync("/api/documents/review-queue"), HttpStatusCode.Forbidden);
@@ -574,6 +575,88 @@ internal static class HttpChecks
         var events = await ss.GetFromJsonAsync<JsonElement>(path + "/activations");
         if (events.GetArrayLength() != 3) throw new Exception("Missing activation history.");
         Console.WriteLine("Template management permissions, previews, immutable pins, concurrency and restore passed.");
+    }
+
+    private static async Task CheckBrandingAsync(WebApplicationFactory<TecNMDbContext> factory, HttpClient admin, HttpClient student)
+    {
+        const string root = "/api/template-management";
+        const string ct = root + "/ss-termination";
+        const string pp = root + "/pp-evaluation";
+        const string roles = "/api/institutional-authorities";
+        var token = await admin.GetFromJsonAsync<JsonElement>(root + "/csrf");
+        admin.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("token").GetString());
+        await GetJson(await admin.PostAsync(ct + "/draft", null));
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var migration = scope.ServiceProvider.GetRequiredService<TecNM.Api.Modules.Expedients.Templates.BrandingImport>();
+            await migration.RunAsync();
+            await migration.RunAsync();
+        }
+        async Task<JsonElement> Summary(string key) =>
+            (await admin.GetFromJsonAsync<JsonElement>(root)).EnumerateArray().Single(item => item.GetProperty("key").GetString() == key);
+        var draftId = (await Summary("ss-termination")).GetProperty("draftId").GetInt64();
+        var draft = await admin.GetFromJsonAsync<JsonElement>(ct + "/versions/" + draftId);
+        if (!draft.GetProperty("canAdoptAuthorityBase").GetBoolean()) throw new Exception("The existing draft lost its compatible base.");
+        var adopted = await GetJson(await admin.PostAsync(ct + "/draft/adopt-authority-base?revision=" + draft.GetProperty("revision").GetUInt32(), null));
+        if (draft.GetProperty("layout").GetProperty("fields").GetRawText() != adopted.GetProperty("layout").GetProperty("fields").GetRawText())
+            throw new Exception("Adopting the approved base changed the draft fields.");
+
+        var active = await admin.GetFromJsonAsync<JsonElement>(roles + "/active");
+        foreach (var (role, name, position) in new[]
+        {
+            ("institute_director", "Rafael Peña del Valle", "Director institucional de prueba"),
+            ("outreach_division_head", "Lucía Muñoz Valdés", "Titular de Vinculación de prueba")
+        })
+        {
+            var replacement = new { roleKey = role, title = "Mtra.", fullName = name, position };
+            Expect(await student.PostAsJsonAsync(roles, replacement), HttpStatusCode.Forbidden);
+            Expect(await admin.PostAsJsonAsync(roles, replacement), HttpStatusCode.Created);
+        }
+        var acceptance = await admin.GetByteArrayAsync("/api/document-templates/ss-acceptance-example/file?tramiteId=1");
+        var termination = await admin.GetByteArrayAsync("/api/document-templates/ss-termination/file?tramiteId=1");
+        File.WriteAllBytes("tmp/pdf-qa/branding-acceptance.pdf", acceptance);
+        File.WriteAllBytes("tmp/pdf-qa/branding-termination.pdf", termination);
+        foreach (var role in new[] { "institute_director", "outreach_division_head" })
+        {
+            var originalId = active.GetProperty(role).GetProperty("id").GetInt64();
+            Expect(await admin.PatchAsJsonAsync(roles + "/" + originalId + "/status", new { isActive = true }), HttpStatusCode.OK);
+        }
+
+        var ppSummary = await Summary("pp-evaluation");
+        var ppDraft = await GetJson(await admin.PostAsync(pp + "/draft", null));
+        var placements = ppDraft.GetProperty("logos").Deserialize<TecNM.Api.Modules.Expedients.Templates.TemplateLogoPlacement[]>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        if (placements.Length < 10) throw new Exception("The PP draft did not clone the approved logos.");
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent("Marca de revisión de prueba"), "name");
+        var sample = Directory.GetFiles("backend/Resources/Documents/branding", "*.png").First();
+        form.Add(new ByteArrayContent(File.ReadAllBytes(sample)), "file", "logo.png");
+        var asset = await GetJson(await admin.PostAsync(root + "/logos", form));
+        var revision = ppDraft.GetProperty("revision").GetUInt32();
+        var first = placements[0];
+        placements[0] = first with { X = -10 };
+        Expect(await admin.PutAsJsonAsync(pp + "/draft/logos", new { revision, logos = placements }), HttpStatusCode.UnprocessableEntity);
+        placements[0] = first with { LogoId = asset.GetProperty("id").GetInt64() };
+        var configured = await GetJson(await admin.PutAsJsonAsync(pp + "/draft/logos", new { revision, logos = placements }));
+        var publishedRevision = configured.GetProperty("revision").GetUInt32();
+        var preview = await admin.PostAsync(pp + "/draft/preview?revision=" + publishedRevision, null);
+        Expect(preview, HttpStatusCode.OK);
+        File.WriteAllBytes("tmp/pdf-qa/branding-pp.pdf", await preview.Content.ReadAsByteArrayAsync());
+        Expect(await admin.PostAsJsonAsync(pp + "/draft/publish", new
+        {
+            templateRevision = ppSummary.GetProperty("revision").GetUInt32(), draftRevision = publishedRevision, reason = "Ensayo de logotipos"
+        }), HttpStatusCode.NoContent);
+        var activePp = await Summary("pp-evaluation");
+        Expect(await admin.PostAsJsonAsync(pp + "/versions/" + ppSummary.GetProperty("activeVersionId").GetInt64() + "/restore",
+            new { templateRevision = activePp.GetProperty("revision").GetUInt32(), reason = "Recuperar la marca anterior" }), HttpStatusCode.NoContent);
+        Expect(await admin.DeleteAsync(ct + "/draft?revision=" + adopted.GetProperty("revision").GetUInt32()), HttpStatusCode.NoContent);
+        admin.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");
+        Console.WriteLine("Document branding migration, draft adoption, authorities, logos, preview and restore passed.");
+
+        static async Task<JsonElement> GetJson(HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode) throw new Exception(await response.Content.ReadAsStringAsync());
+            return await response.Content.ReadFromJsonAsync<JsonElement>();
+        }
     }
 
     private static async Task Login(HttpClient client, string username)

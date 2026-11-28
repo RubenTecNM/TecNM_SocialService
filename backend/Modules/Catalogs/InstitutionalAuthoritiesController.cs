@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TecNM.Api.Core.Http;
+using TecNM.Api.Modules.Expedients.Templates;
 
 namespace TecNM.Api.Modules.Catalogs;
 
 [ApiController]
 [Route("api/institutional-authorities")]
+[TemplateAntiforgery]
 public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService authoritiesService) : ControllerBase
 {
     [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]

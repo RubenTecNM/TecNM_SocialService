@@ -28,7 +28,8 @@ const string FrontendCors = "Frontend";
 LoadDotEnv();
 
 const string ImportTemplatesArg = "--import-document-templates";
-var builder = WebApplication.CreateBuilder(args.Where(arg => arg != ImportTemplatesArg).ToArray());
+const string ImportBrandingArg = "--import-document-branding";
+var builder = WebApplication.CreateBuilder(args.Where(arg => arg != ImportTemplatesArg && arg != ImportBrandingArg).ToArray());
 var configuration = builder.Configuration;
 
 var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -117,6 +118,8 @@ builder.Services.AddScoped<ImssEligibilityService>();
 builder.Services.AddSingleton<OfficialPdfService>();
 builder.Services.AddScoped<TemplateCatalog>();
 builder.Services.AddScoped<TemplateManagement>();
+builder.Services.AddScoped<TemplateBranding>();
+builder.Services.AddScoped<BrandingImport>();
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
@@ -208,10 +211,11 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-if (args.Contains(ImportTemplatesArg))
+if (args.Contains(ImportTemplatesArg) || args.Contains(ImportBrandingArg))
 {
     await using var scope = app.Services.CreateAsyncScope();
-    await scope.ServiceProvider.GetRequiredService<TemplateCatalog>().ImportAsync();
+    if (args.Contains(ImportTemplatesArg)) await scope.ServiceProvider.GetRequiredService<TemplateCatalog>().ImportAsync();
+    if (args.Contains(ImportBrandingArg)) await scope.ServiceProvider.GetRequiredService<BrandingImport>().RunAsync();
     Console.WriteLine("Catálogo documental importado y asignado.");
     return;
 }

@@ -32,6 +32,8 @@ export interface TemplateVersion {
   id: number
   revision: number
   publishedAt: string | null
+  logos: LogoPlacement[]
+  canAdoptAuthorityBase: boolean
   layout: {
     version: string
     font: string
@@ -39,9 +41,14 @@ export interface TemplateVersion {
     minFontSize: number
     pageSizes: { width: number; height: number }[]
     fields: (Placement | null)[]
+    logoZones?: LogoZone[] | null
+    authorityFields?: { role: string; part: string }[] | null
   }
   slots: TemplateSlot[]
 }
+
+export interface LogoZone { name: string; page: number; x: number; y: number; width: number; height: number }
+export interface LogoPlacement { slot: number; logoId: number; x: number; y: number; width: number; height: number }
 
 export interface VersionSummary {
   id: number
