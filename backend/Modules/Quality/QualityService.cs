@@ -391,7 +391,7 @@ public sealed class QualityService(
 
     private void EnsureCanWriteForTramiteType(string tramiteType)
     {
-        if (currentUser.IsInRole("admin"))
+        if (currentUser.IsInRole("department_head"))
         {
             return;
         }

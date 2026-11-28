@@ -410,8 +410,8 @@ public sealed class DocumentsService(
             query = query.Where(d => d.Status == targetStatus);
         }
 
-        // Restricción por rol si no es admin
-        var isAdmin = currentUser.IsInRole("admin");
+        // Restricción por rol si no es department_head
+        var isDeptHead = currentUser.IsInRole("department_head");
         var isSsOfficer = currentUser.IsInRole("social_service_officer");
         var isIntCoord = currentUser.IsInRole("internship_coordinator");
 
@@ -421,7 +421,7 @@ public sealed class DocumentsService(
             EnsureCanReviewTramiteType(normalizedTramite);
             query = query.Where(d => d.TramiteType == normalizedTramite);
         }
-        else if (!isAdmin)
+        else if (!isDeptHead)
         {
             if (isSsOfficer && !isIntCoord)
             {
@@ -488,7 +488,7 @@ public sealed class DocumentsService(
 
     private async Task EnsureEvidenceOwnerAsync(long studentId, string type, string code, CancellationToken ct)
     {
-        if (type == "internship" && code == "CA" && (currentUser.IsInRole("admin") || currentUser.IsInRole("internship_coordinator"))) return;
+        if (type == "internship" && code == "CA" && (currentUser.IsInRole("department_head") || currentUser.IsInRole("internship_coordinator"))) return;
         if (!currentUser.IsInRole("student") || !await dbContext.Students.AnyAsync(s => s.Id == studentId && s.UserId == currentUser.Id, ct))
             throw new AppException(403, "documents.upload_forbidden", "Solo el alumno propietario puede modificar esta evidencia.");
     }
@@ -539,7 +539,7 @@ public sealed class DocumentsService(
 
     private void EnsureCanReviewTramiteType(string tramiteType)
     {
-        if (currentUser.IsInRole("admin"))
+        if (currentUser.IsInRole("department_head"))
         {
             return;
         }

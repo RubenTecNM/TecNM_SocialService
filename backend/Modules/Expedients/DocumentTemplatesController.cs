@@ -8,7 +8,7 @@ using TecNM.Api.Modules.Internships;
 namespace TecNM.Api.Modules.Expedients;
 
 [ApiController]
-[Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head,student")]
+[Authorize(Roles = "department_head,social_service_officer,internship_coordinator,student")]
 public sealed class DocumentTemplatesController(TemplateCatalog templates, SocialServiceService socialService, InternshipsService internships, DocumentsService documents) : ControllerBase
 {
     [HttpGet("/api/document-templates/{key}/file")]

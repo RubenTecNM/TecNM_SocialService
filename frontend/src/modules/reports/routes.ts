@@ -10,13 +10,13 @@ export const reportsRoutes: RouteRecordRaw[] = [
     path: 'reports/tracking',
     name: 'reports-tracking',
     component: () => import('./views/TrackingSheetView.vue'),
-    meta: { requiresAuth: true, roles: ['admin', 'social_service_officer', 'internship_coordinator', 'department_head'] },
+    meta: { requiresAuth: true, roles: ['department_head', 'social_service_officer', 'internship_coordinator'] },
   },
   {
     path: 'reports/stats',
     name: 'reports-stats',
     component: () => import('./views/StatisticsView.vue'),
-    meta: { requiresAuth: true, roles: ['admin', 'social_service_officer', 'internship_coordinator', 'department_head'] },
+    meta: { requiresAuth: true, roles: ['department_head', 'social_service_officer', 'internship_coordinator'] },
   },
 ]
 

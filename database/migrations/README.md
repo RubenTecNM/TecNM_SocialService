@@ -43,3 +43,6 @@ Aplicar 20261108_student_social_service_follow_up.sql después de cuentas. Despl
 
 ## Analítica por Ciclo Escolar y Tipos de Actividad — 27 de noviembre de 2026
 Aplicar `20261127_reports_school_year_and_activity_types.sql` con `ON_ERROR_STOP=1` después de `20261126_document_templates.sql`. Agrega `academic_periods.school_year` con backfill automático por `start_date`, crea `activity_types` con catálogo semilla, vincula `activity_type_id` nullable en `social_services` e `internships` (los registros previos quedan como «Sin clasificar») y agrega índices analíticos parciales sin alterar las vistas `vw_linkage_*`.
+
+## Unificación de Roles (`admin` → `department_head`) — 27 de noviembre de 2026
+Aplicar `20261127_unify_admin_into_department_head.sql` con `ON_ERROR_STOP=1`. Verifica en preflight que no existan usuarios activos con rol residual `company_supervisor` (aborta si hay), reasigna de forma idempotente a todos los usuarios con rol `admin` hacia `department_head`, incrementa `users.session_version` para invalidar sesiones previas y retira por borrado lógico (`deleted_at = now()`) las asignaciones y registros de catálogo de `admin` y `company_supervisor`. Desplegar junto con backend y frontend actualizados.

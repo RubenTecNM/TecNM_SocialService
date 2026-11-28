@@ -19,7 +19,7 @@ const documents = [999,1000].map((id, i) => ({ id, studentId: 11+i, studentContr
   studentFullName: i ? 'Segunda Alumna' : student.fullName, careerCode: 'INF', careerName: student.careerName,
   tramiteType: 'general', tramiteId: null, documentCode: 'IMSS', originalFileName: 'imss.pdf', fileMimeType: 'application/pdf',
   fileSizeBytes: pdf.length, status: 'pending', documentDate: i ? '2026-10-01' : null, createdAt: '2026-11-07T12:00:00Z' }))
-let role = 'admin', failQueue = false, failReview = false, noDocument = false, uploaded = false
+let role = 'department_head', failQueue = false, failReview = false, noDocument = false, uploaded = false
 const reviews = [], queries = [], resets = []
 let suggestionRequests = 0
 let openings = 0
@@ -38,7 +38,7 @@ try {
     const request = route.request(), url = new URL(request.url()), endpoint = url.pathname
     if (!endpoint.startsWith('/api/')) return route.continue()
     let body = []
-    if (endpoint === '/api/auth/me') body = { id: role === 'student' ? 12 : 1, username: role === 'student' ? student.accountUsername : 'admin', name: 'Prueba', roles: [role] }
+    if (endpoint === '/api/auth/me') body = { id: role === 'student' ? 12 : 5, username: role === 'student' ? student.accountUsername : 'jefa.vinculacion', name: 'Prueba', roles: [role] }
     else if (endpoint === '/api/documents/review-queue') {
       queries.push(Object.fromEntries(url.searchParams))
       if (failQueue) return route.fulfill({ status: 500, json: { detail: 'Error simulado' } })

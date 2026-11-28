@@ -20,7 +20,7 @@ expect_status() {
 expect_status 401 \
   --request POST \
   --header 'Content-Type: application/json' \
-  --data '{"username":"admin","password":"incorrecta"}' \
+  --data '{"username":"jefa.vinculacion","password":"incorrecta"}' \
   "$api_url/api/auth/login"
 
 expect_status 400 \
@@ -32,7 +32,7 @@ expect_status 400 \
 expect_status 200 \
   --request POST \
   --header 'Content-Type: application/json' \
-  --data '{"username":"admin","password":"TecNM-Demo-2026!"}' \
+  --data '{"username":"jefa.vinculacion","password":"TecNM-Demo-2026!"}' \
   --cookie-jar "$cookie_jar" \
   "$api_url/api/auth/login"
 

@@ -198,15 +198,15 @@ builder.Services
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-    options.AddPolicy("SocialServiceList", p => p.RequireRole("admin", "social_service_officer", "department_head"));
-    options.AddPolicy("InternshipList", p => p.RequireRole("admin", "internship_coordinator", "department_head"));
-    options.AddPolicy("SocialServiceRead", p => p.RequireRole("admin", "social_service_officer", "department_head", "student"));
-    options.AddPolicy("SocialServiceManage", p => p.RequireRole("admin", "social_service_officer"));
-    options.AddPolicy("InternshipRead", p => p.RequireRole("admin", "internship_coordinator", "department_head", "student"));
-    options.AddPolicy("InternshipManage", p => p.RequireRole("admin", "internship_coordinator"));
-    options.AddPolicy("CompaniesRead", p => p.RequireRole("admin", "social_service_officer", "internship_coordinator", "department_head"));
-    options.AddPolicy("CompaniesWrite", p => p.RequireRole("admin", "social_service_officer", "internship_coordinator"));
-    options.AddPolicy("StatisticsRead", p => p.RequireRole("admin", "social_service_officer", "internship_coordinator", "department_head"));
+    options.AddPolicy("SocialServiceList", p => p.RequireRole("department_head", "social_service_officer"));
+    options.AddPolicy("InternshipList", p => p.RequireRole("department_head", "internship_coordinator"));
+    options.AddPolicy("SocialServiceRead", p => p.RequireRole("department_head", "social_service_officer", "student"));
+    options.AddPolicy("SocialServiceManage", p => p.RequireRole("department_head", "social_service_officer"));
+    options.AddPolicy("InternshipRead", p => p.RequireRole("department_head", "internship_coordinator", "student"));
+    options.AddPolicy("InternshipManage", p => p.RequireRole("department_head", "internship_coordinator"));
+    options.AddPolicy("CompaniesRead", p => p.RequireRole("department_head", "social_service_officer", "internship_coordinator"));
+    options.AddPolicy("CompaniesWrite", p => p.RequireRole("department_head", "social_service_officer", "internship_coordinator"));
+    options.AddPolicy("StatisticsRead", p => p.RequireRole("department_head", "social_service_officer", "internship_coordinator"));
 });
 
 var app = builder.Build();

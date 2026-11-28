@@ -22,15 +22,13 @@ internal static class AccountImportChecks
         var db=scope.ServiceProvider.GetRequiredService<TecNMDbContext>();
         var imports=scope.ServiceProvider.GetRequiredService<StudentImportsService>();
         var period=await db.AcademicPeriods.Select(p=>p.Id).FirstAsync();
-        using var admin=factory.CreateClient(new(){BaseAddress=new Uri("https://localhost")});
-        using var ss=factory.CreateClient(new(){BaseAddress=new Uri("https://localhost")});
         using var head=factory.CreateClient(new(){BaseAddress=new Uri("https://localhost")});
+        using var ss=factory.CreateClient(new(){BaseAddress=new Uri("https://localhost")});
         using var pp=factory.CreateClient(new(){BaseAddress=new Uri("https://localhost")});
-        await Expect(await admin.PostAsJsonAsync("/api/auth/login",new{username="admin",password="TecNM-Demo-2026!"}),HttpStatusCode.OK);
-        await Expect(await ss.PostAsJsonAsync("/api/auth/login",new{username="encargado.ss",password="TecNM-Demo-2026!"}),HttpStatusCode.OK);
         await Expect(await head.PostAsJsonAsync("/api/auth/login",new{username="jefa.vinculacion",password="TecNM-Demo-2026!"}),HttpStatusCode.OK);
+        await Expect(await ss.PostAsJsonAsync("/api/auth/login",new{username="encargado.ss",password="TecNM-Demo-2026!"}),HttpStatusCode.OK);
         await Expect(await pp.PostAsJsonAsync("/api/auth/login",new{username="coord.practicas",password="TecNM-Demo-2026!"}),HttpStatusCode.OK);
-        var adminHash=await db.Users.Where(u=>u.Username=="admin").Select(u=>u.PasswordHash).SingleAsync();
+        var headHash=await db.Users.Where(u=>u.Username=="jefa.vinculacion").Select(u=>u.PasswordHash).SingleAsync();
         byte[] Excel(params (string control,string email,string name)[] rows)
         {
             using var stream=new MemoryStream();stream.Write(imports.GenerateTemplateXlsx());
@@ -53,10 +51,10 @@ internal static class AccountImportChecks
         async Task<JsonElement> Import(byte[] bytes)
         {
             using var form=new MultipartFormDataContent();form.Add(new ByteArrayContent(bytes),"file","students.xlsx");form.Add(new StringContent(period.ToString()),"periodId");
-            var response=await admin.PostAsync("/api/student-imports",form);await Expect(response,HttpStatusCode.Created);
+            var response=await head.PostAsync("/api/student-imports",form);await Expect(response,HttpStatusCode.Created);
             return await response.Content.ReadFromJsonAsync<JsonElement>();
         }
-        var adminEmail=await db.Users.Where(u=>u.Username=="admin").Select(u=>u.Email).SingleAsync();
+        var headEmail=await db.Users.Where(u=>u.Username=="jefa.vinculacion").Select(u=>u.Email).SingleAsync();
         await Expect(await PostImport(pp,Excel(("QAIMPPP","qa.imppp@monclova.tecnm.mx","PP"))),HttpStatusCode.Forbidden);
         var ssImport=await PostImport(ss,Excel(("QAIMPSS","qa.impss@monclova.tecnm.mx","SS")));await Expect(ssImport,HttpStatusCode.Created);
         var ssBatchId=(await ssImport.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
@@ -65,7 +63,7 @@ internal static class AccountImportChecks
         await Expect(await head.GetAsync("/api/student-imports"),HttpStatusCode.OK);
         var result=await Import(Excel(("QAIMP01","qa.import1@monclova.tecnm.mx","Uno"),("QAIMP02","qa.import2@monclova.tecnm.mx","Dos"),
             ("QAIMP03","","Sin correo"),("QAIMP04","invalid","Inválido"),("QAIMP01","duplicate@monclova.tecnm.mx","Repetido"),
-            ("QAIMP05","qa.import1@monclova.tecnm.mx","Correo repetido"),("QAIMP06",adminEmail,"Colisión"),("QAIMP07","long@monclova.tecnm.mx",new string('x',101))));
+            ("QAIMP05","qa.import1@monclova.tecnm.mx","Correo repetido"),("QAIMP06",headEmail,"Colisión"),("QAIMP07","long@monclova.tecnm.mx",new string('x',101))));
         if(result.GetProperty("importedRecords").GetInt32()!=2 || result.GetProperty("createdAccounts").GetInt32()!=2 || result.GetProperty("failedRecords").GetInt32()!=6) throw new Exception($"Import counters invalid: {result}");
         db.ChangeTracker.Clear();
         var one=await db.Students.Include(s=>s.User).SingleAsync(s=>s.ControlNumber=="QAIMP01");
@@ -81,10 +79,10 @@ internal static class AccountImportChecks
         db.ChangeTracker.Clear();
         if((await db.Students.AsNoTracking().SingleAsync(s=>s.Id==one.Id)).SocialServiceEligiblePeriodId!=period) throw new Exception("Reimport must not reset eligibility origin.");
         var preserved=await db.Users.SingleAsync(u=>u.Id==one.UserId);
-        if(preserved.PasswordHash!=custom || preserved.IsActive || await db.Users.Where(u=>u.Username=="admin").Select(u=>u.PasswordHash).SingleAsync()!=adminHash) throw new Exception("Import modified account credentials/activity.");
+        if(preserved.PasswordHash!=custom || preserved.IsActive || await db.Users.Where(u=>u.Username=="jefa.vinculacion").Select(u=>u.PasswordHash).SingleAsync()!=headHash) throw new Exception("Import modified account credentials/activity.");
         await Expect(await student.PutAsJsonAsync("/api/students/me/contact",new{institutionalEmail="changed@monclova.tecnm.mx"}),HttpStatusCode.BadRequest);
         await Expect(await ss.PostAsync($"/api/students/{two.Id}/account/reset-password",null),HttpStatusCode.Forbidden);
-        await Expect(await admin.PostAsync($"/api/students/{two.Id}/account/reset-password",null),HttpStatusCode.NoContent);
+        await Expect(await head.PostAsync($"/api/students/{two.Id}/account/reset-password",null),HttpStatusCode.NoContent);
         await Expect(await student.GetAsync("/api/auth/me"),HttpStatusCode.Unauthorized);
         await Expect(await student.PostAsJsonAsync("/api/auth/login",new{username="qa.import2@monclova.tecnm.mx",password="QAIMP02"}),HttpStatusCode.OK);
         await Expect(await ss.GetAsync($"/api/students/{two.Id}"),HttpStatusCode.NotFound);
@@ -104,7 +102,7 @@ internal static class AccountImportChecks
 
         db.ChangeTracker.Clear();
         var beforeEmailChange=await db.Users.AsNoTracking().SingleAsync(u=>u.Id==two.UserId);
-        var updated=await admin.PutAsJsonAsync($"/api/students/{two.Id}",new StudentRequest(two.CareerId,two.ControlNumber,null,"Dos","Prueba",null,null,
+        var updated=await head.PutAsJsonAsync($"/api/students/{two.Id}",new StudentRequest(two.CareerId,two.ControlNumber,null,"Dos","Prueba",null,null,
             InstitutionalEmail:"qa.changed@monclova.tecnm.mx",CompletedCredits:156));
         await Expect(updated,HttpStatusCode.OK);
         db.ChangeTracker.Clear();
@@ -113,13 +111,13 @@ internal static class AccountImportChecks
             || changed.SessionVersion!=beforeEmailChange.SessionVersion+1) throw new Exception("Administrative email change lost credentials or failed session revocation.");
         await Expect(await student.GetAsync("/api/auth/me"),HttpStatusCode.Unauthorized);
         await Expect(await student.PostAsJsonAsync("/api/auth/login",new{username=changed.Username,password="QAIMP02"}),HttpStatusCode.OK);
-        var manual=await admin.PostAsJsonAsync("/api/students",new StudentRequest(two.CareerId,"QAMANUAL01",null,"Manual","Prueba",null,null,InstitutionalEmail:"qa.manual@monclova.tecnm.mx"));
+        var manual=await head.PostAsJsonAsync("/api/students",new StudentRequest(two.CareerId,"QAMANUAL01",null,"Manual","Prueba",null,null,InstitutionalEmail:"qa.manual@monclova.tecnm.mx"));
         await Expect(manual,HttpStatusCode.Created);
         var manualId=(await manual.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
-        var manualAccount=await admin.PostAsync($"/api/students/{manualId}/account",null);await Expect(manualAccount,HttpStatusCode.Created);
+        var manualAccount=await head.PostAsync($"/api/students/{manualId}/account",null);await Expect(manualAccount,HttpStatusCode.Created);
         var accountJson=await manualAccount.Content.ReadFromJsonAsync<JsonElement>();
         if(accountJson.GetProperty("username").GetString()!="qa.manual@monclova.tecnm.mx" || accountJson.TryGetProperty("temporaryPassword",out _)) throw new Exception("Manual account contract is obsolete.");
-        await Expect(await admin.PostAsync($"/api/students/{manualId}/account",null),HttpStatusCode.Conflict);
+        await Expect(await head.PostAsync($"/api/students/{manualId}/account",null),HttpStatusCode.Conflict);
 
         var connection=Environment.GetEnvironmentVariable("DOCUMENT_TEST_CONNECTION")!;
         await using(var failing=new TecNMDbContext(new DbContextOptionsBuilder<TecNMDbContext>().UseNpgsql(connection).AddInterceptors(new FailAccountSave()).Options))

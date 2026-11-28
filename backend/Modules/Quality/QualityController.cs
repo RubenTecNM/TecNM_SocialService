@@ -10,7 +10,7 @@ namespace TecNM.Api.Modules.Quality;
 public sealed class QualityController(QualityService service) : ControllerBase
 {
     [HttpGet("/api/tramite-status-logs")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head,student")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator,student")]
     public async Task<ActionResult<IReadOnlyList<StatusLogFullResponse>>> GetStatusLogs(
         [FromQuery] string tramiteType,
         [FromQuery] long tramiteId,
@@ -21,7 +21,7 @@ public sealed class QualityController(QualityService service) : ControllerBase
     }
 
     [HttpGet("/api/non-conformances")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<PagedResponse<NonConformanceResponse>>> GetPagedNonConformances(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -46,7 +46,7 @@ public sealed class QualityController(QualityService service) : ControllerBase
     }
 
     [HttpGet("/api/non-conformances/{id:long}")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<NonConformanceResponse>> GetNonConformanceById(
         long id,
         CancellationToken cancellationToken = default)
@@ -56,7 +56,7 @@ public sealed class QualityController(QualityService service) : ControllerBase
     }
 
     [HttpPost("/api/non-conformances")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<NonConformanceResponse>> CreateNonConformance(
         [FromBody] CreateNonConformanceRequest request,
         CancellationToken cancellationToken = default)
@@ -66,7 +66,7 @@ public sealed class QualityController(QualityService service) : ControllerBase
     }
 
     [HttpPut("/api/non-conformances/{id:long}")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<NonConformanceResponse>> UpdateNonConformance(
         long id,
         [FromBody] UpdateNonConformanceRequest request,
@@ -77,7 +77,7 @@ public sealed class QualityController(QualityService service) : ControllerBase
     }
 
     [HttpPost("/api/non-conformances/{id:long}/status")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<NonConformanceResponse>> UpdateNonConformanceStatus(
         long id,
         [FromBody] UpdateNonConformanceStatusRequest request,

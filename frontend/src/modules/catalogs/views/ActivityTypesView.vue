@@ -22,7 +22,7 @@ import {
 import type { ActivityAppliesTo, ActivityType } from '../types/careers'
 
 const canWrite = computed(() =>
-  hasRole('admin', 'social_service_officer', 'internship_coordinator'),
+  hasRole('department_head', 'social_service_officer', 'internship_coordinator'),
 )
 
 interface ActivityTypeRow extends ActivityType {

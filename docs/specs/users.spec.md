@@ -4,7 +4,7 @@
 
 ## Acceso
 
-Todo el módulo: política `Admin`. Excepción: `PUT /api/users/me/password` para cualquier usuario autenticado.
+Todo el módulo: rol `department_head`. Excepción: `PUT /api/users/me/password` para cualquier usuario autenticado.
 
 ## DTOs
 
@@ -75,5 +75,5 @@ interface RoleItem { id: number; name: string; description: string | null; }
 
 - Roles se sincronizan reemplazando el conjunto completo en `user_roles`.
 - Cada petición revalida cuenta activa y roles; `session_version` revoca JWT al cambiar contraseña o identidad. Usuarios de alumno usan correo institucional (máximo 254), sin distinción de mayúsculas en unicidad. La migración conserva contraseñas y bloquea vínculos ambiguos o roles incompatibles.
-- Un admin no puede desactivarse ni borrarse a sí mismo.
+- Un usuario `department_head` no puede desactivarse ni borrarse a sí mismo.
 - Borrado lógico de usuario no borra `students`; `students.user_id` queda intacto (FK `SET NULL` solo aplica a borrado físico).

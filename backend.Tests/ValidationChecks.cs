@@ -13,7 +13,7 @@ internal static class ValidationChecks
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TecNMDbContext>();
         using var admin = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        var login = await admin.PostAsJsonAsync("/api/auth/login", new { username = "admin", password = "TecNM-Demo-2026!" });
+        var login = await admin.PostAsJsonAsync("/api/auth/login", new { username = "jefa.vinculacion", password = "TecNM-Demo-2026!" });
         login.EnsureSuccessStatusCode();
         var career = await db.Careers.FirstAsync(c => c.IsActive);
         var invalid = await admin.PostAsJsonAsync("/api/students", new {

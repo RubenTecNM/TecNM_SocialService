@@ -7,7 +7,7 @@
 ## Acceso
 
 - Bitácora: lectura para quien puede leer el trámite. Sin escritura vía API (solo la generan las transiciones).
-- PNC: `SocialServiceStaff` (SS), `InternshipStaff` (PP), `admin` (todo), `department_head` (lectura).
+- PNC: `SocialServiceStaff` (SS), `InternshipStaff` (PP), `department_head` (todo).
 
 ## 1. Bitácora de estados
 

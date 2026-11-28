@@ -8,7 +8,7 @@ fs.mkdirSync(output, { recursive: true })
 const browser = await chromium.launch({ channel: 'msedge', headless: true })
 const expected = {first_notice:2, second_notice:1, third_notice:1, non_compliant:1, in_progress:4, released:1, pending_setup:1}
 try {
- for (const [username, role] of [['admin','admin'], ['encargado.ss','social_service_officer'], ['coord.practicas','internship_coordinator']]) {
+ for (const [username, role] of [['jefa.vinculacion','department_head'], ['encargado.ss','social_service_officer'], ['coord.practicas','internship_coordinator']]) {
   const context = await browser.newContext({ignoreHTTPSErrors:true, viewport:{width:1440,height:1000}})
   const page = await context.newPage(), errors=[]
   page.on('pageerror', error=>errors.push(error.message))

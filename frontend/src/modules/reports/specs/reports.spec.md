@@ -5,7 +5,7 @@
 # Especificación Frontend: Módulo de Reportes & Estadísticos
 
 > **Contrato Backend:** [`docs/specs/reports.spec.md`](../../../../../docs/specs/reports.spec.md)  
-> **Roles:** `admin`, `social_service_officer`, `internship_coordinator`, `department_head` (acceso completo a consulta y exportación).
+> **Roles:** `department_head`, `social_service_officer`, `internship_coordinator` (acceso completo a consulta y exportación).
 
 ---
 

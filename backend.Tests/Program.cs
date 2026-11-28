@@ -49,7 +49,7 @@ Check(!DocumentDefinitions.CanUpload("social_service", "CA", 2, new TestUser(["i
 Check(DocumentDefinitions.CanUpload("internship", "CA", 2, new TestUser(["internship_coordinator"])), "PP staff can upload acceptance");
 Check(DocumentDefinitions.CanUpload("social_service", "EV1", 1, student), "Keep historic bundles");
 Check(!DocumentDefinitions.CanUpload("social_service", "EV1", 2, student), "New cases cannot submit old bundles");
-foreach (var role in new[] { "admin", "social_service_officer", "internship_coordinator", "department_head" })
+foreach (var role in new[] { "department_head", "social_service_officer", "internship_coordinator" })
 {
     var actor = new TestUser([role]);
     foreach (var version in new[] { 1, 2 })
@@ -281,6 +281,7 @@ if (Directory.Exists(fonts))
 }
 else Console.WriteLine("PDF rendering checks skipped: set DOCUMENT_TEST_FONTS to authorized Arial/Century Gothic fonts.");
 await AccountMigrationChecks.RunAsync();
+await RoleUnificationMigrationChecks.RunAsync();
 await LinkageDatabaseChecks.RunAsync();
 await DatabaseChecks.RunAsync();
 await HttpChecks.RunAsync();

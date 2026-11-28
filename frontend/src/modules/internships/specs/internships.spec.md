@@ -5,7 +5,7 @@
 # Especificación Frontend: Módulo de Prácticas Profesionales (PP)
 
 > **Contrato Backend:** [`docs/specs/internships.spec.md`](../../../../../docs/specs/internships.spec.md)  
-> **Roles:** `student` (su trámite), `internship_coordinator`, `admin` (gestión completa), `department_head`, `social_service_officer` (lectura).
+> **Roles:** `student` (su trámite), `internship_coordinator`, `department_head` (gestión completa).
 
 ---
 

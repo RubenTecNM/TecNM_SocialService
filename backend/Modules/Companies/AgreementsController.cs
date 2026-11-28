@@ -9,8 +9,8 @@ namespace TecNM.Api.Modules.Companies;
 [Route("api/agreements")]
 public class AgreementsController(AgreementsService agreementsService) : ControllerBase
 {
-    private const string StaffAndDeptRoles = "admin,social_service_officer,internship_coordinator,department_head";
-    private const string StaffRoles = "admin,social_service_officer,internship_coordinator";
+    private const string StaffAndDeptRoles = "department_head,social_service_officer,internship_coordinator";
+    private const string StaffRoles = "department_head,social_service_officer,internship_coordinator";
 
     [Authorize(Roles = StaffAndDeptRoles)]
     [HttpGet]

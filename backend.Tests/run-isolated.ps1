@@ -35,7 +35,9 @@ try {
     Get-Content database/migrations/20261126_document_templates.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw 'Falló la migración del gestor de plantillas.' }
     Get-Content database/migrations/20261127_document_branding.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
-    if ($LASTEXITCODE -ne 0) { throw "Falló la migración de cuentas." }
+    if ($LASTEXITCODE -ne 0) { throw "Falló la migración de branding." }
+    Get-Content database/migrations/20261127_unify_admin_into_department_head.sql -Raw | docker exec -i $containerName psql -U postgres -d document_checks -q -v ON_ERROR_STOP=1
+    if ($LASTEXITCODE -ne 0) { throw "Falló la migración de unificación de roles." }
     $mapping = docker port $containerName 5432
     $port = ($mapping -split ':')[-1]
     $env:DOCUMENT_TEST_CONNECTION = "Host=127.0.0.1;Port=$port;Database=document_checks;Username=postgres;Password=document-checks-local;Timeout=3"

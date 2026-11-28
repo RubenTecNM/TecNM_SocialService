@@ -43,7 +43,7 @@ public class SocialServiceProgramsController(SocialServiceProgramsService progra
         return Ok(program);
     }
 
-    [Authorize(Roles = "admin,social_service_officer")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpPost]
     public async Task<ActionResult<SocialServiceProgramResponse>> Create(
         [FromBody] SocialServiceProgramRequest request,
@@ -53,7 +53,7 @@ public class SocialServiceProgramsController(SocialServiceProgramsService progra
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [Authorize(Roles = "admin,social_service_officer")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SocialServiceProgramResponse>> Update(
         long id,
@@ -64,7 +64,7 @@ public class SocialServiceProgramsController(SocialServiceProgramsService progra
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin,social_service_officer")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpPatch("{id:long}/status")]
     public async Task<ActionResult<SocialServiceProgramResponse>> UpdateStatus(
         long id,
@@ -75,7 +75,7 @@ public class SocialServiceProgramsController(SocialServiceProgramsService progra
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin,social_service_officer")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(
         long id,

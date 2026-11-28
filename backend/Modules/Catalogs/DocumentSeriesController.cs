@@ -7,7 +7,7 @@ namespace TecNM.Api.Modules.Catalogs;
 [Route("api/document-series")]
 public class DocumentSeriesController(DocumentSeriesService seriesService) : ControllerBase
 {
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<DocumentSeriesResponse>>> GetList(
         [FromQuery] string? documentType = null,
@@ -18,7 +18,7 @@ public class DocumentSeriesController(DocumentSeriesService seriesService) : Con
         return Ok(list);
     }
 
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<DocumentSeriesResponse>> GetById(
         long id,
@@ -28,7 +28,7 @@ public class DocumentSeriesController(DocumentSeriesService seriesService) : Con
         return Ok(series);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost]
     public async Task<ActionResult<DocumentSeriesResponse>> Create(
         [FromBody] DocumentSeriesRequest request,
@@ -38,7 +38,7 @@ public class DocumentSeriesController(DocumentSeriesService seriesService) : Con
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<DocumentSeriesResponse>> Update(
         long id,

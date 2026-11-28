@@ -54,7 +54,7 @@ public class AcademicPeriodsController(AcademicPeriodsService academicPeriodsSer
         return Ok(period);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost]
     public async Task<ActionResult<AcademicPeriodResponse>> Create(
         [FromBody] AcademicPeriodRequest request,
@@ -64,7 +64,7 @@ public class AcademicPeriodsController(AcademicPeriodsService academicPeriodsSer
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<AcademicPeriodResponse>> Update(
         long id,
@@ -75,7 +75,7 @@ public class AcademicPeriodsController(AcademicPeriodsService academicPeriodsSer
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost("{id:long}/activate")]
     public async Task<ActionResult<AcademicPeriodResponse>> Activate(
         long id,
@@ -85,7 +85,7 @@ public class AcademicPeriodsController(AcademicPeriodsService academicPeriodsSer
         return Ok(activated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken = default)
     {

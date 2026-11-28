@@ -5,7 +5,7 @@ export const internshipsRoutes: RouteRecordRaw[] = [
     path: 'internships',
     name: 'internships-list',
     component: () => import('./views/InternshipsListView.vue'),
-    meta: { requiresAuth: true, roles: ['admin', 'internship_coordinator', 'department_head'] },
+    meta: { requiresAuth: true, roles: ['department_head', 'internship_coordinator'] },
   },
   {
     path: 'internships/my',

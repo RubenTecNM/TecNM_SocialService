@@ -12,9 +12,9 @@ Proveer actualización reactiva en tiempo real entre estudiantes, personal de Vi
 - **Autenticación:** `[Authorize]` obligatorio mediante el esquema JWT existente leyendo la cookie `HttpOnly` `auth_token` (mismo origen vía proxy Nginx / Vite, sin exponer tokens en query string).
 - **Suscripción automática a grupos en `OnConnectedAsync`:**
   - `user:{userId}`: todo usuario autenticado recibe únicamente eventos dirigidos a su propia cuenta.
-  - `staff:social_service`: roles `admin`, `department_head` y `social_service_officer`.
-  - `staff:internship`: roles `admin`, `department_head` y `internship_coordinator`.
-  - `staff:general`: roles `admin`, `department_head`, `social_service_officer` e `internship_coordinator`.
+  - `staff:social_service`: roles `department_head` y `social_service_officer`.
+  - `staff:internship`: roles `department_head` y `internship_coordinator`.
+  - `staff:general`: roles `department_head`, `social_service_officer` e `internship_coordinator`.
 - Ningún cliente puede elegir arbitrariamente a qué grupo unirse; el servidor calcula los grupos exclusivamente a partir de los claims verificados de la sesión.
 
 ---
@@ -54,7 +54,7 @@ Emitido únicamente **después** de confirmar la transacción en PostgreSQL (`Sa
 ### 3.2 Evento `ReviewPresenceUpdated` y Métodos del Hub (Cliente → Servidor)
 Previene colisiones operativas cuando dos integrantes de Vinculación revisan simultáneamente la bandeja documental:
 
-- **Métodos invocables por roles revisores (`admin`, `social_service_officer`, `internship_coordinator`):**
+- **Métodos invocables por roles revisores (`department_head`, `social_service_officer`, `internship_coordinator`):**
   - `StartReviewing(long documentId)`
   - `StopReviewing(long documentId)`
 - El servidor valida que el revisor tenga permiso sobre el `tramiteType` del documento antes de registrar su presencia en memoria y libera automáticamente cualquier documento asociado a `ConnectionId` en `OnDisconnectedAsync` o al dictaminar el documento.

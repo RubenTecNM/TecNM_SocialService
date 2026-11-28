@@ -7,7 +7,7 @@ namespace TecNM.Api.Modules.Expedients.Templates;
 
 [ApiController]
 [Route("api/template-management")]
-[Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+[Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
 [TemplateAntiforgery]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class TemplateManagementController(TemplateManagement management, TemplateBranding branding) : ControllerBase
@@ -27,7 +27,7 @@ public sealed class TemplateManagementController(TemplateManagement management, 
         File(await branding.ImageAsync(id, ct), "image/png");
 
     [HttpPost("logos")]
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [RequestSizeLimit(2 * 1024 * 1024 + 65536)]
     public Task<LogoSummary> UploadLogo([FromForm] string name, IFormFile file, CancellationToken ct) =>
         branding.UploadAsync(name, file, ct);

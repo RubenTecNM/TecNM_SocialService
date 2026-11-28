@@ -16,7 +16,7 @@ internal static class FollowUpChecks
         using var admin = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
         using var ss = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
         using var pp = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        foreach (var (client, name) in new[] {(admin,"admin"),(ss,"encargado.ss"),(pp,"coord.practicas")})
+        foreach (var (client, name) in new[] {(admin,"jefa.vinculacion"),(ss,"encargado.ss"),(pp,"coord.practicas")})
             (await client.PostAsJsonAsync("/api/auth/login",new {username=name,password="TecNM-Demo-2026!"})).EnsureSuccessStatusCode();
         var previous = await db.AcademicPeriods.Where(p=>p.IsActive).ToListAsync();
         var periods = Enumerable.Range(0,5).Select(i=>new AcademicPeriod {Code=$"FOLLOW{i}",Name="Seguimiento QA",SchoolYear=$"{2009+i/2+i%2}-{2010+i/2+i%2}",StartDate=new DateOnly(2010+i/2, i%2==0?2:8,1),EndDate=new DateOnly(2010+i/2,i%2==0?7:12,28)}).ToArray();

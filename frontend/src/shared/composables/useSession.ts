@@ -25,7 +25,7 @@ export function hasRole(...roles: string[]) {
   return roles.some(role => sessionUser.value?.roles.some(assigned => assigned === role))
 }
 export function canReadProcess(type: 'social_service' | 'internship') {
-  return hasRole('admin', 'department_head', type === 'social_service' ? 'social_service_officer' : 'internship_coordinator')
+  return hasRole('department_head', type === 'social_service' ? 'social_service_officer' : 'internship_coordinator')
 }
 export const defaultProcess = computed<'social_service' | 'internship'>(() =>
-  hasRole('internship_coordinator') && !hasRole('social_service_officer', 'admin', 'department_head') ? 'internship' : 'social_service')
+  hasRole('internship_coordinator') && !hasRole('social_service_officer', 'department_head') ? 'internship' : 'social_service')

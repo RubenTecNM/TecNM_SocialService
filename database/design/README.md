@@ -71,7 +71,7 @@ Toda tabla, columna y script DDL creado en este proyecto debe alinearse sin exce
 
 | Tabla | Módulo / Dominio | PK | Descripción General | Estado |
 | :--- | :--- | :--- | :--- | :---: |
-| `roles` | Shared Core | `id` | Catálogo de roles del sistema (`admin`, `student`, `social_service_officer`, etc.). | Diseñada |
+| `roles` | Shared Core | `id` | Catálogo de roles del sistema (`department_head`, `student`, `social_service_officer`, `internship_coordinator`). | Diseñada |
 | `users` | Shared Core | `id` | Cuentas de usuario institucionales para autenticación local y auditoría. | Diseñada |
 | `user_roles` | Shared Core | `id` | Asignación de múltiples roles por usuario (relación N:M). | Diseñada |
 | `careers` | Shared Core | `id` | Oferta de carreras del TecNM y total de créditos de retícula. | Diseñada |
@@ -116,7 +116,7 @@ Toda tabla, columna y script DDL creado en este proyecto debe alinearse sin exce
 ## 🔍 Detalle de Tablas y Atributos (Capa 1: Shared Core)
 
 ### 1. `roles`
-Catálogo maestro de roles del sistema (`admin`, `student`, `social_service_officer`, `internship_coordinator`, `department_head`).
+Catálogo maestro de roles del sistema (`department_head`, `student`, `social_service_officer`, `internship_coordinator`).
 
 | Columna | Tipo de Dato | Nulo | Default | Constraint / FK | Descripción |
 | :--- | :--- | :---: | :--- | :--- | :--- |

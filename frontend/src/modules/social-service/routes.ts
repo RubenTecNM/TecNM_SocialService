@@ -5,7 +5,7 @@ export const socialServiceRoutes: RouteRecordRaw[] = [
     path: 'social-service',
     name: 'social-service-list',
     component: () => import('./views/SocialServiceListView.vue'),
-    meta: { requiresAuth: true, roles: ['admin', 'social_service_officer', 'department_head'] },
+    meta: { requiresAuth: true, roles: ['department_head', 'social_service_officer'] },
   },
   {
     path: 'social-service/my',

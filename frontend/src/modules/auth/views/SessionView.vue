@@ -45,7 +45,7 @@ const isStudentOnly = computed(() => {
   return (
     roles.includes('student') &&
     !roles.some((r) =>
-      ['admin', 'social_service_officer', 'internship_coordinator', 'department_head'].includes(r),
+      ['department_head', 'social_service_officer', 'internship_coordinator'].includes(r),
     )
   )
 })
@@ -131,7 +131,7 @@ const quickConnectors = computed<QuickConnector[]>(() => [
     label: 'Revisión PDF',
     sub: 'Cola de validación',
     to: '/expedients/review',
-    visible: hasRole('admin', 'social_service_officer', 'internship_coordinator'),
+    visible: hasRole('department_head', 'social_service_officer', 'internship_coordinator'),
   },
   {
     label: 'Padrón Alumnos',
@@ -226,7 +226,7 @@ async function loadData(): Promise<void> {
     } else {
       const [dash, docs, ssRes, ppRes] = await Promise.all([
         getDashboardMetrics().catch(() => null),
-        hasRole('admin', 'social_service_officer', 'internship_coordinator')
+        hasRole('department_head', 'social_service_officer', 'internship_coordinator')
           ? getReviewQueue('pending', { pageSize: 10 }).catch(() => [])
           : Promise.resolve([]),
         canReadProcess('social_service')
@@ -286,7 +286,7 @@ useRealtimeRefresh(
               Actualizar
             </UiButton>
             <UiButton
-              v-if="hasRole('admin', 'social_service_officer', 'internship_coordinator')"
+              v-if="hasRole('department_head', 'social_service_officer', 'internship_coordinator')"
               variant="primary"
               size="sm"
               @click="router.push('/expedients/review')"
@@ -605,7 +605,7 @@ useRealtimeRefresh(
               <UiBadge tone="warning">{{ pendingDocs.length }} en espera</UiBadge>
             </div>
             <UiButton
-              v-if="hasRole('admin', 'social_service_officer', 'internship_coordinator')"
+              v-if="hasRole('department_head', 'social_service_officer', 'internship_coordinator')"
               variant="secondary"
               size="sm"
               @click="router.push('/expedients/review')"

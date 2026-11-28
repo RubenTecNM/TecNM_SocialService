@@ -33,7 +33,7 @@ try {
     if (endpoint.includes('/pdf/')) pdfRequests.push(endpoint)
     if (!endpoint.startsWith('/api/')) return route.continue()
     let body = []
-    if (endpoint === '/api/auth/me') body = { id: admin ? 1 : 2, username: admin ? 'admin' : 'usuario', name: 'Usuario de prueba', email: 'test@monclova.tecnm.mx', roles: [admin ? 'admin' : 'student'] }
+    if (endpoint === '/api/auth/me') body = { id: admin ? 5 : 2, username: admin ? 'jefa.vinculacion' : 'usuario', name: 'Usuario de prueba', email: 'test@monclova.tecnm.mx', roles: [admin ? 'department_head' : 'student'] }
     else if (endpoint === '/api/students/me') body = jointOpening ? { ...profile, hasValidImss: false, imssStatus: null } : profile
     else if (endpoint === '/api/students/me/eligibility') body = { socialService: { eligible: false }, internship: { eligible: false } }
     else if (endpoint === '/api/students/me/imss' && route.request().method() === 'PUT') {

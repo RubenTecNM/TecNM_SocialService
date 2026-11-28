@@ -10,7 +10,7 @@ try {
  await context.addCookies([{name:'session_exp',value:String(Math.floor(Date.now()/1000)+3600),url:base,secure:true}])
  const page=await context.newPage(),errors=[],requests=[]
  page.on('pageerror',e=>errors.push(e.message))
- let role='admin',failDetail=false,failList=false
+ let role='department_head',failDetail=false,failList=false
  const followUp={status:'in_progress',progressAssessment:'low_progress',approvedDocumentsCount:2,eligiblePeriodCode:'FJ26',trackingPeriodCode:'AD26',trackingPeriodId:3,elapsedSemesters:1,lastApprovedAt:'2026-10-01T12:00:00Z',notes:'Revisar segundo reporte bimestral',reviewedAt:'2026-11-08T12:00:00Z'}
  const row={id:1,controlNumber:'I23050363',fullName:'Héctor Gabriel Torres Arzola',careerCode:'INF',careerId:1,currentSemester:7,canReadProfile:true,hasUserAccount:true,socialServiceFollowUp:followUp}
  const full={...row,firstName:'Héctor Gabriel',firstSurname:'Torres',secondSurname:'Arzola',curp:'TOAH050315HCLRRH01',careerName:'Ingeniería Informática',completedCredits:192,curriculumProgressPercentage:73.85,shift:'morning',isEnrolled:true,gender:'M',hasDisability:false,personalEmail:'personal@example.test',institutionalEmail:'alumno.institucional@example.test',phoneNumber:'8661234567',accountUsername:'alumno.institucional@example.test',accountStatus:'active',imssStatus:'approved',hasValidImss:true,hasImssFile:false,createdAt:'2026-02-09T12:00:00Z',updatedAt:'2026-11-08T12:00:00Z'}
@@ -20,7 +20,7 @@ try {
   if(u.pathname==='/api/auth/me')data={id:1,name:'Prueba',username:'qa',roles:[role]}
   else if(u.pathname==='/api/students') {
    if(failList)return route.fulfill({status:500,json:{detail:'Error de padrón simulado'}})
-   const items=u.searchParams.get('search')==='Sin coincidencias'?[]:[{...row,canReadProfile:role==='admin'}]
+   const items=u.searchParams.get('search')==='Sin coincidencias'?[]:[{...row,canReadProfile:role==='department_head'}]
    data={items,totalItems:items.length,totalPages:items.length,page:1,pageSize:50}
   }else if(u.pathname==='/api/students/1') {
    if(failDetail)return route.fulfill({status:500,json:{detail:'Detalle temporalmente no disponible'}})

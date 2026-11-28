@@ -41,9 +41,7 @@ El proyecto **TecNM SSPP** moderniza y sustituye los flujos operativos manuales,
 | **Estudiante** | `student` | Consulta de elegibilidad, registro de solicitudes, descarga de formatos oficiales, carga de constancias y reportes bimestrales. |
 | **Oficial de Servicio Social** | `social_service_officer` | Dictamen de solicitudes, revisión de reportes bimestrales, validación de cartas de aceptación/terminación y trámite de liberación. |
 | **Coordinador de Prácticas** | `internship_coordinator` | Registro de convenios de estancia profesional, asignación de supervisores de empresa, validación de evaluaciones y acreditación de créditos. |
-| **Jefe de Vinculación / Depto.** | `department_head` | Visto bueno directivo, seguimiento de métricas institucionales y firma de oficios oficiales. |
-| **Supervisor Externo** | `company_supervisor` | Tutor asignado por la empresa o institución receptora facultado para firmar reportes y calificar el desempeño. |
-| **Administrador** | `admin` | Gestión de usuarios, roles, períodos escolares, carga masiva de alumnos (Excel) y configuración de autoridades. |
+| **Jefe de Vinculación / Depto.** | `department_head` | Gestión administrativa integral: usuarios, roles, catálogos, autoridades, plantillas, padrón, convenios, dictamen y firma de oficios oficiales. |
 
 ---
 

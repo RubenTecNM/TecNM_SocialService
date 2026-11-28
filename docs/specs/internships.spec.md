@@ -9,7 +9,7 @@
 ## Acceso
 
 - `InternshipStaff`: todo.
-- `social_service_officer`, `department_head`: lectura.
+- `department_head`, `internship_coordinator`: gestión completa.
 - `student`: solicita apertura (Carta de Presentación adjuntando IMSS), llena formulario de evaluación Anexo XVII para imprimirlo prellenado y sube sus documentos (`CA`, `EV`, `CT`).
 
 ---

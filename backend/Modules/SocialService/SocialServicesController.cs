@@ -59,7 +59,7 @@ public sealed class SocialServicesController(SocialServiceService service) : Con
     }
 
     [HttpPost]
-    [Authorize(Roles = "admin,social_service_officer,student")]
+    [Authorize(Roles = "department_head,social_service_officer,student")]
     public async Task<ActionResult<SocialServiceDetailResponse>> Create(
         [FromBody] CreateSocialServiceRequest request,
         CancellationToken cancellationToken = default)
@@ -83,7 +83,7 @@ public sealed class SocialServicesController(SocialServiceService service) : Con
     }
 
     [HttpPut("{id:long}")]
-    [Authorize(Roles = "admin,social_service_officer,student")]
+    [Authorize(Roles = "department_head,social_service_officer,student")]
     public async Task<ActionResult<SocialServiceDetailResponse>> Update(
         long id,
         [FromBody] UpdateSocialServiceRequest request,
@@ -127,7 +127,7 @@ public sealed class SocialServicesController(SocialServiceService service) : Con
     }
 
     [HttpPut("{id:long}/commitment")]
-    [Authorize(Roles = "admin,social_service_officer,student")]
+    [Authorize(Roles = "department_head,social_service_officer,student")]
     public async Task<ActionResult<SocialServiceDetailResponse>> UpsertCommitment(
         long id,
         [FromBody] CommitmentRequest request,
@@ -148,7 +148,7 @@ public sealed class SocialServicesController(SocialServiceService service) : Con
     }
 
     [HttpPut("{id:long}/reports/{reportNumber:int}")]
-    [Authorize(Roles = "admin,social_service_officer,student")]
+    [Authorize(Roles = "department_head,social_service_officer,student")]
     public async Task<ActionResult<BiMonthlyReportResponse>> UpsertReport(
         long id,
         int reportNumber,
@@ -239,7 +239,7 @@ public sealed class SocialServicesController(SocialServiceService service) : Con
     }
 
     [HttpPost("{id:long}/cancel")]
-    [Authorize(Roles = "admin,social_service_officer,student")]
+    [Authorize(Roles = "department_head,social_service_officer,student")]
     public async Task<ActionResult<SocialServiceDetailResponse>> Cancel(
         long id,
         [FromBody] CancelTramiteRequest request,

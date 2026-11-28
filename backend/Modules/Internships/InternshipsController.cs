@@ -59,7 +59,7 @@ public sealed class InternshipsController(InternshipsService service) : Controll
     }
 
     [HttpPost]
-    [Authorize(Roles = "admin,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,internship_coordinator,student")]
     public async Task<ActionResult<InternshipDetailResponse>> Create(
         [FromBody] CreateInternshipRequest request,
         CancellationToken cancellationToken = default)
@@ -69,7 +69,7 @@ public sealed class InternshipsController(InternshipsService service) : Controll
     }
 
     [HttpPut("{id:long}")]
-    [Authorize(Roles = "admin,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,internship_coordinator,student")]
     public async Task<ActionResult<InternshipDetailResponse>> Update(
         long id,
         [FromBody] CreateInternshipRequest request,
@@ -102,7 +102,7 @@ public sealed class InternshipsController(InternshipsService service) : Controll
     }
 
     [HttpPost("{id:long}/acceptance")]
-    [Authorize(Roles = "admin,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,internship_coordinator,student")]
     public async Task<ActionResult<InternshipDetailResponse>> RegisterAcceptance(
         long id,
         [FromBody] RegisterInternshipAcceptanceRequest request,
@@ -177,7 +177,7 @@ public sealed class InternshipsController(InternshipsService service) : Controll
     }
 
     [HttpPost("{id:long}/cancel")]
-    [Authorize(Roles = "admin,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,internship_coordinator,student")]
     public async Task<ActionResult<InternshipDetailResponse>> Cancel(
         long id,
         [FromBody] CancelTramiteRequest request,
@@ -199,7 +199,7 @@ public sealed class InternshipsController(InternshipsService service) : Controll
     }
 
     [HttpPut("{id:long}/evaluation-format")]
-    [Authorize(Roles = "admin,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,internship_coordinator,student")]
     public async Task<IActionResult> SaveEvaluationFormat(long id, EvaluationFormatRequest request, CancellationToken ct)
     {
         await service.SaveEvaluationFormatAsync(id, request, ct);

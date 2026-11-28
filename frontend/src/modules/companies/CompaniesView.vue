@@ -19,7 +19,7 @@ import { deleteCompany, getCompanies, saveCompany, setCompanyStatus } from './ap
 import { companyTypeLabels, type Company, type CompanyRequest, type CompanyType } from './types'
 import CompanyRelations from './CompanyRelations.vue'
 
-const canManage = computed(() => hasRole('admin', 'social_service_officer', 'internship_coordinator'))
+const canManage = computed(() => hasRole('department_head', 'social_service_officer', 'internship_coordinator'))
 
 const rows = ref<Company[]>([])
 const kpiPool = ref<Company[]>([])

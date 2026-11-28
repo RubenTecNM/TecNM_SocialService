@@ -52,8 +52,8 @@ const STATUS_META: Record<
   cancelled: { label: 'Cancelado' },
 }
 
-const canWriteSocialService = computed(() => hasRole('admin', 'social_service_officer'))
-const canWriteInternship = computed(() => hasRole('admin', 'internship_coordinator'))
+const canWriteSocialService = computed(() => hasRole('department_head', 'social_service_officer'))
+const canWriteInternship = computed(() => hasRole('department_head', 'internship_coordinator'))
 const canCreateAny = computed(() => canWriteSocialService.value || canWriteInternship.value)
 
 const items = ref<NonConformance[]>([])

@@ -31,6 +31,6 @@ Contrato compartido: [spec raíz de empresas](../../../../docs/specs/companies.s
 
 ## 2. Reglas de Autorización
 
-- Lectura general y `/options`: `Staff` + `department_head` (`admin,social_service_officer,internship_coordinator,department_head`).
+- Lectura y escritura general: `Staff` (`department_head,social_service_officer,internship_coordinator`).
 - Endpoint `/options`: disponible para todos los usuarios autenticados (`[Authorize]`, incluidos `student` para registro de trámites).
 - Escritura (POST, PUT, PATCH, DELETE, upload PDF): `Staff` (`admin,social_service_officer,internship_coordinator`).

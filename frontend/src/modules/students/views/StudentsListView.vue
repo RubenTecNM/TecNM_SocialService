@@ -43,7 +43,7 @@ import type {
   StudentShift,
 } from '../types/students'
 
-const canFollowUp = computed(() => hasRole('admin', 'social_service_officer', 'department_head'))
+const canFollowUp = computed(() => hasRole('department_head', 'social_service_officer'))
 const followUpStatus = ref('')
 const followUpProgress = ref('')
 const followUpLabels: Record<string, string> = {
@@ -61,14 +61,14 @@ const assessmentLabels: Record<string, string> = {
   pending: 'Pendiente de valoración',
 }
 const canCreate = computed(() =>
-  hasRole('admin', 'social_service_officer', 'internship_coordinator', 'department_head'),
+  hasRole('department_head', 'social_service_officer', 'internship_coordinator'),
 )
-const canImport = computed(() => hasRole('admin', 'social_service_officer', 'department_head'))
+const canImport = computed(() => hasRole('department_head', 'social_service_officer'))
 const isExporting = ref(false)
 const isDownloadingTemplate = ref(false)
-const canRegister = computed(() => hasRole('admin'))
+const canRegister = computed(() => hasRole('department_head'))
 const canReview = computed(() =>
-  hasRole('admin', 'social_service_officer', 'internship_coordinator'),
+  hasRole('department_head', 'social_service_officer', 'internship_coordinator'),
 )
 
 interface StudentRow extends StudentListItem {
@@ -109,7 +109,7 @@ const columns: { key: keyof StudentRow & string; label: string }[] = [
   { key: 'fullName', label: 'ALUMNO' },
   { key: 'controlNumber', label: 'MATRÍCULA' },
   { key: 'careerCode', label: 'CARRERA / SEMESTRE' },
-  ...(hasRole('admin', 'social_service_officer', 'department_head')
+  ...(hasRole('department_head', 'social_service_officer')
     ? [{ key: 'socialServiceFollowUp' as const, label: 'SEGUIMIENTO SS' }]
     : []),
   { key: 'actions', label: 'DETALLE' },

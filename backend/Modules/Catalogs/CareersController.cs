@@ -38,7 +38,7 @@ public class CareersController(CareersService careersService) : ControllerBase
         return Ok(career);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost]
     public async Task<ActionResult<CareerResponse>> Create(
         [FromBody] CareerRequest request,
@@ -48,7 +48,7 @@ public class CareersController(CareersService careersService) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<CareerResponse>> Update(
         long id,
@@ -59,7 +59,7 @@ public class CareersController(CareersService careersService) : ControllerBase
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPatch("{id:long}/status")]
     public async Task<ActionResult<CareerResponse>> UpdateStatus(
         long id,
@@ -70,7 +70,7 @@ public class CareersController(CareersService careersService) : ControllerBase
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken = default)
     {

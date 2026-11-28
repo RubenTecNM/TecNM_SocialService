@@ -7,7 +7,7 @@ namespace TecNM.Api.Core.Security;
 
 public static class ProcessAccess
 {
-    public static bool ReadsAll(this ICurrentUser user) => user.IsInRole("admin") || user.IsInRole("department_head");
+    public static bool ReadsAll(this ICurrentUser user) => user.IsInRole("department_head");
     public static bool CanReadProcess(this ICurrentUser user, string type) => user.ReadsAll()
         || type == "social_service" && user.IsInRole("social_service_officer")
         || type == "internship" && user.IsInRole("internship_coordinator");

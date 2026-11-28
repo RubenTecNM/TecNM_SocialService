@@ -131,7 +131,7 @@ public sealed class SsppHub(
     private static IReadOnlyCollection<string> GetAuthorizedStaffTypes(HashSet<string> roles)
     {
         var types = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (roles.Contains("admin") || roles.Contains("department_head"))
+        if (roles.Contains("department_head"))
         {
             types.Add("social_service");
             types.Add("internship");
@@ -155,13 +155,13 @@ public sealed class SsppHub(
     }
 
     private static bool CanReviewDocuments(HashSet<string> roles) =>
-        roles.Contains("admin")
+        roles.Contains("department_head")
         || roles.Contains("social_service_officer")
         || roles.Contains("internship_coordinator");
 
     private static bool CanReviewTramiteType(HashSet<string> roles, string tramiteType)
     {
-        if (roles.Contains("admin")) return true;
+        if (roles.Contains("department_head")) return true;
         var normalized = tramiteType.Trim().ToLowerInvariant();
         if (normalized == "social_service") return roles.Contains("social_service_officer");
         if (normalized == "internship") return roles.Contains("internship_coordinator");

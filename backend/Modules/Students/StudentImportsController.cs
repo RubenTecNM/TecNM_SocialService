@@ -10,7 +10,7 @@ namespace TecNM.Api.Modules.Students;
 public class StudentImportsController(StudentImportsService studentImportsService) : ControllerBase
 {
 
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpGet("template")]
     public IActionResult DownloadTemplate()
     {
@@ -21,7 +21,7 @@ public class StudentImportsController(StudentImportsService studentImportsServic
             "Plantilla_Importacion_Estudiantes_TecNM.xlsx");
     }
 
-    [Authorize(Roles = "admin,social_service_officer,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpPost]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<StudentImportResult>> Import(
@@ -33,7 +33,7 @@ public class StudentImportsController(StudentImportsService studentImportsServic
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [Authorize(Roles = "admin,social_service_officer,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpGet]
     public async Task<ActionResult<PagedResponse<StudentImportBatchDto>>> GetPaged(
         [FromQuery] int page = 1,
@@ -46,7 +46,7 @@ public class StudentImportsController(StudentImportsService studentImportsServic
         return Ok(result);
     }
 
-    [Authorize(Roles = "admin,social_service_officer,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<StudentImportResult>> GetById(
         long id,

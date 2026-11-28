@@ -57,7 +57,7 @@ internal static class HttpChecks
         Expect(await anonymous.PostAsync("/api/hubs/sspp/negotiate?negotiateVersion=1", null), HttpStatusCode.Unauthorized);
         using var admin = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var student = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        await Login(admin, "admin");
+        await Login(admin, "jefa.vinculacion");
         await Login(student, "l23050363@monclova.tecnm.mx");
         await CheckTemplateManagementAsync(factory, student);
         await CheckBrandingAsync(factory, admin, student);
@@ -340,10 +340,8 @@ internal static class HttpChecks
     {
         using var ssOfficer = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var ppCoordinator = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        using var viewer = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await Login(ssOfficer, "encargado.ss");
         await Login(ppCoordinator, "coord.practicas");
-        await Login(viewer, "jefa.vinculacion");
         var foreignId = await db.Internships.Where(t => t.StudentId != 1).Select(t => t.Id).FirstAsync();
         Expect(await student.GetAsync($"/api/internships/{foreignId}/pdf/evaluation"), HttpStatusCode.NotFound);
         Expect(await student.PutAsJsonAsync($"/api/internships/{foreignId}/evaluation-format", new { evaluationStartDate = new DateOnly(2026, 1, 1), evaluationEndDate = new DateOnly(2026, 2, 1) }), HttpStatusCode.NotFound);
@@ -363,7 +361,6 @@ internal static class HttpChecks
         Expect(await Upload(ssOfficer, "CA"), HttpStatusCode.NotFound);
         Expect(await ssOfficer.PostAsJsonAsync($"/api/documents/{caId}/review", new { status = "approved" }), HttpStatusCode.NotFound);
         Expect(await ssOfficer.DeleteAsync($"/api/documents/{caId}"), HttpStatusCode.NotFound);
-        Expect(await viewer.DeleteAsync($"/api/documents/{caId}"), HttpStatusCode.Forbidden);
         Expect(await student.DeleteAsync($"/api/documents/{caId}"), HttpStatusCode.Forbidden);
         if (!await db.ExpedientDocuments.AsNoTracking().AnyAsync(d => d.Id == caId)) throw new Exception("Forbidden delete changed evidence.");
         Expect(await ppCoordinator.DeleteAsync($"/api/documents/{caId}"), HttpStatusCode.NoContent);

@@ -9,8 +9,8 @@ namespace TecNM.Api.Modules.Students;
 [Route("api/students")]
 public class StudentsController(StudentsService studentsService, StudentAccountsService accounts) : ControllerBase
 {
-    private const string StaffAndDeptRoles = "admin,social_service_officer,internship_coordinator,department_head";
-    private const string StaffRoles = "admin,social_service_officer,internship_coordinator";
+    private const string StaffAndDeptRoles = "department_head,social_service_officer,internship_coordinator";
+    private const string StaffRoles = "department_head,social_service_officer,internship_coordinator";
 
     [Authorize(Roles = StaffAndDeptRoles)]
     [HttpGet]
@@ -97,7 +97,7 @@ public class StudentsController(StudentsService studentsService, StudentAccounts
         return Ok(detail);
     }
 
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpPost]
     public async Task<ActionResult<StudentDetail>> Create(
         [FromBody] StudentRequest request,
@@ -107,7 +107,7 @@ public class StudentsController(StudentsService studentsService, StudentAccounts
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<StudentDetail>> Update(
         long id,
@@ -118,7 +118,7 @@ public class StudentsController(StudentsService studentsService, StudentAccounts
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken = default)
     {
@@ -136,7 +136,7 @@ public class StudentsController(StudentsService studentsService, StudentAccounts
         return Ok(eligibility);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost("{id:long}/account")]
     public async Task<ActionResult<CreateStudentAccountResponse>> CreateAccount(
         long id,
@@ -146,7 +146,7 @@ public class StudentsController(StudentsService studentsService, StudentAccounts
         return StatusCode(StatusCodes.Status201Created, account);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost("{id:long}/account/reset-password")]
     public async Task<IActionResult> ResetPassword(long id, CancellationToken cancellationToken = default)
     {

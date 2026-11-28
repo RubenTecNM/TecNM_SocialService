@@ -9,7 +9,7 @@ const c=await b.newContext({ignoreHTTPSErrors:true});const base=process.env.UI_T
 await c.addCookies([{name:'session_exp',value:String(Math.floor(Date.now()/1000)+3600),url:base,secure:true}]);
 const p=await c.newPage();let requests=0;
 await p.route('**/api/**',async r=>{const u=new URL(r.request().url());let data=[];
-if(u.pathname==='/api/auth/me')data={id:1,name:'Admin',username:'admin',roles:['admin']};
+if(u.pathname==='/api/auth/me')data={id:5,name:'Jefatura',username:'jefa.vinculacion',roles:['department_head']};
 else if(u.pathname==='/api/social-services')data={items:[{...detail,studentFullName:detail.student.fullName,studentControlNumber:detail.student.controlNumber,careerCode:'INF',periodCode:detail.period.code,status:'released'}],totalItems:1,totalPages:1};
 else if(u.pathname===`/api/social-services/${detail.id}`)data={...detail,status:'released'};
 else if(u.pathname.endsWith('/pdf/individual_act')){requests++;return r.fulfill({status:422,json:{detail:'Datos incompletos',errors:{companyName:['Falta la dependencia registrada.']}}});}

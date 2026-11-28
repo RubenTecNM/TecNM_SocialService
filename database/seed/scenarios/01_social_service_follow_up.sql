@@ -7,9 +7,9 @@ END $$;
 INSERT INTO academic_periods(code,name,start_date,end_date,is_active)
 SELECT 'FJ25','Febrero - Julio 2025','2025-02-10','2025-07-04',false
 WHERE NOT EXISTS(SELECT 1 FROM academic_periods WHERE code='FJ25' AND deleted_at IS NULL);
-UPDATE academic_periods SET is_active=(code='AD26'),updated_at=now(),updated_by=1 WHERE deleted_at IS NULL;
+UPDATE academic_periods SET is_active=(code='AD26'),updated_at=now(),updated_by=5 WHERE deleted_at IS NULL;
 UPDATE students s SET social_service_eligible_period_id=p.id,
- social_service_eligible_period_updated_at=now(),social_service_eligible_period_updated_by=1,updated_at=now(),updated_by=1
+ social_service_eligible_period_updated_at=now(),social_service_eligible_period_updated_by=5,updated_at=now(),updated_by=5
 FROM (VALUES
  ('I23050363','AD26'), -- En proceso, constante; usa evidencias aprobadas existentes.
  ('I22050114','FJ26'), -- En proceso, pendiente de valoración, aunque aún no esté activo.
@@ -24,7 +24,7 @@ FROM (VALUES
 ) AS sample(control_number,period_code)
 JOIN academic_periods p ON p.code=sample.period_code AND p.deleted_at IS NULL
 WHERE s.control_number=sample.control_number AND s.deleted_at IS NULL;
-UPDATE students SET social_service_eligible_period_id=NULL,social_service_eligible_period_updated_at=now(),social_service_eligible_period_updated_by=1,updated_at=now(),updated_by=1
+UPDATE students SET social_service_eligible_period_id=NULL,social_service_eligible_period_updated_at=now(),social_service_eligible_period_updated_by=5,updated_at=now(),updated_by=5
 WHERE control_number='I21050409' AND deleted_at IS NULL; -- Periodo pendiente: PP liberado no equivale a SS liberado.
 DELETE FROM social_service_follow_up_reviews r USING social_services t,students s,academic_periods p
 WHERE r.social_service_id=t.id AND t.student_id=s.id AND r.period_id=p.id AND p.code='AD26'

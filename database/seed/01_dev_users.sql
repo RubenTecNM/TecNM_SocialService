@@ -5,7 +5,6 @@ BEGIN;
 -- ============================================================================
 INSERT INTO roles (name, description)
 VALUES
-    ('admin', 'Administrador del Sistema'),
     ('student', 'Estudiante / Prestador de SS / Practicante'),
     ('social_service_officer', 'Encargado(a) de Servicio Social'),
     ('internship_coordinator', 'Coordinador(a) de Prácticas Profesionales'),
@@ -21,16 +20,6 @@ INSERT INTO users (id, username, email, password_hash, first_name, first_surname
 OVERRIDING SYSTEM VALUE
 VALUES
     -- Personal Administrativo y Directivo (1 cuenta por cada rol de staff)
-    (
-        1,
-        'admin',
-        'admin@monclova.tecnm.mx',
-        'AQAAAAIAAYagAAAAEIr5sN4qIlQg9nbMvyG/Ber0Le6W9Gg8Bt2Ej4uha46Bx7kn/1vJ0MbMx84IKWUhTQ==',
-        'Administrador',
-        'Sistema',
-        'ITSM',
-        true
-    ),
     (
         3,
         'encargado.ss',
@@ -141,8 +130,7 @@ INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id
 FROM users u
 CROSS JOIN roles r
-WHERE (u.username = 'admin' AND r.name = 'admin')
-   OR (u.username = 'encargado.ss' AND r.name = 'social_service_officer')
+WHERE (u.username = 'encargado.ss' AND r.name = 'social_service_officer')
    OR (u.username = 'coord.practicas' AND r.name = 'internship_coordinator')
    OR (u.username = 'jefa.vinculacion' AND r.name = 'department_head')
    OR (u.username IN (

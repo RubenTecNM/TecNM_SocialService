@@ -12,7 +12,7 @@ const studentUsername = process.env.UI_TEST_STUDENT_USERNAME || 'l23050363@moncl
 const root = path.resolve('tmp/pdf-qa')
 const browser = await chromium.launch({ channel: 'msedge', headless: true })
 try {
-  for (const username of ['admin', studentUsername]) {
+  for (const username of ['jefa.vinculacion', studentUsername]) {
     const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 1000 } })
     const page = await context.newPage()
     const errors = []
@@ -28,7 +28,7 @@ try {
     await page.waitForURL(url => !url.pathname.includes('login'), { timeout: 10000 })
     const me = await context.request.get(base + '/api/auth/me')
     assert.equal(me.status(), 200, `${username}: authenticated cookie`)
-    if (username === 'admin') {
+    if (username === 'jefa.vinculacion') {
       await page.goto(base + '/expedients/review')
       await page.getByRole('button', { name: 'Actualizar bandeja', exact: true }).waitFor()
       const queue = await context.request.get(base + '/api/documents/review-queue?pageSize=1')

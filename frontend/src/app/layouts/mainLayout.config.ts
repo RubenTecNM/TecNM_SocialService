@@ -18,7 +18,6 @@ export const mainLayoutConfig = {
 }
 
 export const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrador del Sistema',
   social_service_officer: 'Encargado(a) de Servicio Social',
   internship_coordinator: 'Coordinador(a) de Prácticas Prof.',
   department_head: 'Jefatura de Vinculación',
@@ -33,12 +32,11 @@ export function getRoleDisplayLabel(roles: string[]): string {
 }
 
 export function getSidebarNavigationForRoles(roles: string[]): NavigationItem[] {
-  const isAdmin = roles.includes('admin')
   const isSSOfficer = roles.includes('social_service_officer')
   const isPPCoord = roles.includes('internship_coordinator')
   const isDeptHead = roles.includes('department_head')
   const isStudent = roles.includes('student')
-  const isStaff = isAdmin || isSSOfficer || isPPCoord || isDeptHead
+  const isStaff = isSSOfficer || isPPCoord || isDeptHead
 
   // Si el usuario es únicamente estudiante, solo ve su Portal de Estudiante
   if (isStudent && !isStaff) {
@@ -58,13 +56,13 @@ export function getSidebarNavigationForRoles(roles: string[]): NavigationItem[] 
 
   // Grupo de Gestión Operativa según rol de Vinculación
   const tramitesChildren: NavigationLink[] = []
-  if (isAdmin || isSSOfficer || isDeptHead) {
+  if (isSSOfficer || isDeptHead) {
     tramitesChildren.push({ label: 'Servicio Social', to: '/social-service', icon: 'social' })
   }
-  if (isAdmin || isPPCoord || isDeptHead) {
+  if (isPPCoord || isDeptHead) {
     tramitesChildren.push({ label: 'Prácticas Profesionales', to: '/internships', icon: 'internship' })
   }
-  if (isAdmin || isSSOfficer || isPPCoord) {
+  if (isDeptHead || isSSOfficer || isPPCoord) {
     tramitesChildren.push({ label: 'Revisión Documental', to: '/expedients/review', icon: 'review' })
   }
   tramitesChildren.push({ label: 'Padrón de Alumnos', to: '/students', icon: 'students' })
@@ -86,17 +84,17 @@ export function getSidebarNavigationForRoles(roles: string[]): NavigationItem[] 
     ],
   })
 
-  // Catálogos Oficiales (para Administrador y Encargados)
+  // Catálogos Oficiales (para Jefatura de Vinculación y Encargados)
   if (isStaff) {
     nav.push({
       label: 'Catálogos Oficiales',
       open: true,
       children: [
         { label: 'Empresas y dependencias', to: '/companies', icon: 'companies' },
-        ...(isAdmin ? [{ label: 'Autoridades y logotipos', to: '/catalogs/institutional-identity', icon: 'careers' as const }] : []),
+        ...(isDeptHead ? [{ label: 'Autoridades y logotipos', to: '/catalogs/institutional-identity', icon: 'careers' as const }] : []),
         { label: 'Carreras Oficiales', to: '/catalogs/careers', icon: 'careers' },
         { label: 'Tipos de Actividad', to: '/catalogs/activity-types', icon: 'careers' },
-        ...(isAdmin || isSSOfficer || isPPCoord
+        ...(isDeptHead || isSSOfficer || isPPCoord
           ? [{ label: 'Plantillas documentales', to: '/catalogs/document-templates', icon: 'careers' as const }]
           : []),
       ],
@@ -110,4 +108,4 @@ export const headerNavigation: NavigationItem[] = [
   { label: 'Panel Principal', to: '/', icon: 'dashboard' },
 ]
 
-export const sidebarNavigation: NavigationItem[] = getSidebarNavigationForRoles(['admin'])
+export const sidebarNavigation: NavigationItem[] = getSidebarNavigationForRoles(['department_head'])

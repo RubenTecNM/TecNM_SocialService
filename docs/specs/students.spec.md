@@ -8,8 +8,9 @@
 
 ## Acceso
 
-- `Staff`: CRUD, importación, validación IMSS, creación de cuenta.
-- `department_head`: lectura.
+- `department_head`: CRUD global, importación, validación IMSS, creación y reseteo de cuentas.
+- `social_service_officer`: lectura de su proceso y seguimiento SS, alta manual, importación Excel y validación IMSS.
+- `internship_coordinator`: lectura de su proceso, alta manual y validación IMSS.
 - `student`: solo `/api/students/me*`.
 
 ## DTOs
@@ -142,7 +143,7 @@ interface StudentEligibility {
 
 Cuenta de estudiante: `username = email = institutionalEmail`, normalizado a minúsculas, válido y máximo 254 caracteres; rol exclusivo `student`. Contraseña habitual inicial: matrícula en mayúsculas, almacenada mediante hash; sin cambio obligatorio. No fabricar correos ni reutilizar cuentas por coincidencia.
 
-`POST /api/students/{id}/account` devuelve `{ userId, username, accountStatus }`. `POST /api/students/{id}/account/reset-password`, exclusivo admin, restablece a matrícula y devuelve 204; invalida sesiones. Crear cuenta, rol y vínculo es atómico. El padrón añade `accountUsername` y `accountStatus`: `missing`, `active`, `inactive`, `inconsistent`. Solo admin modifica correo institucional; corrección sincroniza identidad y revoca sesiones. Las contraseñas existentes se conservan salvo restablecimiento explícito.
+`POST /api/students/{id}/account` devuelve `{ userId, username, accountStatus }`. `POST /api/students/{id}/account/reset-password`, exclusivo `department_head`, restablece a matrícula y devuelve 204; invalida sesiones. Crear cuenta, rol y vínculo es atómico. El padrón añade `accountUsername` y `accountStatus`: `missing`, `active`, `inactive`, `inconsistent`. Solo `department_head` modifica correo institucional; corrección sincroniza identidad y revoca sesiones. Las contraseñas existentes se conservan salvo restablecimiento explícito.
 
 ## Elegibilidad
 

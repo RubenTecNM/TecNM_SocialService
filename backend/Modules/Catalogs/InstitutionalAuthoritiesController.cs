@@ -10,7 +10,7 @@ namespace TecNM.Api.Modules.Catalogs;
 [TemplateAntiforgery]
 public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService authoritiesService) : ControllerBase
 {
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpGet]
     public async Task<ActionResult<PagedResponse<InstitutionalAuthorityResponse>>> GetPaged(
         [FromQuery] int page = 1,
@@ -24,7 +24,7 @@ public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService 
         return Ok(result);
     }
 
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpGet("active")]
     public async Task<ActionResult<IReadOnlyDictionary<string, InstitutionalAuthorityResponse?>>> GetActiveMap(
         CancellationToken cancellationToken = default)
@@ -33,7 +33,7 @@ public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService 
         return Ok(activeMap);
     }
 
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<InstitutionalAuthorityResponse>> GetById(
         long id,
@@ -43,7 +43,7 @@ public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService 
         return Ok(authority);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPost]
     public async Task<ActionResult<InstitutionalAuthorityResponse>> Create(
         [FromBody] InstitutionalAuthorityRequest request,
@@ -53,7 +53,7 @@ public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService 
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<InstitutionalAuthorityResponse>> Update(
         long id,
@@ -64,7 +64,7 @@ public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService 
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpPatch("{id:long}/status")]
     public async Task<ActionResult<InstitutionalAuthorityResponse>> UpdateStatus(
         long id,
@@ -75,7 +75,7 @@ public class InstitutionalAuthoritiesController(InstitutionalAuthoritiesService 
         return Ok(updated);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "department_head")]
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(
         long id,

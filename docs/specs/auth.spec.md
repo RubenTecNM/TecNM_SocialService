@@ -56,14 +56,14 @@ Respuesta `401` de login usa mensaje genérico. No confirma si cuenta existe, es
 - Claims requeridos: `sub`, `username`, `email`, `name`, `roles`, `exp`, `iss`, `aud`.
 - `sub` contiene `UserResponse.id` en formato numérico textual.
 - Claim `sv` contiene `users.session_version`. La API exige coincidencia en cada petición; tokens anteriores sin `sv` requieren nuevo login. Restablecer contraseña o cambiar identidad incrementa la versión.
-- `roles` contiene los roles asignados: `admin`, `student`, `social_service_officer`, `internship_coordinator`, `department_head`.
+- `roles` contiene los roles asignados: `department_head`, `student`, `social_service_officer`, `internship_coordinator`.
 - Backend valida firma, emisor, audiencia y expiración en cada ruta protegida.
 - `Jwt__SecretKey` vive fuera de Git. API falla al iniciar si falta o tiene menos de 32 bytes UTF-8.
 
 ## Datos demo
 
 - Usuarios activos de desarrollo:
-  - `admin` (id: 1) con rol `admin`.
+  - `jefa.vinculacion` (id: 5) con rol `department_head`.
   - `l23050363@monclova.tecnm.mx` (id: 2) con rol `student`.
 - Contraseña común exclusiva de desarrollo: `TecNM-Demo-2026!`.
 - PostgreSQL guarda solo hashes creados con `PasswordHasher<User>`.

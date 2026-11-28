@@ -11,7 +11,7 @@
 - `student`: sube, lista y descarga sus documentos; borra solo `pending` propios.
 - `SocialServiceStaff`: revisa `tramiteType` `social_service` y `general`.
 - `InternshipStaff`: revisa `tramiteType` `internship` y `general`.
-- `admin`: todo.
+- `department_head`: todo (revisión SS, PP y general; no carga formatos exclusivos del alumno).
 
 ## DTOs
 

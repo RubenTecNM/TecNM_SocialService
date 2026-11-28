@@ -1379,7 +1379,7 @@ public sealed class SocialServiceService(
 
     public async Task<Dictionary<string, object?>> GetIndividualActDataAsync(long id, CancellationToken ct = default)
     {
-        if (!currentUser.IsInRole("admin") && !currentUser.IsInRole("social_service_officer") && !currentUser.IsInRole("department_head"))
+        if (!currentUser.IsInRole("department_head") && !currentUser.IsInRole("social_service_officer"))
             throw new AppException(403, "documents.forbidden", "El Acta Individual está disponible únicamente para personal autorizado.");
         var entity = await BuildDetailQuery().AsNoTracking().SingleOrDefaultAsync(s => s.Id == id, ct)
             ?? throw new NotFoundException("social_services.not_found", "Trámite no encontrado.");
@@ -1926,7 +1926,7 @@ public sealed class SocialServiceService(
     }
 
     private bool IsSocialServiceStaff() =>
-        currentUser.IsInRole("admin") || currentUser.IsInRole("social_service_officer");
+        currentUser.IsInRole("department_head") || currentUser.IsInRole("social_service_officer");
 
     private void EnsureCanViewTramite(Core.Entities.SocialService entity)
     {

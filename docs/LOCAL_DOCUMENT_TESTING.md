@@ -8,7 +8,7 @@ Acceso actual: http://localhost:6070 (API en http://127.0.0.1:6080). Frontend, A
 - Coinciden las huellas anteriores y posteriores de los 12 expedientes, los 52 registros de evidencia y los 13 archivos del volumen. Respaldo previo en `tmp/pdf-qa/backups/tecnm-pre-plantillas-20261126-203635.dump`. Las imágenes previas tienen la etiqueta `pre-template-management-20261126`.
 - Verificados el gestor en Edge, el catálogo operativo de Administración y de ambas áreas, y la descarga de Solicitud, Reporte, Compromiso y evaluación PP. El editor completo se probó en la compilación que sirve Nginx con respuestas API simuladas. La contraseña histórica de la cuenta demo de alumno fue rechazada. Los permisos de estudiante se comprobaron en la suite aislada.
 
-Cuentas demo verificadas: `i23050363@monclova.tecnm.mx` (alumno) y `admin` (administración). Contraseña demo: `TecNM-Demo-2026!`.
+Cuentas demo verificadas: `i23050363@monclova.tecnm.mx` (alumno) y `jefa.vinculacion` (`department_head`). Contraseña demo: `TecNM-Demo-2026!`.
 
 ## Entorno preparado
 

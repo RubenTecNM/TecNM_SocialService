@@ -26,10 +26,9 @@ async function json(request, endpoint) {
 }
 try {
   for (const [username, role, own] of [
-    ['admin','admin','social_service'],
+    ['jefa.vinculacion','department_head','social_service'],
     ['encargado.ss','social_service_officer','social_service'],
     ['coord.practicas','internship_coordinator','internship'],
-    ['jefa.vinculacion','department_head','social_service'],
     [studentUsername,'student',null],
   ]) {
     const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width:1440,height:1000 } })
@@ -59,7 +58,7 @@ try {
     const companies = await json(context.request,'/api/companies?pageSize=100')
     assert.ok(companies.items.length > 0)
     assert.ok(companies.items.every(company => catalogTypes.has(company.companyType)))
-    if (role === 'admin') {
+    if (role === 'department_head') {
       for (const [type,endpoint] of Object.entries(processPaths)) {
         const list = await json(context.request,`/api/${endpoint}?pageSize=100`)
         references[type] = list.items
@@ -103,12 +102,9 @@ try {
     await page.screenshot({path:path.join(output,`${role}-statistics.png`),fullPage:true})
     await page.goto(base + '/companies')
     await page.getByRole('table').waitFor()
-    if (role === 'department_head') assert.equal(await page.getByRole('button',{name:'Registrar empresa',exact:true}).count(),0)
-    else {
-      await page.getByRole('button',{name:'Registrar empresa',exact:true}).click()
-      await page.getByRole('dialog').getByLabel('Tipo de empresa',{exact:true}).waitFor()
-      await page.keyboard.press('Escape')
-    }
+    await page.getByRole('button',{name:'Registrar empresa',exact:true}).click()
+    await page.getByRole('dialog').getByLabel('Tipo de empresa',{exact:true}).waitFor()
+    await page.keyboard.press('Escape')
     await page.screenshot({path:path.join(output,`${role}-companies.png`),fullPage:true})
     if (role === 'social_service_officer' || role === 'internship_coordinator') {
       await page.setViewportSize({width:390,height:844})

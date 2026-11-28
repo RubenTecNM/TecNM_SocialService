@@ -5,7 +5,7 @@
 # Especificación Frontend: Módulo Expediente Documental & Archivos
 
 > **Contrato Backend:** [`docs/specs/documents.spec.md`](../../../../../docs/specs/documents.spec.md)  
-> **Roles:** `student` (consulta y subida de propios), `social_service_officer` (revisa SS y general), `internship_coordinator` (revisa PP y general), `admin` (todo).
+> **Roles:** `student` (consulta y subida de propios), `social_service_officer` (revisa SS y general), `internship_coordinator` (revisa PP y general), `department_head` (todo).
 
 ---
 

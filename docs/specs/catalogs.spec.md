@@ -212,7 +212,7 @@ Sin `DELETE`. No existe endpoint público para consumir folio: solo lo consumen 
 Catálogo estandarizado para clasificar la actividad funcional realizada en Servicio Social y/o Prácticas Profesionales.
 
 - Lectura (`GET`, `/options?tramiteType=social_service|internship|both`): Autenticado.
-- Escritura (`POST`, `PUT`, `PATCH /status`, `DELETE`): `admin`, `social_service_officer`, `internship_coordinator` (política `CompaniesWrite`).
+- Escritura (`POST`, `PUT`, `PATCH /status`, `DELETE`): `department_head`, `social_service_officer`, `internship_coordinator` (política `CompaniesWrite`).
 - `appliesTo`: `social_service` | `internship` | `both`.
 - `DELETE` → `409 activity_types.in_use` si existen trámites de SS o PP vinculados.
 

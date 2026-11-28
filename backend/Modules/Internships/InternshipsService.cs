@@ -1399,7 +1399,7 @@ public sealed class InternshipsService(
     }
 
     private bool IsInternshipStaff() =>
-        currentUser.IsInRole("admin") || currentUser.IsInRole("internship_coordinator");
+        currentUser.IsInRole("department_head") || currentUser.IsInRole("internship_coordinator");
 
     private void EnsureCanViewTramite(Internship entity)
     {

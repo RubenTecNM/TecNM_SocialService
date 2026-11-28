@@ -32,7 +32,7 @@ try {
     const url = new URL(route.request().url()), endpoint = url.pathname
     if (!endpoint.startsWith('/api/')) return route.continue()
     let body = []
-    if (endpoint === '/api/auth/me') body = { id: 1, username: 'admin', name: 'Administrador de prueba', roles: ['admin'] }
+    if (endpoint === '/api/auth/me') body = { id: 5, username: 'jefa.vinculacion', name: 'Jefatura de prueba', roles: ['department_head'] }
     else if (endpoint === '/api/documents/review-queue') {
       queries.push(Object.fromEntries(url.searchParams))
       if (fail) return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })

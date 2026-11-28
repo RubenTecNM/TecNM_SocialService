@@ -11,7 +11,7 @@ const pdf = fs.readFileSync('backend/Resources/Documents/templates/ss-report.pdf
 const profile = JSON.parse(fs.readFileSync('tmp/pdf-qa/ui-fixtures/profile.json'))
 const detail = JSON.parse(fs.readFileSync('tmp/pdf-qa/ui-fixtures/social-service.json'))
 const pp = JSON.parse(fs.readFileSync('tmp/pdf-qa/ui-fixtures/internship.json'))
-let role = 'admin', scenario = '', saves = 0
+let role = 'department_head', scenario = '', saves = 0
 const exceptions = []
 const problem = errors => ({ detail: 'Uno o más campos presentan errores de validación.', code: 'validation.failed', errors })
 try {

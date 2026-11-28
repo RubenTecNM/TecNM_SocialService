@@ -15,11 +15,12 @@ internal static class AccessChecks
         var db = scope.ServiceProvider.GetRequiredService<TecNMDbContext>();
         using var ss = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
         using var pp = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        using var viewer = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        using var deptHead = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
         using var student = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        using var admin = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        foreach (var (client, name) in new[] { (ss,"encargado.ss"), (pp,"coord.practicas"), (viewer,"jefa.vinculacion"), (student,"l23050363@monclova.tecnm.mx"), (admin,"admin") })
+        foreach (var (client, name) in new[] { (ss,"encargado.ss"), (pp,"coord.practicas"), (deptHead,"jefa.vinculacion"), (student,"l23050363@monclova.tecnm.mx") })
             await Expect(await client.PostAsJsonAsync("/api/auth/login", new { username = name, password = "TecNM-Demo-2026!" }), HttpStatusCode.OK);
+        if (await db.Roles.AnyAsync(r => r.Name == "admin" || r.Name == "company_supervisor"))
+            throw new Exception("Deprecated roles admin or company_supervisor must not exist active.");
 
         var period = new AcademicPeriod { Code = "QA-RBAC", Name = "Pruebas de alcance", SchoolYear = "2025-2026", StartDate = new(2026,1,1), EndDate = new(2026,12,31) };
         var a = new Company { Name = "QA Empresa A", CompanyType = "micro", Sector = "private", CompanySize = "micro" };
@@ -45,7 +46,7 @@ internal static class AccessChecks
         foreach (var (client, id, type, tramiteId, code, expected) in new[] {
             (ss, students[0].Id, "social_service", ownSs.Id, "CP", HttpStatusCode.Forbidden),
             (pp, students[3].Id, "internship", ownPp.Id, "EV", HttpStatusCode.Forbidden),
-            (admin, students[0].Id, "social_service", ownSs.Id, "CA", HttpStatusCode.Forbidden),
+            (deptHead, students[0].Id, "social_service", ownSs.Id, "CA", HttpStatusCode.Forbidden),
             (student, students[0].Id, "social_service", ownSs.Id, "CP", HttpStatusCode.NotFound) })
         {
             using var form = new MultipartFormDataContent();
@@ -89,7 +90,7 @@ internal static class AccessChecks
         await Expect(await ss.PostAsJsonAsync($"/api/documents/{docSs.Id}/review", new {status="approved"}), HttpStatusCode.OK);
         await Expect(await pp.PostAsJsonAsync($"/api/documents/{docPp.Id}/review", new {status="approved"}), HttpStatusCode.OK);
 
-        foreach (var client in new[] { ss, pp, viewer })
+        foreach (var client in new[] { ss, pp, deptHead })
         foreach (var (type, assigned, active, companyCount) in new[] { ("social_service",2,1,1), ("internship",3,2,2) })
         {
             var response = await client.GetAsync($"/api/reports/linkage?tramiteType={type}&periodId={period.Id}&pageSize=1");
@@ -118,7 +119,8 @@ internal static class AccessChecks
         var created=await ss.PostAsJsonAsync("/api/companies",payload);await Expect(created,HttpStatusCode.Created);
         var companyId=(await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
         await Expect(await pp.PutAsJsonAsync($"/api/companies/{companyId}",payload),HttpStatusCode.OK);
-        await Expect(await viewer.PostAsJsonAsync("/api/companies",payload),HttpStatusCode.Forbidden);
+        await Expect(await deptHead.PostAsJsonAsync("/api/companies",payload),HttpStatusCode.Created);
+        await Expect(await student.PostAsJsonAsync("/api/companies",payload),HttpStatusCode.Forbidden);
         await Expect(await ss.PostAsJsonAsync("/api/companies",new {name="Invalid",companyType="other",sector="educational",companySize="not_applicable"}),HttpStatusCode.BadRequest);
         var roles = await db.UserRoles.Where(ur => ur.User!.Username=="encargado.ss").ToListAsync();
         // Role removal and restoration happen only inside the disposable test database.

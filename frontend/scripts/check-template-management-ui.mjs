@@ -34,7 +34,7 @@ try {
     if (!endpoint.startsWith('/api/')) return route.continue()
     const method = request.method()
     let json = []
-    if (endpoint === '/api/auth/me') json = { id: 2, username: 'ss', name: 'Usuario de prueba', roles: [adminView ? 'admin' : 'social_service_officer'] }
+    if (endpoint === '/api/auth/me') json = { id: 5, username: 'jefa.vinculacion', name: 'Usuario de prueba', roles: [adminView ? 'department_head' : 'social_service_officer'] }
     else if (endpoint === '/api/template-management') json = [active]
     else if (endpoint === '/api/template-management/logos') json = [{ id: 1, name: 'Marca inicial', width: 800, height: 200 }, { id: 2, name: 'Marca nueva', width: 800, height: 200 }]
     else if (endpoint.endsWith('/image')) return route.fulfill({ contentType: 'image/png', body: png })

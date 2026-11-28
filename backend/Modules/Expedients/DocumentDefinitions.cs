@@ -12,7 +12,7 @@ public static class DocumentDefinitions
 
     public static IReadOnlyList<DocumentRequirement> For(string type, int version, ICurrentUser user)
     {
-        var staff = user.IsInRole("admin") || user.IsInRole(type == "internship" ? "internship_coordinator" : "social_service_officer");
+        var staff = user.IsInRole("department_head") || user.IsInRole(type == "internship" ? "internship_coordinator" : "social_service_officer");
         if (type == "internship") return
         [
             new("CP", "Carta de Presentación", CanUpload: false),
@@ -48,7 +48,7 @@ public static class DocumentDefinitions
 
     public static bool CanUpload(string type, string code, int version, ICurrentUser user)
     {
-        var isStaff = user.IsInRole("admin") || user.IsInRole(type == "social_service" ? "social_service_officer" : "internship_coordinator");
+        var isStaff = user.IsInRole("department_head") || user.IsInRole(type == "social_service" ? "social_service_officer" : "internship_coordinator");
         if (!isStaff && !user.IsInRole("student")) return false;
         return For(type, version, user).Any(d => d.Code == code && d.CanUpload);
     }

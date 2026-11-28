@@ -231,7 +231,7 @@ public sealed class TemplateManagement(TecNMDbContext db, ICurrentUser user, Tim
         return template;
     }
 
-    private bool CanManage(string area) => user.IsInRole("admin") ||
+    private bool CanManage(string area) => user.IsInRole("department_head") ||
         user.IsInRole(area == "internship" ? "internship_coordinator" : "social_service_officer");
 
     private async Task<DocumentTemplateVersion> GetDraft(string key, uint revision, CancellationToken ct)

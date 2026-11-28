@@ -116,32 +116,32 @@ Mapeo backend obligatorio de PostgreSQL: `23505` (unique) → `409 *.duplicated`
 
 ## 5. Roles y autorización
 
-Roles (claim `roles`): `admin`, `student`, `social_service_officer`, `internship_coordinator`, `department_head`.
+Roles (claim `roles`): `department_head`, `student`, `social_service_officer`, `internship_coordinator`.
 
 | Política backend | Roles |
 | --- | --- |
-| `Admin` | `admin` |
-| `Staff` | `admin`, `social_service_officer`, `internship_coordinator` |
-| `SocialServiceStaff` | `admin`, `social_service_officer` |
-| `InternshipStaff` | `admin`, `internship_coordinator` |
-| `ReportViewer` | `Staff` + `department_head` |
+| `DepartmentHead` | `department_head` |
+| `Staff` | `department_head`, `social_service_officer`, `internship_coordinator` |
+| `SocialServiceStaff` | `department_head`, `social_service_officer` |
+| `InternshipStaff` | `department_head`, `internship_coordinator` |
+| `ReportViewer` | `Staff` |
 | `Student` | `student` (siempre restringido a su propio expediente) |
 
 Matriz resumida (detalle en cada spec):
 
-| Recurso | admin | ss_officer | int_coordinator | dept_head | student |
-| --- | --- | --- | --- | --- | --- |
-| Usuarios / roles | CRUD | — | — | — | — |
-| Catálogos (lectura `/options`) | ✔ | ✔ | ✔ | ✔ | ✔ |
-| Catálogos (escritura) | ✔ | Programas SS | — | — | — |
-| Autoridades / series de folio | CRUD | Lectura | Lectura | — | — |
-| Empresas, supervisores, convenios | CRUD | CRUD | CRUD | Lectura | `/options` |
-| Estudiantes | CRUD + import | CRUD + import + IMSS | CRUD + import + IMSS | Lectura | Solo `me` |
-| Servicio Social | Todo | Todo | Lectura | Lectura | Propios |
-| Prácticas Profesionales | Todo | Lectura | Todo | Lectura | Propios |
-| Documentos | Todo | Revisa SS + general | Revisa PP + general | — | Sube/consulta propios |
-| PNC | Todo | SS | PP | Lectura | — |
-| Reportes | ✔ | ✔ | ✔ | ✔ | — |
+| Recurso | department_head | ss_officer | int_coordinator | student |
+| --- | --- | --- | --- | --- |
+| Usuarios / roles | CRUD | — | — | — |
+| Catálogos (lectura `/options`) | ✔ | ✔ | ✔ | ✔ |
+| Catálogos (escritura) | ✔ | Programas SS, Tipos de actividad | Tipos de actividad | — |
+| Autoridades / series de folio | CRUD | Lectura | Lectura | — |
+| Empresas, supervisores, convenios | CRUD | CRUD | CRUD | `/options` |
+| Estudiantes | CRUD + import + cuentas | Alta + import + IMSS + su proceso | Alta + IMSS + su proceso | Solo `me` |
+| Servicio Social | Todo | Todo | — | Propios |
+| Prácticas Profesionales | Todo | — | Todo | Propios |
+| Documentos | Revisa SS + PP + general | Revisa SS + general | Revisa PP + general | Sube/consulta propios |
+| PNC | Todo | SS | PP | — |
+| Reportes | ✔ | ✔ | ✔ | — |
 
 - Propiedad de estudiante: `students.user_id = sub`. Recurso ajeno responde `404`, no `403` (evita enumeración).
 - Frontend oculta acciones según `roles` de `/api/auth/me` y `allowedActions` del recurso. Backend conserva autoridad.
@@ -191,7 +191,7 @@ Guardas específicas: ver [social-service.spec.md](./social-service.spec.md) e [
 
 | Enum (columna) | Valor → Etiqueta |
 | --- | --- |
-| `roles.name` | `admin` Administrador · `student` Estudiante · `social_service_officer` Encargado(a) de Servicio Social · `internship_coordinator` Coordinador(a) de Prácticas · `department_head` Jefe(a) de Departamento |
+| `roles.name` | `department_head` Jefe(a) de División de Gestión Tecnológica y Vinculación · `student` Estudiante · `social_service_officer` Encargado(a) de Servicio Social · `internship_coordinator` Coordinador(a) de Prácticas |
 | `students.gender` | `M` Masculino · `F` Femenino · `null` No especificado. **Ojo:** en CURP la letra `M` significa *Mujer*; no derivar sexo de CURP sin convertir (`H`→`M`, `M`→`F`). |
 | `students.shift` | `morning` Matutino · `afternoon` Vespertino · `night` Nocturno |
 | `companies.sector` | `public` Público · `private` Privado · `social` Social · `educational` Educativo |

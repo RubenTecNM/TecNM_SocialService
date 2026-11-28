@@ -10,7 +10,7 @@ namespace TecNM.Api.Modules.Expedients;
 public sealed class DocumentsController(DocumentsService service) : ControllerBase
 {
     [HttpGet("/api/students/{studentId:long}/documents")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head,student")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator,student")]
     public async Task<ActionResult<IReadOnlyList<ExpedientDocumentResponse>>> GetStudentDocuments(
         long studentId,
         [FromQuery] string? tramiteType = null,
@@ -50,7 +50,7 @@ public sealed class DocumentsController(DocumentsService service) : ControllerBa
     }
 
     [HttpPost("/api/students/{studentId:long}/documents")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator,student")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<ExpedientDocumentResponse>> UploadStudentDocument(
         long studentId,
@@ -88,7 +88,7 @@ public sealed class DocumentsController(DocumentsService service) : ControllerBa
     }
 
     [HttpGet("/api/documents/{id:long}/file")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,department_head,student")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator,student")]
     public async Task<IActionResult> DownloadFile(long id, CancellationToken cancellationToken = default)
     {
         var (stream, fileName) = await service.GetDocumentStreamAsync(id, cancellationToken);
@@ -96,12 +96,12 @@ public sealed class DocumentsController(DocumentsService service) : ControllerBa
     }
 
     [HttpGet("/api/documents/{id:long}/imss-date-suggestion")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<ImssDateSuggestion>> SuggestImssDate(long id, CancellationToken cancellationToken = default)
         => Ok(await service.GetImssDateSuggestionAsync(id, cancellationToken));
 
     [HttpPost("/api/documents/{id:long}/review")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<ExpedientDocumentResponse>> ReviewDocument(
         long id,
         [FromBody] ReviewDocumentRequest request,
@@ -112,7 +112,7 @@ public sealed class DocumentsController(DocumentsService service) : ControllerBa
     }
 
     [HttpDelete("/api/documents/{id:long}")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator,student")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator,student")]
     public async Task<IActionResult> DeleteDocument(long id, CancellationToken cancellationToken = default)
     {
         await service.DeleteDocumentAsync(id, cancellationToken);
@@ -120,7 +120,7 @@ public sealed class DocumentsController(DocumentsService service) : ControllerBa
     }
 
     [HttpGet("/api/documents/review-queue")]
-    [Authorize(Roles = "admin,social_service_officer,internship_coordinator")]
+    [Authorize(Roles = "department_head,social_service_officer,internship_coordinator")]
     public async Task<ActionResult<PagedResponse<ReviewQueueDocumentResponse>>> GetReviewQueue(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,

@@ -5,7 +5,7 @@
 # Especificación Frontend: Módulo de Servicio Social (SS)
 
 > **Contrato Backend:** [`docs/specs/social-service.spec.md`](../../../../../docs/specs/social-service.spec.md)  
-> **Roles:** `student` (su trámite), `social_service_officer`, `admin` (gestión completa), `department_head`, `internship_coordinator` (lectura).
+> **Roles:** `student` (su trámite), `social_service_officer`, `department_head` (gestión completa).
 
 ---
 
@@ -93,4 +93,4 @@ Los formularios de captura muestran errores locales y del servidor junto al camp
 
 ## Acta Individual
 
-GET /api/social-services/{id}/pdf/individual_act entrega PDF oficial únicamente a admin, social_service_officer y department_head, para trámites released. Prellena alumno, matrícula, carrera, dependencia, actividades de reportes ordenados sin duplicados (respaldo solicitud), fechas del trámite y 480 horas. Expedición: día de descarga en America/Mexico_City mediante TimeProvider. Autoridades activas outreach_division_head e institute_director, con título opcional, nombre y cargo; solo firmas vacías. Faltantes devuelven 422 documents.data_missing por campo; desbordamiento 422 documents.text_overflow. Plantilla/fuente inválida devuelve 409. No modifica estado, evidencia, folios ni envío a Escolares. Solo PDF individual, sin reverso. Descarga administrativa con carga, prevención de doble petición y errores visibles; alumno sin acceso.
+GET /api/social-services/{id}/pdf/individual_act entrega PDF oficial únicamente a department_head y social_service_officer, para trámites released. Prellena alumno, matrícula, carrera, dependencia, actividades de reportes ordenados sin duplicados (respaldo solicitud), fechas del trámite y 480 horas. Expedición: día de descarga en America/Mexico_City mediante TimeProvider. Autoridades activas outreach_division_head e institute_director, con título opcional, nombre y cargo; solo firmas vacías. Faltantes devuelven 422 documents.data_missing por campo; desbordamiento 422 documents.text_overflow. Plantilla/fuente inválida devuelve 409. No modifica estado, evidencia, folios ni envío a Escolares. Solo PDF individual, sin reverso. Descarga administrativa con carga, prevención de doble petición y errores visibles; alumno sin acceso.

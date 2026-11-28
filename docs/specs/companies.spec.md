@@ -6,8 +6,7 @@
 
 ## Acceso
 
-- Escritura: `Staff`.
-- Lectura completa: `Staff` + `department_head`.
+- Lectura y escritura completa: `Staff` (`department_head`, `social_service_officer`, `internship_coordinator`).
 - `student`: solo `/options` de empresas, supervisores y convenios vigentes (para llenar su solicitud).
 
 ---

@@ -19,7 +19,7 @@ internal static class DatabaseChecks
         await using var db = new TecNMDbContext(options);
         var clock = new FixedClock(new DateTimeOffset(2026, 11, 3, 12, 0, 0, TimeSpan.Zero));
         var storage = new LocalFileStorage(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["Storage:RootPath"] = Path.GetFullPath("tmp/pdf-qa/db-storage") }).Build());
-        var service = new DocumentsService(db, new TestUser(["admin"]), storage, clock);
+        var service = new DocumentsService(db, new TestUser(["department_head"], 5), storage, clock);
         var studentService = new DocumentsService(db, new TestUser(["student"], 2), storage, clock);
         var bytes = File.ReadAllBytes("backend/Resources/Documents/templates/pp-evaluation.pdf");
         IFormFile Upload(byte[] value) => new FormFile(new MemoryStream(value), 0, value.Length, "file", "imss.pdf");
