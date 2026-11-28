@@ -22,6 +22,7 @@ public class SocialServiceConfiguration : IEntityTypeConfiguration<SocialService
         builder.HasIndex(s => s.StudentId).IsUnique().HasFilter("deleted_at IS NULL AND status NOT IN ('cancelled','non_compliant')").HasDatabaseName("uq_social_services__student_open");
         builder.Property(s => s.PeriodId).HasColumnName("period_id").IsRequired();
         builder.Property(s => s.ProgramId).HasColumnName("program_id").IsRequired();
+        builder.Property(s => s.ActivityTypeId).HasColumnName("activity_type_id");
         builder.Property(s => s.AgreementId).HasColumnName("agreement_id");
         builder.Property(s => s.CompanyId).HasColumnName("company_id").IsRequired();
         builder.Property(s => s.SupervisorId).HasColumnName("supervisor_id").IsRequired();
@@ -70,6 +71,11 @@ public class SocialServiceConfiguration : IEntityTypeConfiguration<SocialService
         builder.HasOne(s => s.Program)
                .WithMany()
                .HasForeignKey(s => s.ProgramId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(s => s.ActivityType)
+               .WithMany()
+               .HasForeignKey(s => s.ActivityTypeId)
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(s => s.Agreement)

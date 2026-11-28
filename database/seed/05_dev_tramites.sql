@@ -699,5 +699,14 @@ UPDATE document_series SET current_sequence = 1 WHERE document_type = 'social_se
 UPDATE document_series SET current_sequence = 1 WHERE document_type = 'internship_release_certificate' AND current_year = 2026;
 UPDATE document_series SET current_sequence = 2 WHERE document_type = 'school_services_act' AND current_year = 2026;
 
-COMMIT;
 
+-- Asignar tipos de actividad a trámites demo (dejando PP #1 y PP #3 en NULL por estar en solicitud/aprobado sin CA)
+UPDATE social_services SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-DOC' AND deleted_at IS NULL LIMIT 1) WHERE id = 1;
+UPDATE social_services SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-COM' AND deleted_at IS NULL LIMIT 1) WHERE id = 2;
+UPDATE social_services SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-ENE' AND deleted_at IS NULL LIMIT 1) WHERE id = 3;
+UPDATE social_services SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-ENE' AND deleted_at IS NULL LIMIT 1) WHERE id = 4;
+UPDATE social_services SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-CAL' AND deleted_at IS NULL LIMIT 1) WHERE id = 5;
+UPDATE internships SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-ING' AND deleted_at IS NULL LIMIT 1) WHERE id = 2;
+UPDATE internships SET activity_type_id = (SELECT id FROM activity_types WHERE code = 'ACT-PRO' AND deleted_at IS NULL LIMIT 1) WHERE id = 4;
+
+COMMIT;

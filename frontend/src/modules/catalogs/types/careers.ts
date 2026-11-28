@@ -28,9 +28,45 @@ export interface AcademicPeriod {
   id: number
   code: string
   name: string
+  schoolYear: string
   startDate: string
   endDate: string
   isActive: boolean
+}
+
+export interface SchoolYearPeriodItem {
+  id: number
+  code: string
+  name: string
+  startDate: string
+  endDate: string
+  isActive: boolean
+}
+
+export interface SchoolYearOption {
+  schoolYear: string
+  hasActivePeriod: boolean
+  periods: SchoolYearPeriodItem[]
+}
+
+export type ActivityAppliesTo = 'social_service' | 'internship' | 'both'
+
+export interface ActivityType {
+  id: number
+  code: string
+  name: string
+  appliesTo: ActivityAppliesTo
+  description: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ActivityTypeRequest {
+  code: string
+  name: string
+  appliesTo: ActivityAppliesTo
+  description?: string | null
 }
 
 export interface PagedResponse<T> {

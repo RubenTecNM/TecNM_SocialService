@@ -102,6 +102,7 @@ builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CareersService>();
 builder.Services.AddScoped<AcademicPeriodsService>();
+builder.Services.AddScoped<ActivityTypesService>();
 builder.Services.AddScoped<SocialServiceProgramsService>();
 builder.Services.AddScoped<InstitutionalAuthoritiesService>();
 builder.Services.AddScoped<DocumentSeriesService>();

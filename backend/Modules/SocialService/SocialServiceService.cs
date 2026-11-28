@@ -293,12 +293,15 @@ public sealed class SocialServiceService(
             request.Application,
             cancellationToken);
 
+        var resolvedActivityTypeId = await ValidateActivityTypeAsync(request.ActivityTypeId, required: true, cancellationToken);
+
         var entity = new Core.Entities.SocialService
         {
             AdmissionImssDocumentId = admissionImssId,
             StudentId = student.Id,
             PeriodId = resolvedPeriod.Id,
             ProgramId = request.ProgramId,
+            ActivityTypeId = resolvedActivityTypeId,
             CompanyId = request.CompanyId,
             SupervisorId = request.SupervisorId,
             AgreementId = request.AgreementId,
@@ -429,6 +432,10 @@ public sealed class SocialServiceService(
 
         entity.PeriodId = request.PeriodId;
         entity.ProgramId = request.ProgramId;
+        if (request.ActivityTypeId.HasValue)
+        {
+            entity.ActivityTypeId = await ValidateActivityTypeAsync(request.ActivityTypeId, required: false, cancellationToken);
+        }
         entity.CompanyId = request.CompanyId;
         entity.SupervisorId = request.SupervisorId;
         entity.AgreementId = request.AgreementId;
@@ -1641,6 +1648,7 @@ public sealed class SocialServiceService(
                 .ThenInclude(st => st!.Career)
             .Include(s => s.Period)
             .Include(s => s.Program)
+            .Include(s => s.ActivityType)
             .Include(s => s.Company)
             .Include(s => s.Application);
 
@@ -1650,6 +1658,7 @@ public sealed class SocialServiceService(
                 .ThenInclude(st => st!.Career)
             .Include(s => s.Period)
             .Include(s => s.Program)
+            .Include(s => s.ActivityType)
             .Include(s => s.Company)
             .Include(s => s.Supervisor)
             .Include(s => s.Agreement)
@@ -2186,7 +2195,41 @@ public sealed class SocialServiceService(
             checklist,
             s.CreatedAt,
             s.UpdatedAt)
-        { DocumentWorkflowVersion = s.DocumentWorkflowVersion, DocumentRequirements = DocumentDefinitions.For("social_service", s.DocumentWorkflowVersion, currentUser).Select(d => d with { CanUpload = d.CanUpload && !TerminalStatuses.Contains(s.Status) }).ToList() };
+        {
+            DocumentWorkflowVersion = s.DocumentWorkflowVersion,
+            ActivityType = s.ActivityType is null ? null : new ActivityTypeSummary(s.ActivityType.Id, s.ActivityType.Code, s.ActivityType.Name, s.ActivityType.AppliesTo),
+            DocumentRequirements = DocumentDefinitions.For("social_service", s.DocumentWorkflowVersion, currentUser).Select(d => d with { CanUpload = d.CanUpload && !TerminalStatuses.Contains(s.Status) }).ToList()
+        };
+    }
+
+    private async Task<long?> ValidateActivityTypeAsync(long? activityTypeId, bool required, CancellationToken cancellationToken)
+    {
+        if (!activityTypeId.HasValue || activityTypeId.Value <= 0)
+        {
+            if (required)
+            {
+                throw new ValidationException(new Dictionary<string, string[]>
+                {
+                    ["activityTypeId"] = ["El tipo de actividad es obligatorio."]
+                });
+            }
+
+            return null;
+        }
+
+        var activityType = await dbContext.ActivityTypes
+            .AsNoTracking()
+            .SingleOrDefaultAsync(a => a.Id == activityTypeId.Value && a.IsActive, cancellationToken);
+
+        if (activityType is null || activityType.AppliesTo is not ("social_service" or "both"))
+        {
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                ["activityTypeId"] = ["El tipo de actividad seleccionado no existe, está inactivo o no aplica a Servicio Social."]
+            });
+        }
+
+        return activityType.Id;
     }
 
     private IReadOnlyList<string> BuildAllowedActions(Core.Entities.SocialService s)

@@ -114,6 +114,7 @@ interface CreateSocialServiceRequest {
   studentId: number | null;     // staff: requerido; student: se ignora (usa el propio)
   periodId: number;
   programId: number;
+  activityTypeId: number;       // requerido en nuevas aperturas; activo y appliesTo in ('social_service','both')
   companyId: number;
   supervisorId: number;
   agreementId: number | null;

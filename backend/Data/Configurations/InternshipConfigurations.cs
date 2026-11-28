@@ -26,6 +26,7 @@ public class InternshipConfiguration : IEntityTypeConfiguration<Internship>
         builder.Property(i => i.CompanyId).HasColumnName("company_id");
         builder.Property(i => i.SupervisorId).HasColumnName("supervisor_id");
         builder.Property(i => i.AgreementId).HasColumnName("agreement_id");
+        builder.Property(i => i.ActivityTypeId).HasColumnName("activity_type_id");
         builder.Property(i => i.SemesterEnrolled).HasColumnName("semester_enrolled").IsRequired();
         builder.Property(i => i.StartDate).HasColumnName("start_date");
         builder.Property(i => i.EndDate).HasColumnName("end_date");
@@ -80,6 +81,11 @@ public class InternshipConfiguration : IEntityTypeConfiguration<Internship>
                .WithMany()
                .HasForeignKey(i => i.AgreementId)
                .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(i => i.ActivityType)
+               .WithMany()
+               .HasForeignKey(i => i.ActivityTypeId)
+               .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(i => i.Evaluation)
                .WithOne(e => e.Internship)

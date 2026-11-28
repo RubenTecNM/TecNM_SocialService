@@ -31,6 +31,14 @@ public class AcademicPeriodsController(AcademicPeriodsService academicPeriodsSer
     }
 
     [Authorize]
+    [HttpGet("school-years")]
+    public async Task<ActionResult<IReadOnlyList<SchoolYearOptionResponse>>> GetSchoolYears(CancellationToken cancellationToken = default)
+    {
+        var years = await academicPeriodsService.GetSchoolYearsAsync(cancellationToken);
+        return Ok(years);
+    }
+
+    [Authorize]
     [HttpGet("current")]
     public async Task<ActionResult<AcademicPeriodResponse>> GetCurrent(CancellationToken cancellationToken = default)
     {

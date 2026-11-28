@@ -21,7 +21,7 @@ internal static class AccessChecks
         foreach (var (client, name) in new[] { (ss,"encargado.ss"), (pp,"coord.practicas"), (viewer,"jefa.vinculacion"), (student,"l23050363@monclova.tecnm.mx"), (admin,"admin") })
             await Expect(await client.PostAsJsonAsync("/api/auth/login", new { username = name, password = "TecNM-Demo-2026!" }), HttpStatusCode.OK);
 
-        var period = new AcademicPeriod { Code = "QA-RBAC", Name = "Pruebas de alcance", StartDate = new(2026,1,1), EndDate = new(2026,12,31) };
+        var period = new AcademicPeriod { Code = "QA-RBAC", Name = "Pruebas de alcance", SchoolYear = "2025-2026", StartDate = new(2026,1,1), EndDate = new(2026,12,31) };
         var a = new Company { Name = "QA Empresa A", CompanyType = "micro", Sector = "private", CompanySize = "micro" };
         var b = new Company { Name = "QA Empresa B", CompanyType = "public", Sector = "public", IsActive = false };
         var supervisor = new CompanySupervisor { Company = a, FullName = "Responsable QA", Position = "Dirección" };
@@ -99,7 +99,16 @@ internal static class AccessChecks
             if (json.GetProperty("byCompanyType").GetArrayLength()!=6 || json.GetProperty("companies").GetProperty("totalItems").GetInt32()!=companyCount || json.GetProperty("companies").GetProperty("items").GetArrayLength()!=1) throw new Exception("Linkage zero categories/pagination wrong.");
             var text=await response.Content.ReadAsStringAsync();
             if (text.Contains("\"studentId\"") || text.Contains("\"tramiteId\"") || text.Contains("\"documentId\"")) throw new Exception("Aggregate contains personal resource IDs.");
-            await Expect(await client.GetAsync($"/api/reports/statistics?tramiteType={type}&periodId={period.Id}"),HttpStatusCode.OK);
+            var statsResp = await client.GetAsync($"/api/reports/statistics?tramiteType={type}&periodId={period.Id}");
+            await Expect(statsResp,HttpStatusCode.OK);
+            var analyticsResp = await client.GetAsync($"/api/reports/analytics?tramiteType={type}&timeScope=period&periodId={period.Id}&statusGroup=in_progress");
+            await Expect(analyticsResp, HttpStatusCode.OK);
+            var analyticsText = await analyticsResp.Content.ReadAsStringAsync();
+            if (analyticsText.Contains("\"studentId\"") || analyticsText.Contains("\"tramiteId\"") || analyticsText.Contains("\"documentId\"") || analyticsText.Contains("\"controlNumber\""))
+                throw new Exception("Analytics response leaked personal resource IDs.");
+            var analyticsJson = JsonDocument.Parse(analyticsText).RootElement;
+            if (analyticsJson.GetProperty("summary").GetProperty("uniqueStudents").GetInt32() < 1)
+                throw new Exception($"Cross-process analytics returned zero for {type}.");
         }
         await Expect(await ss.GetAsync("/api/reports/linkage?tramiteType=other"),HttpStatusCode.BadRequest);
         await Expect(await ss.GetAsync("/api/reports/linkage"),HttpStatusCode.BadRequest);

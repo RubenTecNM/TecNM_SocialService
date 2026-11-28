@@ -11,8 +11,14 @@ import {
   UiCard,
   UiDialog,
 } from '../../../shared/components'
-import { getCareerOptions, getPeriodOptions } from '../../catalogs/api/careersApi'
-import type { OptionItem } from '../../catalogs/types/careers'
+import {
+  getActivityTypeOptions,
+  getCareerOptions,
+  getCompanyOptions,
+  getPeriodOptions,
+  getSchoolYearOptions,
+} from '../../catalogs/api/careersApi'
+import type { OptionItem, SchoolYearOption } from '../../catalogs/types/careers'
 import { getTrackingData } from '../api/reportsApi'
 import type { TrackingItem } from '../types/reports'
 import {
@@ -20,10 +26,14 @@ import {
   socialDocumentLabel,
 } from '../../../shared/utils/socialServiceDocuments'
 import TrackingExpedient from '../components/TrackingExpedient.vue'
+import { exportTrackingCsvSafe, exportTrackingExcel } from '../utils/exportReports'
 
 const items = ref<TrackingItem[]>([])
 const periodOptions = ref<OptionItem[]>([])
+const schoolYearOptions = ref<SchoolYearOption[]>([])
 const careerOptions = ref<OptionItem[]>([])
+const companyOptions = ref<OptionItem[]>([])
+const activityTypeOptions = ref<OptionItem[]>([])
 
 const isLoading = ref(true)
 const errorMessage = ref('')
@@ -31,7 +41,13 @@ let dataRequest = 0
 
 const tramiteType = ref<'social_service' | 'internship'>(defaultProcess.value)
 const selectedPeriodId = ref<number | undefined>(undefined)
+const selectedSchoolYear = ref<string>('')
 const selectedCareerId = ref<number | undefined>(undefined)
+const selectedSemester = ref<number | undefined>(undefined)
+const selectedGender = ref<string>('')
+const selectedCompanyId = ref<number | undefined>(undefined)
+const selectedActivityTypeId = ref<number | undefined>(undefined)
+const selectedStatus = ref<string>('')
 const searchQuery = ref('')
 const debouncedQuery = ref('')
 const kpiFilter = ref<'all' | 'in_progress' | 'complete' | 'released'>('all')
@@ -127,9 +143,23 @@ const pagedItems = computed(() => {
   return filteredItems.value.slice(start, start + pageSize)
 })
 
-watch([kpiFilter, selectedPeriodId, selectedCareerId, tramiteType], () => {
-  currentPage.value = 1
-})
+watch(
+  [
+    kpiFilter,
+    selectedPeriodId,
+    selectedSchoolYear,
+    selectedCareerId,
+    selectedSemester,
+    selectedGender,
+    selectedCompanyId,
+    selectedActivityTypeId,
+    selectedStatus,
+    tramiteType,
+  ],
+  () => {
+    currentPage.value = 1
+  },
+)
 
 function handleSearchInput(): void {
   clearTimeout(debounceTimer)
@@ -184,12 +214,18 @@ function switchProcess(nextProcess: 'social_service' | 'internship'): void {
 }
 
 async function loadCatalogs(): Promise<void> {
-  const [periods, careers] = await Promise.all([
+  const [periods, schoolYears, careers, companies, activities] = await Promise.all([
     getPeriodOptions().catch(() => []),
+    getSchoolYearOptions().catch(() => []),
     getCareerOptions().catch(() => []),
+    getCompanyOptions().catch(() => []),
+    getActivityTypeOptions(tramiteType.value).catch(() => []),
   ])
   periodOptions.value = periods
+  schoolYearOptions.value = schoolYears
   careerOptions.value = careers
+  companyOptions.value = companies
+  activityTypeOptions.value = activities
 }
 
 async function loadData(): Promise<void> {
@@ -197,12 +233,17 @@ async function loadData(): Promise<void> {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const res = await getTrackingData(
-      selectedPeriodId.value,
-      tramiteType.value,
-      selectedCareerId.value,
-      undefined,
-    )
+    const res = await getTrackingData({
+      periodId: selectedSchoolYear.value ? undefined : selectedPeriodId.value,
+      schoolYear: selectedSchoolYear.value || undefined,
+      tramiteType: tramiteType.value,
+      careerId: selectedCareerId.value,
+      semester: selectedSemester.value,
+      gender: selectedGender.value || undefined,
+      companyId: selectedCompanyId.value,
+      activityTypeId: selectedActivityTypeId.value,
+      status: selectedStatus.value || undefined,
+    })
     if (request !== dataRequest) return
     items.value = (res.items || []).map((i) => ({ ...i, id: i.tramiteId }))
   } catch (err: any) {
@@ -222,48 +263,11 @@ useRealtimeRefresh(
 )
 
 function handleExportCsv(): void {
-  if (filteredItems.value.length === 0) return
-  const docCols = activeDocKeys.value.map((d) => d.label)
-  const headers = [
-    'NO_CONTROL',
-    'ALUMNO',
-    'CARRERA',
-    'SEMESTRE',
-    'DEPENDENCIA_EMPRESA',
-    'FOLIO_CP',
-    ...docCols,
-    'AVANCE_%',
-    'FOLIO_CONSTANCIA',
-    'ACTA_ESCOLARES',
-  ]
+  exportTrackingCsvSafe(filteredItems.value, activeDocKeys.value, tramiteType.value)
+}
 
-  const rows = filteredItems.value.map((r) => {
-    const docs = (r.documents || {}) as Record<string, boolean | null | undefined>
-    const docVals = activeDocKeys.value.map((d) =>
-      docs[d.key] === null ? 'SIN DICTAMEN INDIVIDUAL' : docs[d.key] ? 'SI' : 'NO',
-    )
-    return [
-      r.controlNumber,
-      `"${(r.studentFullName || '').replace(/"/g, '""')}"`,
-      r.careerCode,
-      r.semesterEnrolled,
-      `"${(r.companyName || '').replace(/"/g, '""')}"`,
-      r.presentationLetterFolio || '',
-      ...docVals,
-      `${r.progressPercentage}%`,
-      r.releaseCertificateFolio || '',
-      r.schoolServicesActFolio || '',
-    ].join(',')
-  })
-
-  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n')
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `SEGUIMIENTO_VINCULACION_${tramiteType.value.toUpperCase()}.csv`
-  a.click()
-  window.URL.revokeObjectURL(url)
+async function handleExportExcel(): Promise<void> {
+  await exportTrackingExcel(filteredItems.value, activeDocKeys.value, tramiteType.value)
 }
 
 onBeforeUnmount(() => {
@@ -299,9 +303,17 @@ onMounted(async () => {
             variant="secondary"
             size="sm"
             :disabled="filteredItems.length === 0"
+            @click="handleExportExcel"
+          >
+            Exportar Excel (.xlsx)
+          </UiButton>
+          <UiButton
+            variant="secondary"
+            size="sm"
+            :disabled="filteredItems.length === 0"
             @click="handleExportCsv"
           >
-            Exportar Sábana (.CSV)
+            Exportar .CSV
           </UiButton>
         </div>
       </div>
@@ -510,6 +522,115 @@ onMounted(async () => {
             >
               <polyline points="6 9 12 15 18 9" />
             </svg>
+          </div>
+        </div>
+
+        <!-- Selector de Ciclo Escolar -->
+        <div class="select-box">
+          <label class="filter-label" for="tracking-sy-select">Ciclo Escolar</label>
+          <div class="select-wrapper">
+            <select
+              id="tracking-sy-select"
+              v-model="selectedSchoolYear"
+              class="modern-select"
+              @change="loadData"
+            >
+              <option value="">Por periodo individual</option>
+              <option v-for="sy in schoolYearOptions" :key="sy.schoolYear" :value="sy.schoolYear">
+                Ciclo {{ sy.schoolYear }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector de Semestre -->
+        <div class="select-box">
+          <label class="filter-label" for="tracking-sem-select">Semestre</label>
+          <div class="select-wrapper">
+            <select
+              id="tracking-sem-select"
+              v-model="selectedSemester"
+              class="modern-select"
+              @change="loadData"
+            >
+              <option :value="undefined">Todos</option>
+              <option v-for="n in 12" :key="n" :value="n">{{ n }}°</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector de Sexo -->
+        <div class="select-box">
+          <label class="filter-label" for="tracking-gender-select">Sexo</label>
+          <div class="select-wrapper">
+            <select
+              id="tracking-gender-select"
+              v-model="selectedGender"
+              class="modern-select"
+              @change="loadData"
+            >
+              <option value="">Todos</option>
+              <option value="M">Hombres</option>
+              <option value="F">Mujeres</option>
+              <option value="unspecified">No especificado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector de Tipo de Actividad -->
+        <div class="select-box">
+          <label class="filter-label" for="tracking-act-select">Tipo de Actividad</label>
+          <div class="select-wrapper">
+            <select
+              id="tracking-act-select"
+              v-model="selectedActivityTypeId"
+              class="modern-select"
+              @change="loadData"
+            >
+              <option :value="undefined">Todas</option>
+              <option :value="0">Sin clasificar</option>
+              <option v-for="a in activityTypeOptions" :key="a.id" :value="a.id">{{ a.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector de Empresa -->
+        <div class="select-box">
+          <label class="filter-label" for="tracking-comp-select">Empresa</label>
+          <div class="select-wrapper">
+            <select
+              id="tracking-comp-select"
+              v-model="selectedCompanyId"
+              class="modern-select"
+              @change="loadData"
+            >
+              <option :value="undefined">Todas</option>
+              <option :value="0">Sin empresa (PP)</option>
+              <option v-for="c in companyOptions" :key="c.id" :value="c.id">{{ c.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector de Estatus -->
+        <div class="select-box">
+          <label class="filter-label" for="tracking-status-select">Estatus</label>
+          <div class="select-wrapper">
+            <select
+              id="tracking-status-select"
+              v-model="selectedStatus"
+              class="modern-select"
+              @change="loadData"
+            >
+              <option value="">Todos</option>
+              <option value="requested">Solicitado</option>
+              <option value="approved">CP Emitida</option>
+              <option value="accepted">Aceptado</option>
+              <option value="active">Activo</option>
+              <option value="completed_pending_review">Por Liberar</option>
+              <option value="released">Liberado</option>
+              <option value="non_compliant">PNC</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
           </div>
         </div>
 

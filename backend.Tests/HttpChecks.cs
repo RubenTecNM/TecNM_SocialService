@@ -139,7 +139,8 @@ internal static class HttpChecks
         {
             var db = scope.ServiceProvider.GetRequiredService<TecNMDbContext>();
             var reference = await db.SocialServices.AsNoTracking().FirstAsync();
-            var submissionPayload = new { periodId = reference.PeriodId, programId = reference.ProgramId, companyId = reference.CompanyId, supervisorId = reference.SupervisorId,
+            var activityTypeId = reference.ActivityTypeId ?? await db.ActivityTypes.Where(a => a.IsActive && (a.AppliesTo == "social_service" || a.AppliesTo == "both")).Select(a => a.Id).FirstAsync();
+            var submissionPayload = new { periodId = reference.PeriodId, programId = reference.ProgramId, activityTypeId, companyId = reference.CompanyId, supervisorId = reference.SupervisorId,
                 modality = await db.Companies.Where(c => c.Id == reference.CompanyId).Select(c => c.IsTecnmInternal).SingleAsync() ? "internal" : "external", startDate = today, endDate = today.AddMonths(6),
                 application = new { studentAddress = "Calle de prueba", studentPhone = "8661234567", periodType = "february_july", dependencyName = "Dependencia", dependencyHeadName = "Responsable", dependencyHeadPosition = "Director", activitiesOutline = "Actividades de prueba" } };
             async Task<HttpResponseMessage> Submit(byte[] content)

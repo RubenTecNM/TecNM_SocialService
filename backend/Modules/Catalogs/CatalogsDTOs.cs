@@ -22,6 +22,7 @@ public sealed record AcademicPeriodResponse(
     long Id,
     string Code,
     string Name,
+    string SchoolYear,
     DateOnly StartDate,
     DateOnly EndDate,
     bool IsActive,
@@ -32,7 +33,38 @@ public sealed record AcademicPeriodRequest(
     string Code,
     string Name,
     DateOnly StartDate,
-    DateOnly EndDate);
+    DateOnly EndDate,
+    string? SchoolYear = null);
+
+public sealed record SchoolYearPeriodItem(
+    long Id,
+    string Code,
+    string Name,
+    DateOnly StartDate,
+    DateOnly EndDate,
+    bool IsActive);
+
+public sealed record SchoolYearOptionResponse(
+    string SchoolYear,
+    bool HasActivePeriod,
+    IReadOnlyList<SchoolYearPeriodItem> Periods);
+
+// --- Tipos de Actividad ---
+public sealed record ActivityTypeResponse(
+    long Id,
+    string Code,
+    string Name,
+    string AppliesTo,
+    string? Description,
+    bool IsActive,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record ActivityTypeRequest(
+    string Code,
+    string Name,
+    string AppliesTo = "both",
+    string? Description = null);
 
 // --- Programas de Servicio Social ---
 public sealed record SocialServiceProgramResponse(

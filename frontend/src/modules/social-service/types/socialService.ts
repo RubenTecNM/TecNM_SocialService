@@ -98,6 +98,7 @@ export interface SocialServiceDetail {
   }
   period: { id: number; code: string }
   program: { id: number; code: string; name: string; category: string }
+  activityType?: { id: number; code: string; name: string; appliesTo: string } | null
   company: { id: number; name: string; isTecnmInternal: boolean }
   supervisor: { id: number; fullName: string; position: string }
   agreement: { id: number; agreementNumber: string; validity: string } | null
@@ -141,6 +142,7 @@ export interface CreateSocialServicePayload {
   studentId?: number | null
   periodId: number
   programId: number
+  activityTypeId?: number | null
   companyId: number
   supervisorId: number
   agreementId?: number | null

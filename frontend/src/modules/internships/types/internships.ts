@@ -52,6 +52,7 @@ export interface InternshipDetail {
     hasImssFile: boolean
   }
   period: { id: number; code: string }
+  activityType?: { id: number; code: string; name: string; appliesTo: string } | null
   company?: {
     id: number
     name: string
@@ -117,6 +118,7 @@ export interface RegisterInternshipAcceptanceRequest {
   companyId: number
   supervisorId: number
   agreementId?: number | null
+  activityTypeId?: number | null
   startDate: string
   endDate: string
   scheduleDescription?: string | null

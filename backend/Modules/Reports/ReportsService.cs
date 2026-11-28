@@ -1,25 +1,15 @@
-using TecNM.Api.Modules.Expedients;
 using Microsoft.EntityFrameworkCore;
 using TecNM.Api.Core.Entities;
 using TecNM.Api.Core.Exceptions;
-using TecNM.Api.Data;
 using TecNM.Api.Core.Security;
+using TecNM.Api.Data;
+using TecNM.Api.Modules.Expedients;
 
 namespace TecNM.Api.Modules.Reports;
 
 public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUser currentUser)
 {
-    private static readonly string[] AllStatuses =
-    [
-        "requested",
-        "approved",
-        "accepted",
-        "active",
-        "completed_pending_review",
-        "released",
-        "cancelled",
-        "non_compliant"
-    ];
+    private static readonly string[] AllStatuses = ReportMetricRules.AllStatuses;
 
     private static readonly string[] AllSectors =
     [
@@ -28,6 +18,20 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
         "private",
         "social"
     ];
+
+    private sealed record StatsEvalRow(
+        long TramiteId,
+        long StudentId,
+        DateOnly PeriodStartDate,
+        long CareerId,
+        string CareerCode,
+        string CareerName,
+        string? Gender,
+        string Status,
+        bool Cp,
+        bool Ca,
+        bool Released
+    );
 
     public async Task<DashboardResponse> GetDashboardAsync(
         long? periodId,
@@ -76,30 +80,62 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
     }
 
     public Task<IReadOnlyList<TrackingRowResponse>> GetTrackingAsync(
-        long? periodId, string tramiteType, string? status, long? careerId, string? search,
+        long? periodId,
+        string? schoolYear,
+        string tramiteType,
+        string? status,
+        long? careerId,
+        int? semester,
+        string? gender,
+        long? companyId,
+        long? activityTypeId,
+        string? search,
         CancellationToken cancellationToken = default)
     {
         currentUser.RequireProcess(ValidateTramiteType(tramiteType));
-        return GetTrackingCoreAsync(periodId, tramiteType, status, careerId, search, cancellationToken);
+        return GetTrackingCoreAsync(
+            periodId, schoolYear, tramiteType, status, careerId, semester, gender, companyId, activityTypeId, search, cancellationToken);
     }
 
     private async Task<IReadOnlyList<TrackingRowResponse>> GetTrackingCoreAsync(
         long? periodId,
+        string? schoolYear,
         string tramiteType,
         string? status,
         long? careerId,
+        int? semester,
+        string? gender,
+        long? companyId,
+        long? activityTypeId,
         string? search,
         CancellationToken cancellationToken = default)
     {
         var normType = ValidateTramiteType(tramiteType);
-        AcademicPeriod? period = null;
-        if (periodId.HasValue && periodId.Value > 0)
+        HashSet<long>? targetPeriodIds = null;
+
+        if (!string.IsNullOrWhiteSpace(schoolYear))
         {
-            period = await ResolvePeriodAsync(periodId.Value, cancellationToken);
+            var normSy = schoolYear.Trim();
+            var ids = await dbContext.AcademicPeriods
+                .AsNoTracking()
+                .Where(p => p.SchoolYear == normSy)
+                .Select(p => p.Id)
+                .ToListAsync(cancellationToken);
+            if (ids.Count == 0)
+            {
+                throw new NotFoundException("academic_periods.school_year_not_found", $"Ciclo escolar '{normSy}' no encontrado.");
+            }
+            targetPeriodIds = ids.ToHashSet();
+        }
+        else if (periodId.HasValue && periodId.Value > 0)
+        {
+            var period = await ResolvePeriodAsync(periodId.Value, cancellationToken);
+            targetPeriodIds = [period.Id];
         }
         else if (!periodId.HasValue)
         {
-            period = await ResolvePeriodAsync(null, cancellationToken);
+            var period = await ResolvePeriodAsync(null, cancellationToken);
+            targetPeriodIds = [period.Id];
         }
 
         if (normType == "social_service")
@@ -107,28 +143,37 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
             var query = dbContext.SocialServices
                 .Include(s => s.Student)
                     .ThenInclude(st => st!.Career)
+                .Include(s => s.Period)
                 .Include(s => s.Company)
                 .Include(s => s.Supervisor)
                 .Include(s => s.Agreement)
                 .Include(s => s.Program)
+                .Include(s => s.ActivityType)
                 .Include(s => s.Application)
                 .AsNoTracking();
 
-            if (period != null)
-            {
-                query = query.Where(s => s.PeriodId == period.Id && (currentUser.ReadsAll() || currentUser.Roles.Contains("social_service_officer")));
-            }
-
+            if (targetPeriodIds is not null)
+                query = query.Where(s => targetPeriodIds.Contains(s.PeriodId));
             if (!string.IsNullOrWhiteSpace(status))
             {
                 var normStatus = status.Trim().ToLowerInvariant();
                 query = query.Where(s => s.Status == normStatus);
             }
-
             if (careerId.HasValue)
-            {
                 query = query.Where(s => s.Student != null && s.Student.CareerId == careerId.Value);
+            if (semester.HasValue)
+                query = query.Where(s => s.SemesterEnrolled == semester.Value);
+            if (!string.IsNullOrWhiteSpace(gender))
+            {
+                var g = gender.Trim().ToUpperInvariant();
+                query = g == "UNSPECIFIED"
+                    ? query.Where(s => s.Student != null && s.Student.Gender == null)
+                    : query.Where(s => s.Student != null && s.Student.Gender == g);
             }
+            if (companyId.HasValue)
+                query = companyId.Value == 0 ? query.Where(_ => false) : query.Where(s => s.CompanyId == companyId.Value);
+            if (activityTypeId.HasValue)
+                query = activityTypeId.Value == 0 ? query.Where(s => s.ActivityTypeId == null) : query.Where(s => s.ActivityTypeId == activityTypeId.Value);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -166,7 +211,6 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
                 var ev2 = DocumentProgressCalculator.EvaluationDone(approved, s.DocumentWorkflowVersion, 2);
                 var ev3 = DocumentProgressCalculator.EvaluationDone(approved, s.DocumentWorkflowVersion, 3);
                 var ct = DocumentProgressCalculator.DocumentDone(s, approved, "CT");
-                var cot = DocumentProgressCalculator.DocumentDone(s, approved, "COT");
 
                 var progress = DocumentProgressCalculator.SocialService(s, approved);
 
@@ -206,7 +250,10 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
                     s.SchoolServicesActFolio,
                     s.BeneficiariesCount,
                     s.HasInclusionActivities,
-                    s.TargetCommunity);
+                    s.TargetCommunity,
+                    s.Period?.Code,
+                    s.Period?.SchoolYear,
+                    s.ActivityType?.Name);
             }).ToList();
         }
         else
@@ -214,27 +261,36 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
             var query = dbContext.Internships
                 .Include(i => i.Student)
                     .ThenInclude(st => st!.Career)
+                .Include(i => i.Period)
                 .Include(i => i.Company)
                 .Include(i => i.Supervisor)
                 .Include(i => i.Agreement)
+                .Include(i => i.ActivityType)
                 .Include(i => i.Evaluation)
                 .AsNoTracking();
 
-            if (period != null)
-            {
-                query = query.Where(i => i.PeriodId == period.Id && (currentUser.ReadsAll() || currentUser.Roles.Contains("internship_coordinator")));
-            }
-
+            if (targetPeriodIds is not null)
+                query = query.Where(i => targetPeriodIds.Contains(i.PeriodId));
             if (!string.IsNullOrWhiteSpace(status))
             {
                 var normStatus = status.Trim().ToLowerInvariant();
                 query = query.Where(i => i.Status == normStatus);
             }
-
             if (careerId.HasValue)
-            {
                 query = query.Where(i => i.Student != null && i.Student.CareerId == careerId.Value);
+            if (semester.HasValue)
+                query = query.Where(i => i.SemesterEnrolled == semester.Value);
+            if (!string.IsNullOrWhiteSpace(gender))
+            {
+                var g = gender.Trim().ToUpperInvariant();
+                query = g == "UNSPECIFIED"
+                    ? query.Where(i => i.Student != null && i.Student.Gender == null)
+                    : query.Where(i => i.Student != null && i.Student.Gender == g);
             }
+            if (companyId.HasValue)
+                query = companyId.Value == 0 ? query.Where(i => i.CompanyId == null) : query.Where(i => i.CompanyId == companyId.Value);
+            if (activityTypeId.HasValue)
+                query = activityTypeId.Value == 0 ? query.Where(i => i.ActivityTypeId == null) : query.Where(i => i.ActivityTypeId == activityTypeId.Value);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -307,7 +363,10 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
                     i.SchoolServicesActFolio,
                     null,
                     null,
-                    null);
+                    null,
+                    i.Period?.Code,
+                    i.Period?.SchoolYear,
+                    i.ActivityType?.Name);
             }).ToList();
         }
     }
@@ -315,42 +374,81 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
     public async Task<StatisticalReportResponse> GetStatisticsAsync(
         long? periodId,
         long? comparePeriodId,
+        string? schoolYear,
+        string? compareSchoolYear,
         string tramiteType,
         CancellationToken cancellationToken = default)
     {
         var normType = ValidateTramiteType(tramiteType);
-        var period = await ResolvePeriodAsync(periodId, cancellationToken);
-        var careers = await dbContext.Careers
+
+        await using var tx = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.RepeatableRead, cancellationToken);
+
+        var allPeriods = await dbContext.AcademicPeriods
+            .AsNoTracking()
+            .OrderBy(p => p.StartDate)
+            .ToListAsync(cancellationToken);
+
+        if (allPeriods.Count == 0)
+        {
+            throw new NotFoundException("academic_periods.not_found", "No existen periodos académicos registrados.");
+        }
+
+        List<AcademicPeriod> targetPeriods;
+        ReportPeriodSummary periodSummary;
+        if (!string.IsNullOrWhiteSpace(schoolYear))
+        {
+            var sy = schoolYear.Trim();
+            targetPeriods = allPeriods.Where(p => p.SchoolYear == sy).ToList();
+            if (targetPeriods.Count == 0)
+                throw new NotFoundException("academic_periods.school_year_not_found", $"Ciclo escolar '{sy}' no encontrado.");
+            periodSummary = new ReportPeriodSummary(0, sy, $"Ciclo Escolar {sy}");
+        }
+        else
+        {
+            var p = periodId.HasValue
+                ? allPeriods.SingleOrDefault(x => x.Id == periodId.Value)
+                    ?? throw new NotFoundException("academic_periods.not_found", $"Periodo académico #{periodId} no encontrado.")
+                : allPeriods.OrderByDescending(x => x.IsActive).ThenByDescending(x => x.StartDate).First();
+            targetPeriods = [p];
+            periodSummary = new ReportPeriodSummary(p.Id, p.Code, p.Name);
+        }
+
+        var rows = await LoadStatisticsRowsAsync(normType, targetPeriods.Select(p => p.Id).ToHashSet(), cancellationToken);
+
+        var activeCareers = await dbContext.Careers
             .AsNoTracking()
             .Where(c => c.IsActive)
             .OrderBy(c => c.Id)
+            .Select(c => new { c.Id, c.Code, c.Name })
             .ToListAsync(cancellationToken);
 
-        var rows = await GetTrackingCoreAsync(period.Id, normType, null, null, null, cancellationToken);
-
-        var byCareer = careers.Select(c =>
+        // Incluir carreras inactivas que tengan trámites en el periodo/ciclo para no perder registros
+        var careerMap = activeCareers.ToDictionary(c => c.Id, c => (c.Code, c.Name));
+        foreach (var r in rows)
         {
-            var cRows = rows.Where(r => string.Equals(r.CareerCode, c.Code, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!careerMap.ContainsKey(r.CareerId))
+            {
+                careerMap[r.CareerId] = (r.CareerCode, r.CareerName);
+            }
+        }
 
-            var eligible = cRows.Count(r => r.Documents.Cp);
-            var appMale = cRows.Count(r => r.Documents.Ca && r.Gender == "M");
-            var appFemale = cRows.Count(r => r.Documents.Ca && r.Gender == "F");
-            var appTotal = cRows.Count(r => r.Documents.Ca);
-
-            bool IsReleasedRow(TrackingRowResponse r) =>
-                normType == "social_service"
-                    ? (r.Documents.Ct || r.Status == "released" || !string.IsNullOrWhiteSpace(r.ReleaseCertificateFolio))
-                    : (r.Documents.Ca && (r.Documents.Cc == true || r.Status == "released"));
-
-            var relMale = cRows.Count(r => IsReleasedRow(r) && r.Gender == "M");
-            var relFemale = cRows.Count(r => IsReleasedRow(r) && r.Gender == "F");
-            var relTotal = cRows.Count(IsReleasedRow);
+        var byCareer = careerMap.Select(kvp =>
+        {
+            var cRows = rows.Where(r => r.CareerId == kvp.Key).ToList();
+            var eligible = cRows.Count(r => r.Cp);
+            var appMale = cRows.Count(r => r.Ca && r.Gender == "M");
+            var appFemale = cRows.Count(r => r.Ca && r.Gender == "F");
+            var appTotal = cRows.Count(r => r.Ca);
+            var relMale = cRows.Count(r => r.Released && r.Gender == "M");
+            var relFemale = cRows.Count(r => r.Released && r.Gender == "F");
+            var relTotal = cRows.Count(r => r.Released);
             var pncTotal = Math.Max(0, appTotal - relTotal);
             var rate = appTotal > 0 ? Math.Round(relTotal * 100m / appTotal, 2) : 0m;
 
             return new CareerStatisticalBreakdown(
-                c.Code,
-                c.Name,
+                kvp.Value.Code,
+                kvp.Value.Name,
                 eligible,
                 appMale,
                 appFemale,
@@ -373,199 +471,304 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
         var totRate = totApp > 0 ? Math.Round(totRel * 100m / totApp, 2) : 0m;
 
         var totals = new StatisticalTotals(
-            totEligible,
-            totAppMale,
-            totAppFemale,
-            totApp,
-            totRelMale,
-            totRelFemale,
-            totRel,
-            totPnc,
-            totRate);
+            totEligible, totAppMale, totAppFemale, totApp,
+            totRelMale, totRelFemale, totRel, totPnc, totRate);
 
+        // Consolidado comparativo deduplicado por estudiante (sin doble conteo entre periodos)
         SchoolYearComparison? comparison = null;
-        if (comparePeriodId.HasValue)
+        if (!string.IsNullOrWhiteSpace(compareSchoolYear))
         {
-            var prevPeriod = await dbContext.AcademicPeriods
-                .AsNoTracking()
-                .SingleOrDefaultAsync(p => p.Id == comparePeriodId.Value, cancellationToken);
-
+            var cmpSy = compareSchoolYear.Trim();
+            var cmpIds = allPeriods.Where(p => p.SchoolYear == cmpSy).Select(p => p.Id).ToHashSet();
+            if (cmpIds.Count > 0)
+            {
+                var combinedIds = targetPeriods.Select(p => p.Id).Concat(cmpIds).ToHashSet();
+                var combined = await LoadStatisticsRowsAsync(normType, combinedIds, cancellationToken);
+                var cElig = combined.Count(r => r.Cp);
+                var cApp = combined.Count(r => r.Ca);
+                var cRel = combined.Count(r => r.Released);
+                var cPnc = Math.Max(0, cApp - cRel);
+                var cRate = cApp > 0 ? Math.Round(cRel * 100m / cApp, 2) : 0m;
+                comparison = new SchoolYearComparison(cmpSy, periodSummary.Code, cElig, cApp, cRel, cPnc, cRate);
+            }
+        }
+        else if (comparePeriodId.HasValue)
+        {
+            var prevPeriod = allPeriods.SingleOrDefault(p => p.Id == comparePeriodId.Value);
             if (prevPeriod is not null)
             {
-                var prevRows = await GetTrackingCoreAsync(prevPeriod.Id, normType, null, null, null, cancellationToken);
-                var prevEligible = prevRows.Count(r => r.Documents.Cp);
-                var prevApp = prevRows.Count(r => r.Documents.Ca);
-                var prevRel = prevRows.Count(r =>
-                    normType == "social_service"
-                        ? (r.Documents.Ct || r.Status == "released" || !string.IsNullOrWhiteSpace(r.ReleaseCertificateFolio))
-                        : (r.Documents.Ca && (r.Documents.Cc == true || r.Status == "released")));
-
-                var combinedEligible = prevEligible + totEligible;
-                var combinedApp = prevApp + totApp;
-                var combinedRel = prevRel + totRel;
-                var combinedPnc = Math.Max(0, combinedApp - combinedRel);
-                var combinedRate = combinedApp > 0 ? Math.Round(combinedRel * 100m / combinedApp, 2) : 0m;
-
-                comparison = new SchoolYearComparison(
-                    prevPeriod.Code,
-                    period.Code,
-                    combinedEligible,
-                    combinedApp,
-                    combinedRel,
-                    combinedPnc,
-                    combinedRate);
+                var combinedIds = targetPeriods.Select(p => p.Id).Append(prevPeriod.Id).ToHashSet();
+                var combined = await LoadStatisticsRowsAsync(normType, combinedIds, cancellationToken);
+                var cElig = combined.Count(r => r.Cp);
+                var cApp = combined.Count(r => r.Ca);
+                var cRel = combined.Count(r => r.Released);
+                var cPnc = Math.Max(0, cApp - cRel);
+                var cRate = cApp > 0 ? Math.Round(cRel * 100m / cApp, 2) : 0m;
+                comparison = new SchoolYearComparison(prevPeriod.Code, periodSummary.Code, cElig, cApp, cRel, cPnc, cRate);
             }
         }
 
-        return new StatisticalReportResponse(
-            new ReportPeriodSummary(period.Id, period.Code, period.Name),
-            normType,
-            byCareer,
-            totals,
-            comparison);
+        await tx.CommitAsync(cancellationToken);
+
+        return new StatisticalReportResponse(periodSummary, normType, byCareer, totals, comparison);
     }
 
     public async Task<Report911Response> GetReport911Async(
         long? periodId,
         long? comparePeriodId,
+        string? schoolYear,
         string tramiteType,
         CancellationToken cancellationToken = default)
     {
         var normType = ValidateTramiteType(tramiteType);
-        var period = await ResolvePeriodAsync(periodId, cancellationToken);
-        var periodIds = new List<long> { period.Id };
-        if (comparePeriodId.HasValue && comparePeriodId.Value != period.Id)
+
+        await using var tx = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.RepeatableRead, cancellationToken);
+
+        var allPeriods = await dbContext.AcademicPeriods
+            .AsNoTracking()
+            .OrderBy(p => p.StartDate)
+            .ToListAsync(cancellationToken);
+
+        if (allPeriods.Count == 0)
         {
-            periodIds.Add(comparePeriodId.Value);
+            throw new NotFoundException("academic_periods.not_found", "No existen periodos académicos registrados.");
+        }
+
+        HashSet<long> periodIds;
+        ReportPeriodSummary periodSummary;
+        if (!string.IsNullOrWhiteSpace(schoolYear))
+        {
+            var sy = schoolYear.Trim();
+            var matched = allPeriods.Where(p => p.SchoolYear == sy).ToList();
+            if (matched.Count == 0)
+                throw new NotFoundException("academic_periods.school_year_not_found", $"Ciclo escolar '{sy}' no encontrado.");
+            periodIds = matched.Select(p => p.Id).ToHashSet();
+            periodSummary = new ReportPeriodSummary(0, sy, $"Ciclo Escolar {sy}");
+        }
+        else
+        {
+            var period = periodId.HasValue
+                ? allPeriods.SingleOrDefault(p => p.Id == periodId.Value)
+                    ?? throw new NotFoundException("academic_periods.not_found", $"Periodo académico #{periodId} no encontrado.")
+                : allPeriods.OrderByDescending(p => p.IsActive).ThenByDescending(p => p.StartDate).First();
+            periodIds = [period.Id];
+            if (comparePeriodId.HasValue && comparePeriodId.Value != period.Id)
+            {
+                periodIds.Add(comparePeriodId.Value);
+            }
+            periodSummary = new ReportPeriodSummary(period.Id, period.Code, period.Name);
         }
 
         var careers = await dbContext.Careers
             .AsNoTracking()
             .Where(c => c.IsActive)
             .OrderBy(c => c.Id)
+            .Select(c => new { c.Id, c.Code })
             .ToListAsync(cancellationToken);
 
         if (normType == "social_service")
         {
-            var releasedList = await dbContext.SocialServices
-                .Include(s => s.Student)
-                    .ThenInclude(st => st!.Career)
-                .Include(s => s.Company)
+            var raw = await dbContext.SocialServices
                 .AsNoTracking()
-                .Where(s => periodIds.Contains(s.PeriodId) && (s.Status == "released" || s.TerminationLetterDate != null))
+                .Where(s => periodIds.Contains(s.PeriodId) && s.Student != null && s.Period != null)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.StudentId,
+                    s.Status,
+                    s.DocumentWorkflowVersion,
+                    s.AcceptanceLetterDate,
+                    s.TerminationLetterDate,
+                    s.ReleaseCertificateFolio,
+                    s.HasInclusionActivities,
+                    s.BeneficiariesCount,
+                    PeriodStartDate = s.Period!.StartDate,
+                    CareerId = s.Student!.CareerId,
+                    Gender = s.Student.Gender,
+                    HasDisability = s.Student.HasDisability,
+                    Shift = s.Student.Shift,
+                    CompanySector = s.Company != null ? s.Company.Sector : null,
+                    CompanySize = s.Company != null ? s.Company.CompanySize : null
+                })
                 .ToListAsync(cancellationToken);
+
+            var docsByTramite = await LoadApprovedCodesByTramiteAsync("social_service", raw.Select(r => r.Id).ToList(), cancellationToken);
+
+            var dedup = raw
+                .GroupBy(r => r.StudentId)
+                .Select(g => g
+                    .OrderByDescending(r => ReportMetricRules.StatusPriority(r.Status))
+                    .ThenByDescending(r => r.PeriodStartDate)
+                    .ThenByDescending(r => r.Id)
+                    .First())
+                .ToList();
+
+            var releasedList = dedup.Where(r =>
+            {
+                docsByTramite.TryGetValue(r.Id, out var approved);
+                var ctApproved = approved?.Contains("CT") == true;
+                return ReportMetricRules.IsSocialServiceReleased(r.Status, ctApproved, r.ReleaseCertificateFolio, r.TerminationLetterDate);
+            }).ToList();
+
+            var placedList = dedup.Where(r =>
+            {
+                docsByTramite.TryGetValue(r.Id, out var approved);
+                var caApproved = approved?.Contains("CA") == true || (r.DocumentWorkflowVersion < 2 && r.AcceptanceLetterDate.HasValue);
+                return caApproved || r.Status is "accepted" or "active" or "completed_pending_review" or "released";
+            }).ToList();
 
             var byCareerAndGender = new List<Report911CareerGenderRow>();
             foreach (var c in careers)
             {
                 foreach (var sector in AllSectors)
                 {
-                    var group = releasedList
-                        .Where(s => s.Student?.CareerId == c.Id && (s.Company?.Sector ?? "public") == sector)
-                        .ToList();
-
-                    var m = group.Count(s => s.Student?.Gender == "M");
-                    var f = group.Count(s => s.Student?.Gender == "F");
+                    var group = releasedList.Where(s => s.CareerId == c.Id && s.CompanySector == sector).ToList();
+                    var m = group.Count(s => s.Gender == "M");
+                    var f = group.Count(s => s.Gender == "F");
                     var u = group.Count - m - f;
-                    var dis = group.Count(s => s.Student?.HasDisability == true);
-
+                    var dis = group.Count(s => s.HasDisability);
                     byCareerAndGender.Add(new Report911CareerGenderRow(c.Code, sector, m, f, u, group.Count, dis));
                 }
             }
 
             var bySector = AllSectors.Select(sector =>
             {
-                var group = releasedList.Where(s => (s.Company?.Sector ?? "public") == sector).ToList();
-                var m = group.Count(s => s.Student?.Gender == "M");
-                var f = group.Count(s => s.Student?.Gender == "F");
-                var dis = group.Count(s => s.Student?.HasDisability == true);
-                return new Report911SectorRow(sector, m, f, group.Count, dis);
+                var group = releasedList.Where(s => s.CompanySector == sector).ToList();
+                return new Report911SectorRow(
+                    sector,
+                    group.Count(s => s.Gender == "M"),
+                    group.Count(s => s.Gender == "F"),
+                    group.Count,
+                    group.Count(s => s.HasDisability));
             }).ToList();
 
-            var bySize = releasedList
-                .GroupBy(s => s.Company?.CompanySize ?? "not_applicable")
+            // Sección XIII: estudiantes colocados (CA = SI) por tamaño de empresa
+            var bySize = placedList
+                .Where(s => !string.IsNullOrWhiteSpace(s.CompanySize))
+                .GroupBy(s => s.CompanySize!)
                 .Select(g => new Report911CompanySizeRow(g.Key, g.Count()))
                 .ToList();
 
-            var disMale = releasedList.Count(s => s.Student?.HasDisability == true && s.Student?.Gender == "M");
-            var disFemale = releasedList.Count(s => s.Student?.HasDisability == true && s.Student?.Gender == "F");
+            var disMale = releasedList.Count(s => s.HasDisability && s.Gender == "M");
+            var disFemale = releasedList.Count(s => s.HasDisability && s.Gender == "F");
+            var disTotal = releasedList.Count(s => s.HasDisability);
 
             var byShift = releasedList
-                .GroupBy(s => s.Student?.Shift ?? "morning")
+                .GroupBy(s => s.Shift ?? "morning")
                 .Select(g => new Report911ShiftRow(g.Key, g.Count()))
                 .ToList();
 
-            var withInclusion = releasedList.Count(s => s.HasInclusionActivities);
-            var totalBeneficiaries = releasedList.Sum(s => s.BeneficiariesCount);
+            await tx.CommitAsync(cancellationToken);
 
             return new Report911Response(
-                new ReportPeriodSummary(period.Id, period.Code, period.Name),
+                periodSummary,
                 normType,
                 byCareerAndGender,
                 bySector,
                 bySize,
-                new Report911DisabilitySummary(disMale, disFemale, disMale + disFemale),
+                new Report911DisabilitySummary(disMale, disFemale, disTotal),
                 byShift,
-                withInclusion,
-                totalBeneficiaries);
+                releasedList.Count(s => s.HasInclusionActivities),
+                releasedList.Sum(s => s.BeneficiariesCount));
         }
         else
         {
-            var releasedList = await dbContext.Internships
-                .Include(i => i.Student)
-                    .ThenInclude(st => st!.Career)
-                .Include(i => i.Company)
+            var raw = await dbContext.Internships
                 .AsNoTracking()
-                .Where(i => periodIds.Contains(i.PeriodId) && (i.Status == "released" || i.IsExpedientComplete))
+                .Where(i => periodIds.Contains(i.PeriodId) && i.Student != null && i.Period != null)
+                .Select(i => new
+                {
+                    i.Id,
+                    i.StudentId,
+                    i.Status,
+                    i.AcceptanceLetterDate,
+                    i.IsExpedientComplete,
+                    i.ReleaseCertificateFolio,
+                    PeriodStartDate = i.Period!.StartDate,
+                    CareerId = i.Student!.CareerId,
+                    Gender = i.Student.Gender,
+                    HasDisability = i.Student.HasDisability,
+                    Shift = i.Student.Shift,
+                    CompanySector = i.Company != null ? i.Company.Sector : null,
+                    CompanySize = i.Company != null ? i.Company.CompanySize : null
+                })
                 .ToListAsync(cancellationToken);
+
+            var docsByTramite = await LoadApprovedCodesByTramiteAsync("internship", raw.Select(r => r.Id).ToList(), cancellationToken);
+
+            var dedup = raw
+                .GroupBy(r => r.StudentId)
+                .Select(g => g
+                    .OrderByDescending(r => ReportMetricRules.StatusPriority(r.Status))
+                    .ThenByDescending(r => r.PeriodStartDate)
+                    .ThenByDescending(r => r.Id)
+                    .First())
+                .ToList();
+
+            var releasedList = dedup.Where(r =>
+            {
+                docsByTramite.TryGetValue(r.Id, out var approved);
+                var ca = r.AcceptanceLetterDate.HasValue || approved?.Contains("CA") == true;
+                var cc = approved?.Contains("CC") == true;
+                return ReportMetricRules.IsInternshipReleased(r.Status, ca, cc, r.IsExpedientComplete, r.ReleaseCertificateFolio);
+            }).ToList();
+
+            var placedList = dedup.Where(r =>
+            {
+                docsByTramite.TryGetValue(r.Id, out var approved);
+                return r.AcceptanceLetterDate.HasValue || approved?.Contains("CA") == true || r.Status is "accepted" or "active" or "completed_pending_review" or "released";
+            }).ToList();
 
             var byCareerAndGender = new List<Report911CareerGenderRow>();
             foreach (var c in careers)
             {
                 foreach (var sector in AllSectors)
                 {
-                    var group = releasedList
-                        .Where(i => i.Student?.CareerId == c.Id && (i.Company?.Sector ?? "private") == sector)
-                        .ToList();
-
-                    var m = group.Count(i => i.Student?.Gender == "M");
-                    var f = group.Count(i => i.Student?.Gender == "F");
+                    var group = releasedList.Where(i => i.CareerId == c.Id && i.CompanySector == sector).ToList();
+                    var m = group.Count(i => i.Gender == "M");
+                    var f = group.Count(i => i.Gender == "F");
                     var u = group.Count - m - f;
-                    var dis = group.Count(i => i.Student?.HasDisability == true);
-
+                    var dis = group.Count(i => i.HasDisability);
                     byCareerAndGender.Add(new Report911CareerGenderRow(c.Code, sector, m, f, u, group.Count, dis));
                 }
             }
 
             var bySector = AllSectors.Select(sector =>
             {
-                var group = releasedList.Where(i => (i.Company?.Sector ?? "private") == sector).ToList();
-                var m = group.Count(i => i.Student?.Gender == "M");
-                var f = group.Count(i => i.Student?.Gender == "F");
-                var dis = group.Count(i => i.Student?.HasDisability == true);
-                return new Report911SectorRow(sector, m, f, group.Count, dis);
+                var group = releasedList.Where(i => i.CompanySector == sector).ToList();
+                return new Report911SectorRow(
+                    sector,
+                    group.Count(i => i.Gender == "M"),
+                    group.Count(i => i.Gender == "F"),
+                    group.Count,
+                    group.Count(i => i.HasDisability));
             }).ToList();
 
-            var bySize = releasedList
-                .GroupBy(i => i.Company?.CompanySize ?? "medium")
+            var bySize = placedList
+                .Where(i => !string.IsNullOrWhiteSpace(i.CompanySize))
+                .GroupBy(i => i.CompanySize!)
                 .Select(g => new Report911CompanySizeRow(g.Key, g.Count()))
                 .ToList();
 
-            var disMale = releasedList.Count(i => i.Student?.HasDisability == true && i.Student?.Gender == "M");
-            var disFemale = releasedList.Count(i => i.Student?.HasDisability == true && i.Student?.Gender == "F");
+            var disMale = releasedList.Count(i => i.HasDisability && i.Gender == "M");
+            var disFemale = releasedList.Count(i => i.HasDisability && i.Gender == "F");
+            var disTotal = releasedList.Count(i => i.HasDisability);
 
             var byShift = releasedList
-                .GroupBy(i => i.Student?.Shift ?? "morning")
+                .GroupBy(i => i.Shift ?? "morning")
                 .Select(g => new Report911ShiftRow(g.Key, g.Count()))
                 .ToList();
 
+            await tx.CommitAsync(cancellationToken);
+
             return new Report911Response(
-                new ReportPeriodSummary(period.Id, period.Code, period.Name),
+                periodSummary,
                 normType,
                 byCareerAndGender,
                 bySector,
                 bySize,
-                new Report911DisabilitySummary(disMale, disFemale, disMale + disFemale),
+                new Report911DisabilitySummary(disMale, disFemale, disTotal),
                 byShift,
                 0,
                 0);
@@ -578,7 +781,7 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
         CancellationToken cancellationToken = default)
     {
         var normType = ValidateTramiteType(tramiteType);
-        var stats = await GetStatisticsAsync(periodId, null, normType, cancellationToken);
+        var stats = await GetStatisticsAsync(periodId, null, null, null, normType, cancellationToken);
 
         var pncs = await dbContext.NonConformances
             .AsNoTracking()
@@ -644,6 +847,106 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
         return new CycleTimesResponse(normType, summary);
     }
 
+    private async Task<List<StatsEvalRow>> LoadStatisticsRowsAsync(
+        string normType,
+        HashSet<long> periodIds,
+        CancellationToken cancellationToken)
+    {
+        if (normType == "social_service")
+        {
+            var raw = await dbContext.SocialServices
+                .AsNoTracking()
+                .Where(s => periodIds.Contains(s.PeriodId) && s.Student != null && s.Period != null && s.Student.Career != null)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.StudentId,
+                    s.Status,
+                    s.DocumentWorkflowVersion,
+                    s.PresentationLetterFolio,
+                    s.PresentationLetterDate,
+                    s.AcceptanceLetterDate,
+                    s.TerminationLetterDate,
+                    s.ReleaseCertificateFolio,
+                    PeriodStartDate = s.Period!.StartDate,
+                    CareerId = s.Student!.CareerId,
+                    CareerCode = s.Student.Career!.Code,
+                    CareerName = s.Student.Career.Name,
+                    Gender = s.Student.Gender
+                })
+                .ToListAsync(cancellationToken);
+
+            var docsByTramite = await LoadApprovedCodesByTramiteAsync("social_service", raw.Select(r => r.Id).ToList(), cancellationToken);
+
+            var evaluated = raw.Select(s =>
+            {
+                docsByTramite.TryGetValue(s.Id, out var approved);
+                approved ??= [];
+                var cp = approved.Contains("CP") || (s.DocumentWorkflowVersion < 2 && (!string.IsNullOrWhiteSpace(s.PresentationLetterFolio) || s.PresentationLetterDate.HasValue));
+                var ca = approved.Contains("CA") || (s.DocumentWorkflowVersion < 2 && s.AcceptanceLetterDate.HasValue);
+                var ct = approved.Contains("CT") || (s.DocumentWorkflowVersion < 2 && s.TerminationLetterDate.HasValue);
+                var released = ReportMetricRules.IsSocialServiceReleased(s.Status, ct, s.ReleaseCertificateFolio, s.TerminationLetterDate);
+                return new StatsEvalRow(s.Id, s.StudentId, s.PeriodStartDate, s.CareerId, s.CareerCode, s.CareerName, s.Gender, s.Status, cp, ca, released);
+            });
+
+            return evaluated
+                .GroupBy(r => r.StudentId)
+                .Select(g => g
+                    .OrderByDescending(r => r.Released ? 1 : 0)
+                    .ThenByDescending(r => ReportMetricRules.StatusPriority(r.Status))
+                    .ThenByDescending(r => r.PeriodStartDate)
+                    .ThenByDescending(r => r.TramiteId)
+                    .First())
+                .ToList();
+        }
+        else
+        {
+            var raw = await dbContext.Internships
+                .AsNoTracking()
+                .Where(i => periodIds.Contains(i.PeriodId) && i.Student != null && i.Period != null && i.Student.Career != null)
+                .Select(i => new
+                {
+                    i.Id,
+                    i.StudentId,
+                    i.Status,
+                    i.PresentationLetterFolio,
+                    i.PresentationLetterDate,
+                    i.AcceptanceLetterDate,
+                    i.IsExpedientComplete,
+                    i.ReleaseCertificateFolio,
+                    PeriodStartDate = i.Period!.StartDate,
+                    CareerId = i.Student!.CareerId,
+                    CareerCode = i.Student.Career!.Code,
+                    CareerName = i.Student.Career.Name,
+                    Gender = i.Student.Gender
+                })
+                .ToListAsync(cancellationToken);
+
+            var docsByTramite = await LoadApprovedCodesByTramiteAsync("internship", raw.Select(r => r.Id).ToList(), cancellationToken);
+
+            var evaluated = raw.Select(i =>
+            {
+                docsByTramite.TryGetValue(i.Id, out var approved);
+                approved ??= [];
+                var cp = !string.IsNullOrWhiteSpace(i.PresentationLetterFolio) || i.PresentationLetterDate.HasValue || approved.Contains("CP");
+                var ca = i.AcceptanceLetterDate.HasValue || approved.Contains("CA");
+                var cc = approved.Contains("CC");
+                var released = ReportMetricRules.IsInternshipReleased(i.Status, ca, cc, i.IsExpedientComplete, i.ReleaseCertificateFolio);
+                return new StatsEvalRow(i.Id, i.StudentId, i.PeriodStartDate, i.CareerId, i.CareerCode, i.CareerName, i.Gender, i.Status, cp, ca, released);
+            });
+
+            return evaluated
+                .GroupBy(r => r.StudentId)
+                .Select(g => g
+                    .OrderByDescending(r => r.Released ? 1 : 0)
+                    .ThenByDescending(r => ReportMetricRules.StatusPriority(r.Status))
+                    .ThenByDescending(r => r.PeriodStartDate)
+                    .ThenByDescending(r => r.TramiteId)
+                    .First())
+                .ToList();
+        }
+    }
+
     private async Task<AcademicPeriod> ResolvePeriodAsync(long? periodId, CancellationToken cancellationToken)
     {
         if (periodId.HasValue)
@@ -702,4 +1005,3 @@ public sealed partial class ReportsService(TecNMDbContext dbContext, ICurrentUse
         return norm;
     }
 }
-

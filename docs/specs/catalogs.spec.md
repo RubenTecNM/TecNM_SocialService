@@ -57,6 +57,7 @@ interface AcademicPeriod {
   id: number;
   code: string;      // AD25, FJ26
   name: string;      // "Agosto - Diciembre 2025"
+  schoolYear: string; // "2025-2026" (YYYY-YYYY)
   startDate: string;
   endDate: string;
   isActive: boolean; // periodo en curso
@@ -69,6 +70,7 @@ interface AcademicPeriodRequest {
   name: string;
   startDate: string;
   endDate: string;
+  schoolYear?: string | null; // opcional; si se omite se calcula desde startDate (mes >= 8 -> Y-(Y+1), si no (Y-1)-Y)
 }
 ```
 
@@ -81,7 +83,8 @@ interface AcademicPeriodRequest {
 | Método y ruta | Éxito | Errores |
 | --- | --- | --- |
 | `GET /api/academic-periods?search&isActive&sort=-startDate` | `200 PagedResponse<AcademicPeriod>` | — |
-| `GET /api/academic-periods/options` | `200 OptionItem[]` (orden `-startDate`, `meta.isActive`) | — |
+| `GET /api/academic-periods/options` | `200 OptionItem[]` (orden `-startDate`, `meta.isActive`, `meta.code`, `meta.schoolYear`) | — |
+| `GET /api/academic-periods/school-years` | `200 SchoolYearOption[]` (`schoolYear`, `periods[]`, `hasActivePeriod`) | — |
 | `GET /api/academic-periods/current` | `200 AcademicPeriod` | `404 academic_periods.no_current` |
 | `GET /api/academic-periods/{id}` | `200 AcademicPeriod` | `404` |
 | `POST /api/academic-periods` | `201 AcademicPeriod` (inactivo) | `400`, `409` |
@@ -201,6 +204,15 @@ interface DocumentSeriesRequest {
 | `PUT /api/document-series/{id}` | `200 DocumentSeries` | `400`, `404`, `422` |
 
 Sin `DELETE`. No existe endpoint público para consumir folio: solo lo consumen acciones `presentation-letter`, `release` y `school-services-act` de los trámites, de forma atómica. Si no existe serie para el año en curso, backend la crea copiando `prefix` y `formatPattern` del año anterior con `currentSequence=0`.
+
+## 6. Tipos de Actividad — `/api/activity-types`
+
+Catálogo estandarizado para clasificar la actividad funcional realizada en Servicio Social y/o Prácticas Profesionales.
+
+- Lectura (`GET`, `/options?tramiteType=social_service|internship|both`): Autenticado.
+- Escritura (`POST`, `PUT`, `PATCH /status`, `DELETE`): `admin`, `social_service_officer`, `internship_coordinator` (política `CompaniesWrite`).
+- `appliesTo`: `social_service` | `internship` | `both`.
+- `DELETE` → `409 activity_types.in_use` si existen trámites de SS o PP vinculados.
 
 ## Flujos UI esperados
 

@@ -4,9 +4,34 @@
 
 # Contrato: Reportes e indicadores
 
-> **Estado:** Borrador v0.2 (alineado a las fórmulas de `SEGUIMIENTO VINCULACIÓN1.xlsx`). Convenciones en [api-conventions.spec.md](./api-conventions.spec.md). Solo lectura sobre todas las tablas. Política: `ReportViewer`.
+> **Estado:** v1.0 (alineado a `SEGUIMIENTO VINCULACIÓN1.xlsx`, consolidación por ciclo escolar sin doble conteo y catálogo `activity_types`). Convenciones en [api-conventions.spec.md](./api-conventions.spec.md). Solo lectura sobre todas las tablas. Política: `StatisticsRead`.
 
-Todos los endpoints aceptan `periodId` (default: periodo activo) y responden JSON en tiempo real conforme los alumnos suben documentos y Vinculación los valida. Exportación a Excel/PDF la hace frontend (SheetJS / jsPDF).
+Todos los endpoints agregados responden JSON en tiempo real sin exponer identificadores personales (`studentId`, `tramiteId`, `documentId`). Exportación a Excel (`.xlsx` multi-hoja vía `exceljs`) y PDF ejecutivo imprimible en frontend.
+
+## 0. Analítico Multidimensional — `GET /api/reports/analytics` y `GET /api/reports/analytics/companies`
+
+Consolida y cruza estudiantes en Servicio Social (`social_service`), Prácticas Profesionales (`internship`) o comparativa (`both`).
+
+Query combinable (AND):
+- `tramiteType`: `social_service` | `internship` | `both` (default: `social_service`)
+- `timeScope`: `period` | `school_year` | `all` (default: `period`)
+- `periodId`: `long?` (en `timeScope=period`, default: periodo activo; `0` equivale a `all`)
+- `comparePeriodId`: `long?` (opcional en `timeScope=period`)
+- `schoolYear`: `string?` (`YYYY-YYYY`, ej. `2025-2026`, requerido o inferido del periodo activo en `timeScope=school_year`)
+- `compareSchoolYear`: `string?` (`YYYY-YYYY`, opcional en `timeScope=school_year`)
+- `statusGroup`: `in_progress` (default: `approved`, `accepted`, `active`, `completed_pending_review`) | `all_non_cancelled` | `released` | `all`
+- `status`: `string?` (estatus puntual; prevalece sobre `statusGroup`)
+- `careerId`: `long?`
+- `semester`: `int?` (`1..15`, evaluado sobre `semester_enrolled`)
+- `companyId`: `long?` (`0` = sin empresa asignada en PP)
+- `companyType`: `string?` (`public|micro|small|medium|large|social`)
+- `sector`: `string?` (`educational|public|private|social`)
+- `activityTypeId`: `long?` (`0` = sin clasificar)
+- `gender`: `string?` (`M|F|unspecified`)
+
+Regla de deduplicación: al consolidar por `schoolYear` o `all`, se aplica `DISTINCT ON (tramite_type, student_id)` priorizando `(status='released') DESC, (status IN ('active','completed_pending_review','accepted','approved')) DESC, (status='requested') DESC, period.start_date DESC, id DESC`. Todos los desgloses (`byCareer`, `bySemester`, `byActivityType`, `byCompany`, `byGender`, `byStatus`) cuadran exactamente con el conteo deduplicado.
+
+`GET /api/reports/analytics/companies` acepta los mismos filtros más `search`, `sort` (`students_desc|active_desc|released_desc|name_asc`), `page` y `pageSize` (máx. 100) para la tabla paginada y exportación completa de empresas receptoras.
 
 ## 1. Tablero — `GET /api/reports/dashboard`
 
@@ -24,7 +49,7 @@ interface DashboardResponse {
 ## 2. Sábana de Seguimiento de Vinculación — `GET /api/reports/tracking`
 
 Reemplaza las hojas `SERVICIO SOCIAL`, `PRÁCTICAS` y `PRINCIPAL CONSULTA` de `SEGUIMIENTO VINCULACIÓN1.xlsx`. Se actualiza automáticamente conforme se emiten cartas y se aprueban documentos (`SI`).
-Query: `periodId`, `tramiteType`* (`social_service` | `internship`), `status`, `careerId`, `search` (matrícula o nombre).
+Query: `periodId`, `schoolYear?` (`YYYY-YYYY`), `tramiteType`* (`social_service` | `internship`), `status`, `careerId`, `semester?`, `gender?`, `companyId?`, `activityTypeId?`, `search` (matrícula o nombre).
 
 ```ts
 interface TrackingRow {
@@ -87,7 +112,7 @@ Reemplaza las hojas `ESTADÍSTICO` y `PNC` de `SEGUIMIENTO VINCULACIÓN1.xlsx`. 
 - **Liberados (`released`):** Alumnos con Carta de Terminación / Constancia de Liberación (`CTA. TERM. = SI` / `CONST.TERM` en SS; `CA = SI` y `CC = 1` en PP).
 - **PNC estadístico (`pnc`):** `Solicitantes - Liberados`.
 
-Query: `periodId` (semestre principal, ej. `FJ26`), `comparePeriodId?` (semestre anterior para consolidado de **Año Escolar**, ej. `AD25`), `tramiteType`* (`social_service` | `internship`).
+Query: `periodId` (semestre principal, ej. `FJ26`), `comparePeriodId?` (semestre anterior para consolidado de **Año Escolar**, ej. `AD25`), `schoolYear?` (`YYYY-YYYY`, consolida todos los periodos del ciclo deduplicando por estudiante), `compareSchoolYear?`, `tramiteType`* (`social_service` | `internship`). Disponible para todos los roles en `StatisticsRead` sin filtrar por proceso propio (solo agregados). Incluye carreras desactivadas que tengan registros en el periodo/ciclo.
 
 ```ts
 interface CareerStatisticalBreakdown {
@@ -124,7 +149,7 @@ interface StatisticalReportResponse {
 ## 4. Estadística SEP/TecNM 911.10 (XII y XIII) — `GET /api/reports/911`
 
 Reemplaza las hojas `911.10 XII. SS,PRÁCTICAS E INTE` y `911.10 XIII. PROYECTOS DE VINCU`.
-Query: `periodId`, `comparePeriodId?` (para columna `TOTAL POR CICLO ESCOLAR`), `tramiteType`*.
+Query: `periodId`, `comparePeriodId?` (para columna `TOTAL POR CICLO ESCOLAR`), `schoolYear?` (`YYYY-YYYY`, consolidación deduplicada del ciclo), `tramiteType`*. `withDisability.total` incluye alumnos con `gender = null`. No fabrica sector ni tamaño cuando `company_id IS NULL`. `byCompanySize` (Sección XIII) contabiliza estudiantes colocados (`CA = SI`).
 
 ```ts
 interface Report911Response {

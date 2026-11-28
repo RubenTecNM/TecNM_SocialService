@@ -41,6 +41,7 @@ public class AcademicPeriodsService(TecNMDbContext dbContext)
             ap.Id,
             ap.Code,
             ap.Name,
+            ap.SchoolYear,
             ap.StartDate,
             ap.EndDate,
             ap.IsActive,
@@ -56,14 +57,39 @@ public class AcademicPeriodsService(TecNMDbContext dbContext)
             .AsNoTracking()
             .OrderByDescending(ap => ap.IsActive)
             .ThenByDescending(ap => ap.StartDate)
-            .Select(ap => new { ap.Id, ap.Code, ap.Name, ap.IsActive })
+            .Select(ap => new { ap.Id, ap.Code, ap.Name, ap.SchoolYear, ap.IsActive })
             .ToListAsync(cancellationToken);
 
         return items
             .Select(ap => new OptionItem(
                 ap.Id,
                 ap.IsActive ? $"{ap.Code} · {ap.Name} (Activo)" : $"{ap.Code} · {ap.Name}",
-                new Dictionary<string, object?> { ["isActive"] = ap.IsActive, ["code"] = ap.Code }))
+                new Dictionary<string, object?>
+                {
+                    ["isActive"] = ap.IsActive,
+                    ["code"] = ap.Code,
+                    ["schoolYear"] = ap.SchoolYear
+                }))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<SchoolYearOptionResponse>> GetSchoolYearsAsync(CancellationToken cancellationToken = default)
+    {
+        var items = await dbContext.AcademicPeriods
+            .AsNoTracking()
+            .OrderByDescending(ap => ap.StartDate)
+            .Select(ap => new { ap.Id, ap.Code, ap.Name, ap.SchoolYear, ap.StartDate, ap.EndDate, ap.IsActive })
+            .ToListAsync(cancellationToken);
+
+        return items
+            .GroupBy(ap => ap.SchoolYear)
+            .OrderByDescending(g => g.Key, StringComparer.Ordinal)
+            .Select(g => new SchoolYearOptionResponse(
+                g.Key,
+                g.Any(p => p.IsActive),
+                g.OrderBy(p => p.StartDate)
+                    .Select(p => new SchoolYearPeriodItem(p.Id, p.Code, p.Name, p.StartDate, p.EndDate, p.IsActive))
+                    .ToList()))
             .ToList();
     }
 
@@ -112,6 +138,7 @@ public class AcademicPeriodsService(TecNMDbContext dbContext)
         {
             Code = normalizedCode,
             Name = request.Name.Trim(),
+            SchoolYear = ResolveSchoolYear(request.SchoolYear, request.StartDate),
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsActive = false // Inicialmente inactivo según spec
@@ -146,6 +173,7 @@ public class AcademicPeriodsService(TecNMDbContext dbContext)
 
         period.Code = normalizedCode;
         period.Name = request.Name.Trim();
+        period.SchoolYear = ResolveSchoolYear(request.SchoolYear, request.StartDate);
         period.StartDate = request.StartDate;
         period.EndDate = request.EndDate;
 
@@ -217,16 +245,34 @@ public class AcademicPeriodsService(TecNMDbContext dbContext)
             errors["endDate"] = ["La fecha de fin no puede ser anterior a la fecha de inicio."];
         }
 
+        if (!string.IsNullOrWhiteSpace(request.SchoolYear)
+            && !System.Text.RegularExpressions.Regex.IsMatch(request.SchoolYear.Trim(), @"^\d{4}-\d{4}$"))
+        {
+            errors["schoolYear"] = ["El ciclo escolar debe tener formato YYYY-YYYY (ej. 2025-2026)."];
+        }
+
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
         }
     }
 
+    public static string ResolveSchoolYear(string? explicitSchoolYear, DateOnly startDate)
+    {
+        if (!string.IsNullOrWhiteSpace(explicitSchoolYear))
+        {
+            return explicitSchoolYear.Trim();
+        }
+
+        var startYear = startDate.Month >= 8 ? startDate.Year : startDate.Year - 1;
+        return $"{startYear}-{startYear + 1}";
+    }
+
     private static AcademicPeriodResponse ToResponse(AcademicPeriod ap) => new(
         ap.Id,
         ap.Code,
         ap.Name,
+        ap.SchoolYear,
         ap.StartDate,
         ap.EndDate,
         ap.IsActive,

@@ -62,7 +62,10 @@ public sealed record TrackingRowResponse(
     string? SchoolServicesActFolio,
     int? BeneficiariesCount,
     bool? HasInclusionActivities,
-    string? TargetCommunity
+    string? TargetCommunity,
+    string? PeriodCode = null,
+    string? SchoolYear = null,
+    string? ActivityTypeName = null
 );
 
 public sealed record CareerStatisticalBreakdown(
@@ -181,5 +184,154 @@ public sealed record CycleTimeTransitionRow(
 public sealed record CycleTimesResponse(
     string TramiteType,
     IReadOnlyList<CycleTimeTransitionRow> Transitions
+);
+
+// --- Analítico Multidimensional ---
+
+public sealed record AnalyticsFilterQuery(
+    string TramiteType = "social_service",
+    string TimeScope = "period",
+    long? PeriodId = null,
+    long? ComparePeriodId = null,
+    string? SchoolYear = null,
+    string? CompareSchoolYear = null,
+    string StatusGroup = "in_progress",
+    string? Status = null,
+    long? CareerId = null,
+    int? Semester = null,
+    long? CompanyId = null,
+    string? CompanyType = null,
+    string? Sector = null,
+    long? ActivityTypeId = null,
+    string? Gender = null
+);
+
+public sealed record AnalyticsScopeSummary(
+    string TramiteType,
+    string TimeScope,
+    ReportPeriodSummary? Period,
+    string? SchoolYear,
+    ReportPeriodSummary? ComparePeriod,
+    string? CompareSchoolYear,
+    string StatusGroup,
+    string? Status,
+    IReadOnlyList<string> IncludedPeriodCodes
+);
+
+public sealed record GenderBreakdown(
+    int Male,
+    int Female,
+    int Unspecified
+);
+
+public sealed record AnalyticsComparisonDelta(
+    string PreviousLabel,
+    int PreviousUniqueStudents,
+    int DeltaStudents,
+    decimal? DeltaPercentage,
+    int PreviousReleased,
+    decimal PreviousReleaseRate
+);
+
+public sealed record AnalyticsSummary(
+    int UniqueStudents,
+    int TotalTramites,
+    int SocialServiceStudents,
+    int InternshipStudents,
+    int InProgressCount,
+    int ActiveCount,
+    int ReleasedCount,
+    int PncCount,
+    int CancelledCount,
+    decimal ReleaseRatePercentage,
+    int DistinctCompanies,
+    int UnassignedCompanyCount,
+    int UnclassifiedActivityCount,
+    GenderBreakdown ByGender,
+    AnalyticsComparisonDelta? Comparison
+);
+
+public sealed record CareerAnalyticsRow(
+    long CareerId,
+    string CareerCode,
+    string CareerName,
+    bool IsActive,
+    int Total,
+    int Male,
+    int Female,
+    int Unspecified,
+    int InProgress,
+    int Released,
+    int Pnc,
+    int SocialServiceCount,
+    int InternshipCount
+);
+
+public sealed record SemesterAnalyticsRow(
+    int Semester,
+    int Total,
+    int Male,
+    int Female,
+    int Unspecified,
+    int SocialServiceCount,
+    int InternshipCount
+);
+
+public sealed record ActivityTypeAnalyticsRow(
+    long? ActivityTypeId,
+    string Code,
+    string Name,
+    int Total,
+    int Male,
+    int Female,
+    int Unspecified,
+    int SocialServiceCount,
+    int InternshipCount,
+    decimal SharePercentage
+);
+
+public sealed record CompanyAnalyticsRow(
+    long? CompanyId,
+    string CompanyName,
+    string? CompanyType,
+    string? Sector,
+    bool IsTecnmInternal,
+    int Total,
+    int ActiveCount,
+    int ReleasedCount,
+    int Projects,
+    int Male,
+    int Female,
+    int Unspecified,
+    string? TopActivityName
+);
+
+public sealed record StatusCountRow(
+    string Status,
+    int Count,
+    int SocialServiceCount,
+    int InternshipCount
+);
+
+public sealed record TrendPointRow(
+    string Key,
+    string Label,
+    string SubLabel,
+    int Total,
+    int SocialServiceCount,
+    int InternshipCount,
+    int InProgressCount,
+    int ReleasedCount
+);
+
+public sealed record AnalyticsReportResponse(
+    AnalyticsScopeSummary Scope,
+    AnalyticsSummary Summary,
+    IReadOnlyList<StatusCountRow> ByStatus,
+    IReadOnlyList<CareerAnalyticsRow> ByCareer,
+    IReadOnlyList<SemesterAnalyticsRow> BySemester,
+    IReadOnlyList<ActivityTypeAnalyticsRow> ByActivityType,
+    IReadOnlyList<CompanyAnalyticsRow> TopCompanies,
+    IReadOnlyList<TrendPointRow> Trend
 );
 

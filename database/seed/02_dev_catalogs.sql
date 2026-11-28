@@ -20,15 +20,37 @@ ON CONFLICT (code) WHERE deleted_at IS NULL DO UPDATE SET
 -- ============================================================================
 -- 2. PERIODOS ACADÉMICOS
 -- ============================================================================
-INSERT INTO academic_periods (code, name, start_date, end_date, is_active)
+INSERT INTO academic_periods (code, name, school_year, start_date, end_date, is_active)
 VALUES
-    ('AD25', 'Agosto - Diciembre 2025', '2025-08-18', '2025-12-19', false),
-    ('FJ26', 'Febrero - Julio 2026',    '2026-02-09', '2026-07-03', true),
-    ('AD26', 'Agosto - Diciembre 2026', '2026-08-17', '2026-12-18', false)
+    ('AD25', 'Agosto - Diciembre 2025', '2025-2026', '2025-08-18', '2025-12-19', false),
+    ('FJ26', 'Febrero - Julio 2026',    '2025-2026', '2026-02-09', '2026-07-03', true),
+    ('AD26', 'Agosto - Diciembre 2026', '2026-2027', '2026-08-17', '2026-12-18', false)
 ON CONFLICT (code) WHERE deleted_at IS NULL DO UPDATE SET
     name = EXCLUDED.name,
+    school_year = EXCLUDED.school_year,
     start_date = EXCLUDED.start_date,
     end_date = EXCLUDED.end_date,
+    is_active = EXCLUDED.is_active;
+
+-- ============================================================================
+-- 2B. CATÁLOGO DE TIPOS DE ACTIVIDAD (SS y PP)
+-- ============================================================================
+INSERT INTO activity_types (code, name, applies_to, description, is_active)
+VALUES
+    ('ACT-TI',  'Desarrollo de Software, Redes y Soporte TI',            'both',           'Desarrollo de aplicaciones, soporte técnico, infraestructura de redes y bases de datos.', true),
+    ('ACT-ADM', 'Gestión Administrativa, Contable y Documental',         'both',           'Control documental, gestión financiera, logística administrativa y recursos humanos.', true),
+    ('ACT-MTO', 'Mantenimiento Industrial, Eléctrico y Mecánico',        'both',           'Mantenimiento preventivo y correctivo de equipos, maquinaria e instalaciones.', true),
+    ('ACT-CAL', 'Calidad, Seguridad Industrial y Mejora de Procesos',    'both',           'Aseguramiento de calidad ISO, seguridad e higiene, auditorías y mejora continua.', true),
+    ('ACT-PRO', 'Producción, Manufactura y Operación en Planta',         'internship',     'Supervisión de líneas de producción, manufactura esbelta y control operativo.', true),
+    ('ACT-ING', 'Diseño, Automatización, Electrónica e Instrumentación', 'both',           'Diseño mecánico/electrónico, PLC, control, instrumentación y CAD/CAM.', true),
+    ('ACT-ENE', 'Sustentabilidad, Medio Ambiente y Eficiencia Energética', 'both',         'Diagnósticos energéticos, energías renovables y programas ambientales.', true),
+    ('ACT-DOC', 'Apoyo Académico, Laboratorios y Tutorías',              'social_service', 'Asesorías académicas, apoyo en laboratorios escolares y programas educativos.', true),
+    ('ACT-COM', 'Atención Ciudadana, Salud y Desarrollo Comunitario',    'social_service', 'Brigadas comunitarias, atención ciudadana, alfabetización y apoyo social.', true),
+    ('ACT-INV', 'Investigación Aplicada, Innovación y Proyectos Especiales', 'both',       'Participación en proyectos de investigación, prototipos e innovación tecnológica.', true)
+ON CONFLICT (code) WHERE deleted_at IS NULL DO UPDATE SET
+    name = EXCLUDED.name,
+    applies_to = EXCLUDED.applies_to,
+    description = EXCLUDED.description,
     is_active = EXCLUDED.is_active;
 
 -- ============================================================================
@@ -166,6 +188,7 @@ ON CONFLICT (id) DO NOTHING;
 -- Sincronizar secuencias
 SELECT setval(pg_get_serial_sequence('careers', 'id'), COALESCE(MAX(id), 1)) FROM careers;
 SELECT setval(pg_get_serial_sequence('academic_periods', 'id'), COALESCE(MAX(id), 1)) FROM academic_periods;
+SELECT setval(pg_get_serial_sequence('activity_types', 'id'), COALESCE(MAX(id), 1)) FROM activity_types;
 SELECT setval(pg_get_serial_sequence('social_service_programs', 'id'), COALESCE(MAX(id), 1)) FROM social_service_programs;
 SELECT setval(pg_get_serial_sequence('institutional_authorities', 'id'), COALESCE(MAX(id), 1)) FROM institutional_authorities;
 

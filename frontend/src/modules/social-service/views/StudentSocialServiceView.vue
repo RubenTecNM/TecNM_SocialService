@@ -22,6 +22,7 @@ import {
 } from '../../../shared/components'
 import { openPrintableDocument } from '../../../shared/utils/printDocument'
 import {
+  getActivityTypeOptions,
   getCompanyOptions,
   getPeriodOptions,
   getProgramOptions,
@@ -54,6 +55,7 @@ const successMessage = ref('')
 // Catálogos para el Asistente de Apertura Anexo XVIII
 const periodOptions = ref<OptionItem[]>([])
 const programOptions = ref<OptionItem[]>([])
+const activityTypeOptions = ref<OptionItem[]>([])
 const companyOptions = ref<OptionItem[]>([])
 const supervisorOptions = ref<OptionItem[]>([])
 const imssFileForApplication = ref<File | null>(null)
@@ -61,6 +63,7 @@ const imssFileForApplication = ref<File | null>(null)
 const openForm = reactive<CreateSocialServicePayload>({
   periodId: 0,
   programId: 0,
+  activityTypeId: 0,
   companyId: 0,
   supervisorId: 0,
   modality: 'internal',
@@ -99,18 +102,21 @@ const reportForm = reactive({
 })
 
 async function loadCatalogsForApplication(): Promise<void> {
-  const [periods, programs] = await Promise.all([
+  const [periods, programs, activities] = await Promise.all([
     getPeriodOptions().catch(() => []),
     getProgramOptions().catch(() => []),
+    getActivityTypeOptions('social_service').catch(() => []),
   ])
   periodOptions.value = periods
   programOptions.value = programs
+  activityTypeOptions.value = activities
 
   const activePeriod = periods.find((p) => Boolean((p as any).metadata?.isActive)) ?? periods[0]
   if (activePeriod) {
     openForm.periodId = activePeriod.id
   }
   if (programs.length > 0) openForm.programId = programs[0].id
+  if (activities.length > 0) openForm.activityTypeId = activities[0].id
   await handleModalityChange()
 }
 
@@ -383,6 +389,14 @@ watchValidation(isCommitmentModalOpen, () => commitmentValidation.reset())
             <select v-bind="controlAttrs" v-model.number="openForm.programId">
               <option v-for="prog in programOptions" :key="prog.id" :value="prog.id">
                 {{ prog.label }}
+              </option>
+            </select>
+          </UiField>
+
+          <UiField label="Tipo de Actividad *" v-bind="applicationValidation.field('activityTypeId', 'Tipo de Actividad *')" v-slot="{ controlAttrs }">
+            <select v-bind="controlAttrs" v-model.number="openForm.activityTypeId">
+              <option v-for="act in activityTypeOptions" :key="act.id" :value="act.id">
+                {{ act.label }}
               </option>
             </select>
           </UiField>

@@ -4,8 +4,7 @@ export const reportsRoutes: RouteRecordRaw[] = [
   {
     path: 'reports/dashboard',
     name: 'reports-dashboard',
-    component: () => import('./views/DashboardView.vue'),
-    meta: { requiresAuth: true, roles: ['admin', 'social_service_officer', 'internship_coordinator', 'department_head'] },
+    redirect: { name: 'reports-stats' },
   },
   {
     path: 'reports/tracking',

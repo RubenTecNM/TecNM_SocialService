@@ -264,6 +264,8 @@ public sealed class InternshipsService(
             if (activeP != null) targetPeriodId = activeP.Id;
         }
 
+        var resolvedActivityTypeId = await ValidateActivityTypeAsync(request.ActivityTypeId, required: false, cancellationToken);
+
         var entity = new Internship
         {
             AdmissionImssDocumentId = admissionImssId,
@@ -272,6 +274,7 @@ public sealed class InternshipsService(
             CompanyId = request.CompanyId,
             SupervisorId = request.SupervisorId,
             AgreementId = request.AgreementId,
+            ActivityTypeId = resolvedActivityTypeId,
             SemesterEnrolled = request.CurrentSemester,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
@@ -331,6 +334,10 @@ public sealed class InternshipsService(
         entity.CompanyId = request.CompanyId;
         entity.SupervisorId = request.SupervisorId;
         entity.AgreementId = request.AgreementId;
+        if (request.ActivityTypeId.HasValue)
+        {
+            entity.ActivityTypeId = await ValidateActivityTypeAsync(request.ActivityTypeId, required: false, cancellationToken);
+        }
         entity.StartDate = request.StartDate;
         entity.EndDate = request.EndDate;
         entity.ScheduleDescription = string.IsNullOrWhiteSpace(request.ScheduleDescription) ? null : request.ScheduleDescription.Trim();
@@ -470,6 +477,10 @@ public sealed class InternshipsService(
         entity.CompanyId = request.CompanyId;
         entity.SupervisorId = request.SupervisorId;
         entity.AgreementId = request.AgreementId;
+        entity.ActivityTypeId = await ValidateActivityTypeAsync(
+            request.ActivityTypeId ?? entity.ActivityTypeId,
+            required: true,
+            cancellationToken);
         entity.StartDate = request.StartDate;
         entity.EndDate = request.EndDate;
         entity.ScheduleDescription = string.IsNullOrWhiteSpace(request.ScheduleDescription) ? null : request.ScheduleDescription.Trim();
@@ -1123,7 +1134,8 @@ public sealed class InternshipsService(
             .Include(i => i.Student)
                 .ThenInclude(s => s!.Career)
             .Include(i => i.Period)
-            .Include(i => i.Company);
+            .Include(i => i.Company)
+            .Include(i => i.ActivityType);
 
     private IQueryable<Internship> BuildDetailQuery() =>
         dbContext.Internships
@@ -1133,6 +1145,7 @@ public sealed class InternshipsService(
             .Include(i => i.Company)
             .Include(i => i.Supervisor)
             .Include(i => i.Agreement)
+            .Include(i => i.ActivityType)
             .Include(i => i.Evaluation);
 
     private async Task<Dictionary<long, List<ExpedientDocument>>> LoadDocumentsByInternshipIdsAsync(
@@ -1585,7 +1598,43 @@ public sealed class InternshipsService(
             checklist,
             i.CreatedAt,
             i.UpdatedAt)
-        { EvaluationFormatStartDate = i.EvaluationFormatStartDate, EvaluationFormatEndDate = i.EvaluationFormatEndDate, DocumentWorkflowVersion = i.DocumentWorkflowVersion, DocumentRequirements = DocumentDefinitions.For("internship", i.DocumentWorkflowVersion, currentUser).Select(d => d with { CanUpload = d.CanUpload && !TerminalStatuses.Contains(i.Status) }).ToList() };
+        {
+            EvaluationFormatStartDate = i.EvaluationFormatStartDate,
+            EvaluationFormatEndDate = i.EvaluationFormatEndDate,
+            DocumentWorkflowVersion = i.DocumentWorkflowVersion,
+            ActivityType = i.ActivityType is null ? null : new ActivityTypeSummary(i.ActivityType.Id, i.ActivityType.Code, i.ActivityType.Name, i.ActivityType.AppliesTo),
+            DocumentRequirements = DocumentDefinitions.For("internship", i.DocumentWorkflowVersion, currentUser).Select(d => d with { CanUpload = d.CanUpload && !TerminalStatuses.Contains(i.Status) }).ToList()
+        };
+    }
+
+    private async Task<long?> ValidateActivityTypeAsync(long? activityTypeId, bool required, CancellationToken cancellationToken)
+    {
+        if (!activityTypeId.HasValue || activityTypeId.Value <= 0)
+        {
+            if (required)
+            {
+                throw new ValidationException(new Dictionary<string, string[]>
+                {
+                    ["activityTypeId"] = ["El tipo de actividad es obligatorio al registrar la aceptación."]
+                });
+            }
+
+            return null;
+        }
+
+        var activityType = await dbContext.ActivityTypes
+            .AsNoTracking()
+            .SingleOrDefaultAsync(a => a.Id == activityTypeId.Value && a.IsActive, cancellationToken);
+
+        if (activityType is null || activityType.AppliesTo is not ("internship" or "both"))
+        {
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                ["activityTypeId"] = ["El tipo de actividad seleccionado no existe, está inactivo o no aplica a Prácticas Profesionales."]
+            });
+        }
+
+        return activityType.Id;
     }
 
     private IReadOnlyList<string> BuildAllowedActions(Internship i)

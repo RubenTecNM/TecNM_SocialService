@@ -111,6 +111,7 @@ public sealed record InternshipDetailResponse(
     public DateOnly? EvaluationFormatStartDate { get; init; }
     public DateOnly? EvaluationFormatEndDate { get; init; }
     public int DocumentWorkflowVersion { get; init; }
+    public ActivityTypeSummary? ActivityType { get; init; }
     public IReadOnlyList<DocumentRequirement> DocumentRequirements { get; init; } = [];
 }
 
@@ -127,7 +128,8 @@ public sealed record CreateInternshipRequest(
     DateOnly? StartDate = null,
     DateOnly? EndDate = null,
     string? ScheduleDescription = null,
-    int? RequiredHours = null
+    int? RequiredHours = null,
+    long? ActivityTypeId = null
 );
 
 public sealed record ApproveInternshipRequest(
@@ -146,7 +148,8 @@ public sealed record RegisterInternshipAcceptanceRequest(
     DateOnly EndDate,
     string? ScheduleDescription,
     int? RequiredHours,
-    DateOnly AcceptanceLetterDate
+    DateOnly AcceptanceLetterDate,
+    long? ActivityTypeId = null
 );
 
 public sealed record InternshipEvaluationRequest(

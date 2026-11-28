@@ -44,6 +44,13 @@ public sealed record SocialServiceProgramSummary(
     string Category
 );
 
+public sealed record ActivityTypeSummary(
+    long Id,
+    string Code,
+    string Name,
+    string AppliesTo
+);
+
 public sealed record SocialServiceCompanySummary(
     long Id,
     string Name,
@@ -181,6 +188,7 @@ public sealed record SocialServiceDetailResponse(
 )
 {
     public int DocumentWorkflowVersion { get; init; }
+    public ActivityTypeSummary? ActivityType { get; init; }
     public IReadOnlyList<DocumentRequirement> DocumentRequirements { get; init; } = [];
 }
 
@@ -205,7 +213,8 @@ public sealed record CreateSocialServiceRequest(
     DateOnly StartDate,
     DateOnly EndDate,
     string? TargetCommunity,
-    SocialServiceApplicationInput Application
+    SocialServiceApplicationInput Application,
+    long? ActivityTypeId = null
 );
 
 public sealed record UpdateSocialServiceRequest(
@@ -218,7 +227,8 @@ public sealed record UpdateSocialServiceRequest(
     DateOnly StartDate,
     DateOnly EndDate,
     string? TargetCommunity,
-    SocialServiceApplicationInput Application
+    SocialServiceApplicationInput Application,
+    long? ActivityTypeId = null
 );
 
 public sealed record ReviewApplicationRequest(

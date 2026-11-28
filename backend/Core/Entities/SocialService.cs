@@ -8,6 +8,7 @@ public class SocialService : AuditableEntity
     public long StudentId { get; set; }
     public long PeriodId { get; set; }
     public long ProgramId { get; set; }
+    public long? ActivityTypeId { get; set; }
     public long? AgreementId { get; set; }
     public long CompanyId { get; set; }
     public long SupervisorId { get; set; }
@@ -39,6 +40,7 @@ public class SocialService : AuditableEntity
     public Student? Student { get; set; }
     public AcademicPeriod? Period { get; set; }
     public SocialServiceProgram? Program { get; set; }
+    public ActivityType? ActivityType { get; set; }
     public Agreement? Agreement { get; set; }
     public Company? Company { get; set; }
     public CompanySupervisor? Supervisor { get; set; }

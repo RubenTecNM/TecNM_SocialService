@@ -38,3 +38,6 @@ Verificación aislada: `pwsh -File backend.Tests/run-isolated.ps1` con Docker, o
 
 ## Seguimiento SS — 8 de noviembre de 2026
 Aplicar 20261108_student_social_service_follow_up.sql después de cuentas. Desplegar API/frontend juntos. La migración conserva todos los datos y deja periodos de aptitud históricos nulos; admin debe confirmarlos. PNC de seguimiento no crea casos de Calidad. Ensayar en base aislada antes del despliegue.
+
+## Analítica por Ciclo Escolar y Tipos de Actividad — 27 de noviembre de 2026
+Aplicar `20261127_reports_school_year_and_activity_types.sql` con `ON_ERROR_STOP=1` después de `20261126_document_templates.sql`. Agrega `academic_periods.school_year` con backfill automático por `start_date`, crea `activity_types` con catálogo semilla, vincula `activity_type_id` nullable en `social_services` e `internships` (los registros previos quedan como «Sin clasificar») y agrega índices analíticos parciales sin alterar las vistas `vw_linkage_*`.

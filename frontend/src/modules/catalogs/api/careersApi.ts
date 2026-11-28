@@ -1,11 +1,14 @@
 import { http } from '../../../shared/api/http'
 import type {
   AcademicPeriod,
+  ActivityType,
+  ActivityTypeRequest,
   Career,
   CareerFilterParams,
   CareerRequest,
   OptionItem,
   PagedResponse,
+  SchoolYearOption,
   UpdateStatusRequest,
 } from '../types/careers'
 
@@ -28,6 +31,43 @@ export async function getCareerOptions(): Promise<OptionItem[]> {
 
 export async function getPeriodOptions(): Promise<OptionItem[]> {
   return (await http.get<OptionItem[]>('/academic-periods/options')).data
+}
+
+export async function getSchoolYearOptions(): Promise<SchoolYearOption[]> {
+  return (await http.get<SchoolYearOption[]>('/academic-periods/school-years')).data
+}
+
+export async function getActivityTypeOptions(
+  tramiteType?: 'social_service' | 'internship' | 'both',
+): Promise<OptionItem[]> {
+  const params = tramiteType && tramiteType !== 'both' ? { tramiteType } : undefined
+  return (await http.get<OptionItem[]>('/activity-types/options', { params })).data
+}
+
+export async function getActivityTypes(params?: {
+  page?: number
+  pageSize?: number
+  search?: string
+  appliesTo?: string
+  isActive?: boolean | null
+}): Promise<PagedResponse<ActivityType>> {
+  return (await http.get<PagedResponse<ActivityType>>('/activity-types', { params })).data
+}
+
+export async function createActivityType(request: ActivityTypeRequest): Promise<ActivityType> {
+  return (await http.post<ActivityType>('/activity-types', request)).data
+}
+
+export async function updateActivityType(id: number, request: ActivityTypeRequest): Promise<ActivityType> {
+  return (await http.put<ActivityType>(`/activity-types/${id}`, request)).data
+}
+
+export async function updateActivityTypeStatus(id: number, isActive: boolean): Promise<ActivityType> {
+  return (await http.patch<ActivityType>(`/activity-types/${id}/status`, { isActive })).data
+}
+
+export async function deleteActivityType(id: number): Promise<void> {
+  await http.delete(`/activity-types/${id}`)
 }
 
 export async function getCurrentPeriod(): Promise<AcademicPeriod> {

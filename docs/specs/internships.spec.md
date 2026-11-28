@@ -127,6 +127,7 @@ interface RegisterInternshipAcceptanceRequest {
   companyId: number;
   supervisorId: number;
   agreementId?: number | null;
+  activityTypeId: number;             // requerido al registrar CA; activo y appliesTo in ('internship','both')
   startDate: string;
   endDate: string;
   scheduleDescription?: string | null;

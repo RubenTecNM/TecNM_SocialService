@@ -14,6 +14,7 @@ public sealed class AcademicPeriodConfiguration : AuditableEntityConfiguration<A
         builder.HasKey(ap => ap.Id).HasName("pk_academic_periods");
         builder.Property(ap => ap.Code).HasColumnName("code").HasMaxLength(32).IsRequired();
         builder.Property(ap => ap.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+        builder.Property(ap => ap.SchoolYear).HasColumnName("school_year").HasMaxLength(16).IsRequired();
         builder.Property(ap => ap.StartDate).HasColumnName("start_date").IsRequired();
         builder.Property(ap => ap.EndDate).HasColumnName("end_date").IsRequired();
         builder.Property(ap => ap.IsActive).HasColumnName("is_active").HasDefaultValue(false).IsRequired();

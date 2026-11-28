@@ -21,6 +21,7 @@ import {
 } from '../../../shared/components'
 import { openPrintableDocument } from '../../../shared/utils/printDocument'
 import {
+  getActivityTypeOptions,
   getCompanyOptions,
   getPeriodOptions,
   getSupervisorOptions,
@@ -52,6 +53,7 @@ const successMessage = ref('')
 const periodOptions = ref<OptionItem[]>([])
 const companyOptions = ref<OptionItem[]>([])
 const supervisorOptions = ref<OptionItem[]>([])
+const activityTypeOptions = ref<OptionItem[]>([])
 const imssFileForRequest = ref<File | null>(null)
 
 // Formulario Paso 1: Reemplazo del Microsoft Forms para solicitar Carta de Presentación
@@ -68,6 +70,7 @@ const isAcceptanceModalOpen = ref(false)
 const acceptanceForm = reactive({
   companyId: 0,
   supervisorId: 0,
+  activityTypeId: 0,
   startDate: '2026-02-20',
   endDate: '2026-06-20',
   scheduleDescription: 'Lunes a Viernes de 08:00 a 13:00 hrs',
@@ -83,12 +86,17 @@ const evalForm = reactive({
 })
 
 async function loadCatalogs(): Promise<void> {
-  const [periods, companies] = await Promise.all([
+  const [periods, companies, activities] = await Promise.all([
     getPeriodOptions().catch(() => []),
     getCompanyOptions(false).catch(() => []),
+    getActivityTypeOptions('internship').catch(() => []),
   ])
   periodOptions.value = periods
   companyOptions.value = companies
+  activityTypeOptions.value = activities
+  if (activities.length > 0 && !acceptanceForm.activityTypeId) {
+    acceptanceForm.activityTypeId = activities[0].id
+  }
 
   const activePeriod = periods.find((p) => Boolean((p as any).metadata?.isActive)) ?? periods[0]
   if (activePeriod && !requestForm.periodId) {
@@ -479,6 +487,12 @@ watchValidation(isEvalModalOpen, () => evaluationValidation.reset())
         <UiField label="Responsable / Supervisor en la Empresa *" v-bind="acceptanceValidation.field('supervisorId', 'Responsable / Supervisor en la Empresa *')" v-slot="{ controlAttrs }">
           <select v-bind="controlAttrs" v-model.number="acceptanceForm.supervisorId">
             <option v-for="s in supervisorOptions" :key="s.id" :value="s.id">{{ s.label }}</option>
+          </select>
+        </UiField>
+
+        <UiField label="Tipo de Actividad *" v-bind="acceptanceValidation.field('activityTypeId', 'Tipo de Actividad *')" v-slot="{ controlAttrs }">
+          <select v-bind="controlAttrs" v-model.number="acceptanceForm.activityTypeId">
+            <option v-for="act in activityTypeOptions" :key="act.id" :value="act.id">{{ act.label }}</option>
           </select>
         </UiField>
 

@@ -13,10 +13,9 @@
 
 | Ruta | Nombre | Componente Principal | Propósito |
 | :--- | :--- | :--- | :--- |
-| `/reports/dashboard` | `reports-dashboard` | `ExecutiveDashboardView.vue` | Tablero ejecutivo con indicadores clave, tarjetas y accesos rápidos. |
-| `/reports/tracking` | `reports-tracking` | `VinculacionTrackingView.vue` | Sábana de seguimiento en vivo con avance 0–100% y matriz de documentos. |
-| `/reports/statistics` | `reports-statistics` | `StatisticalReportView.vue` | Estadístico semestral y por ciclo escolar con fórmulas de `SEGUIMIENTO VINCULACIÓN1.xlsx`. |
-| `/reports/911` | `reports-911` | `Report911View.vue` | Formato oficial SEP/TecNM 911.10 (Secciones XII y XIII). |
+| `/reports/dashboard` | `reports-dashboard` | Redirección → `/reports/stats` | Consolida el tablero analítico en un solo módulo. |
+| `/reports/tracking` | `reports-tracking` | `TrackingSheetView.vue` | Sábana de seguimiento en vivo con filtros combinables (periodo, ciclo escolar, carrera, semestre, sexo, empresa, actividad, estatus), modal expediente y exportación `.xlsx`/`.csv`. |
+| `/reports/stats` | `reports-stats` | `StatisticsView.vue` | Centro Analítico y Reportes (Tab 1: Resumen Analítico con `UiChart` interactivo y cross-filtering; Tab 2: Estadístico Oficial y Ciclo Escolar; Tab 3: Formato 911.10 completo; Exportación Excel `.xlsx` multi-hoja y PDF imprimible). |
 
 ---
 
